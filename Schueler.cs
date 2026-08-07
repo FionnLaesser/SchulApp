@@ -1,300 +1,253 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text.Json;
-using System.Windows.Forms;
+using Microsoft.Data.SqlClient;
+using SchulApp.Data;
+using SchulApp.Services;
+using System.Data;
 
 namespace SchulApp
 {
     public partial class Schueler : Form
     {
-        private readonly string dateiPfad =
-            Path.Combine(Application.StartupPath, "schueler.json");
-
-        private List<SchuelerDaten> schuelerListe = new List<SchuelerDaten>();
+        private readonly SchuelerService schuelerService;
+        private int? ausgewaehlteSchuelerId;
 
         public Schueler()
         {
             InitializeComponent();
+            schuelerService = new SchuelerService(new SqlSchuelerRepository());
 
-            SchuelerLaden();
+            KlassenLaden();
             SchuelerListeAktualisieren();
         }
 
-
-        // =========================================================
-        // SCHÜLER AUS JSON LADEN
-        // =========================================================
-
-        private void SchuelerLaden()
+        private void KlassenLaden()
         {
-            if (!File.Exists(dateiPfad))
+            try
             {
-                schuelerListe = new List<SchuelerDaten>();
+                const string sql = @"
+                    SELECT KlassenId, Bezeichnung
+                    FROM dbo.Klassen
+                    ORDER BY Bezeichnung;";
+
+                using SqlConnection connection = Database.GetConnection();
+                using SqlDataAdapter adapter = new SqlDataAdapter(sql, connection);
+
+                DataTable klassen = new DataTable();
+                adapter.Fill(klassen);
+
+                newStudentKlasse.DisplayMember = "Bezeichnung";
+                newStudentKlasse.ValueMember = "KlassenId";
+                newStudentKlasse.DataSource = klassen.Copy();
+
+                editKlasse.DisplayMember = "Bezeichnung";
+                editKlasse.ValueMember = "KlassenId";
+                editKlasse.DataSource = klassen.Copy();
+
+                bool vorhanden = klassen.Rows.Count > 0;
+                OKnewStudent.Enabled = vorhanden;
+                OKchangeName.Enabled = vorhanden;
+            }
+            catch (SqlException ex)
+            {
+                MessageBox.Show("Die Klassen konnten nicht geladen werden.\n\n" + ex.Message);
+            }
+        }
+
+        private void SchuelerListeAktualisieren()
+        {
+            try
+            {
+                studentGrid.DataSource = schuelerService.AlleLaden().ToList();
+
+                if (studentGrid.Columns.Contains("KlasseId"))
+                {
+                    studentGrid.Columns["KlasseId"].Visible = false;
+                }
+
+                if (studentGrid.Columns.Contains("SchuelerId"))
+                {
+                    studentGrid.Columns["SchuelerId"].HeaderText = "ID";
+                    studentGrid.Columns["SchuelerId"].Width = 60;
+                }
+
+                if (studentGrid.Columns.Contains("Name"))
+                {
+                    studentGrid.Columns["Name"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+                }
+
+                if (studentGrid.Columns.Contains("Klasse"))
+                {
+                    studentGrid.Columns["Klasse"].Width = 130;
+                }
+
+                studentGrid.ClearSelection();
+                AuswahlZuruecksetzen();
+            }
+            catch (SqlException ex)
+            {
+                MessageBox.Show("Die Schüler konnten nicht geladen werden.\n\n" + ex.Message);
+            }
+        }
+
+        private void OKnewStudent_Click(object sender, EventArgs e)
+        {
+            if (newStudentKlasse.SelectedValue == null)
+            {
+                MessageBox.Show("Bitte eine Klasse auswählen.");
                 return;
             }
 
             try
             {
-                string json = File.ReadAllText(dateiPfad);
+                schuelerService.Erstellen(
+                    newStudentName.Text,
+                    Convert.ToInt32(newStudentKlasse.SelectedValue)
+                );
 
-                schuelerListe =
-                    JsonSerializer.Deserialize<List<SchuelerDaten>>(json) //Der JSON-Text wird in eine Liste von SchuelerDaten umgewandelt. 
-                    ?? new List<SchuelerDaten>();                         //Falls das Ergebnis null ist ("??"), wird stattdessen eine neue leere Liste erstellt.
+                newStudentName.Text = "";
+                SchuelerListeAktualisieren();
+                MessageBox.Show("Schüler wurde gespeichert.");
             }
-            catch
+            catch (ArgumentException ex)
             {
-                MessageBox.Show("Die Schüler konnten nicht geladen werden.");
-
-                schuelerListe = new List<SchuelerDaten>();
+                MessageBox.Show(ex.Message);
+            }
+            catch (SqlException ex)
+            {
+                MessageBox.Show("Der Schüler konnte nicht gespeichert werden.\n\n" + ex.Message);
             }
         }
-
-
-        // =========================================================
-        // SCHÜLER IN JSON SPEICHERN
-        // =========================================================
-
-        private void SchuelerSpeichern()
-        {
-            JsonSerializerOptions options = new JsonSerializerOptions //Für JsonSearializer die Optionen
-            {
-                WriteIndented = true //eingerückt schreiben
-            };
-
-            string json = JsonSerializer.Serialize(schuelerListe, options); // Wandelt die Schülerliste mit den angegebenen Optionen in JSON um
-
-            File.WriteAllText(dateiPfad, json);
-        }
-
-
-        // =========================================================
-        // SCHÜLERLISTE AUF DER SEITE ANZEIGEN
-        // =========================================================
-
-        private void SchuelerListeAktualisieren()
-        {
-            if (schuelerListe.Count == 0)
-            {
-                studentListLabel.Text = "Noch keine Schüler vorhanden.";
-                return;
-            }
-
-            studentListLabel.Text = string.Join( //macht die Namen aus dem select zu einem String mit jeweils neuen Zeilen
-                "\n",
-                schuelerListe.Select(schueler => schueler.Name) //lambda expression. Nimmt jeweils den Namen.
-            );
-        }
-
-
-        // =========================================================
-        // NEUEN SCHÜLER ERSTELLEN
-        // OKnewStudent
-        // =========================================================
-
-        private void OKnewStudent_Click(object sender, EventArgs e)
-        {
-            string name = newStudentName.Text.Trim();
-
-            if (name == "")
-            {
-                MessageBox.Show("Bitte einen Namen eingeben.");
-                return;
-            }
-
-            bool existiertSchon = schuelerListe.Any(
-                schueler => schueler.Name.Equals(
-                    name,
-                    StringComparison.OrdinalIgnoreCase
-                )
-            );
-
-            if (existiertSchon)
-            {
-                MessageBox.Show("Dieser Schüler existiert bereits.");
-                return;
-            }
-
-            SchuelerDaten neuerSchueler = new SchuelerDaten
-            {
-                Name = name
-            };
-
-            schuelerListe.Add(neuerSchueler);
-
-            SchuelerSpeichern();
-            SchuelerListeAktualisieren();
-
-            newStudentName.Text = "";
-
-            MessageBox.Show("Schüler wurde gespeichert.");
-        }
-
-
-        // =========================================================
-        // SCHÜLER ANZEIGEN
-        // showStudents
-        // =========================================================
 
         private void showStudents_Click(object sender, EventArgs e)
         {
-            if (schuelerListe.Count == 0)
-            {
-                MessageBox.Show("Noch keine Schüler vorhanden.");
-                return;
-            }
-
-            string text = string.Join(
-                "\n",
-                schuelerListe.Select(schueler => schueler.Name)
-            );
-
-            MessageBox.Show(text);
-
+            KlassenLaden();
             SchuelerListeAktualisieren();
         }
 
+        private void studentGrid_SelectionChanged(object sender, EventArgs e)
+        {
+            if (studentGrid.SelectedRows.Count == 0)
+            {
+                return;
+            }
 
-        // =========================================================
-        // SCHÜLER BEARBEITEN
-        // OKchangeName
-        // =========================================================
+            DataGridViewRow row = studentGrid.SelectedRows[0];
+            if (row.Cells["SchuelerId"].Value == null)
+            {
+                return;
+            }
+
+            ausgewaehlteSchuelerId = Convert.ToInt32(row.Cells["SchuelerId"].Value);
+            string name = Convert.ToString(row.Cells["Name"].Value) ?? "";
+            int klasseId = Convert.ToInt32(row.Cells["KlasseId"].Value);
+
+            oldName.Text = name;
+            newName.Text = name;
+            deleteNameBox.Text = name;
+            editKlasse.SelectedValue = klasseId;
+        }
 
         private void OKchangeName_Click(object sender, EventArgs e)
         {
-            string alterName1 = oldName.Text.Trim();
-            string neuerName1 = newName.Text.Trim();
-
-            if (alterName1 == "" || neuerName1 == "")
+            if (ausgewaehlteSchuelerId == null)
             {
-                MessageBox.Show("Bitte den alten und neuen Namen eingeben.");
+                MessageBox.Show("Bitte zuerst einen Schüler in der Tabelle auswählen.");
                 return;
             }
 
-            //Sucht den ersten Schüler mit dem angegebenen Namen. Gross- und Kleinschreibung werden dabei ignoriert.
-            //Wenn kein Schüler gefunden wird, ist das Ergebnis null.
-            SchuelerDaten? schueler = schuelerListe.FirstOrDefault(
-                x => x.Name.Equals(
-                    alterName1,
-                    StringComparison.OrdinalIgnoreCase
-                )
-            );
-
-            if (schueler == null)
+            if (editKlasse.SelectedValue == null)
             {
-                MessageBox.Show(alterName1 + " wurde nicht gefunden.");
-                return;
-            }
-            //prüft ob der Name schon existiert
-            bool neuerNameExistiert = schuelerListe.Any(
-                x =>
-                    x != schueler &&
-                    x.Name.Equals(
-                        neuerName1,
-                        StringComparison.OrdinalIgnoreCase //Grosskleinschreibung wird ignoriert
-                    )
-            );
-
-            if (neuerNameExistiert)
-            {
-                MessageBox.Show("Ein Schüler mit diesem Namen existiert bereits.");
+                MessageBox.Show("Bitte eine Klasse auswählen.");
                 return;
             }
 
-            schueler.Name = neuerName1;
+            try
+            {
+                bool bearbeitet = schuelerService.Bearbeiten(
+                    ausgewaehlteSchuelerId.Value,
+                    newName.Text,
+                    Convert.ToInt32(editKlasse.SelectedValue)
+                );
 
-            SchuelerSpeichern();
-            SchuelerListeAktualisieren();
+                if (!bearbeitet)
+                {
+                    MessageBox.Show("Der Schüler wurde nicht gefunden.");
+                    SchuelerListeAktualisieren();
+                    return;
+                }
 
-            oldName.Text = "";
-            newName.Text = "";
-
-            MessageBox.Show(
-                alterName1 + " wurde zu " + neuerName1 + " geändert."
-            );
+                SchuelerListeAktualisieren();
+                MessageBox.Show("Schüler wurde bearbeitet.");
+            }
+            catch (ArgumentException ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+            catch (SqlException ex)
+            {
+                MessageBox.Show("Der Schüler konnte nicht bearbeitet werden.\n\n" + ex.Message);
+            }
         }
-
-
-        // =========================================================
-        // SCHÜLER LÖSCHEN
-        // OKdeleteBtn
-        // =========================================================
 
         private void OKdeleteBtn_Click(object sender, EventArgs e)
         {
-            string name = deleteNameBox.Text.Trim();
-
-            if (name == "")
+            if (ausgewaehlteSchuelerId == null)
             {
-                MessageBox.Show("Bitte einen Namen eingeben.");
+                MessageBox.Show("Bitte zuerst einen Schüler in der Tabelle auswählen.");
                 return;
             }
 
-            SchuelerDaten? schueler = schuelerListe.FirstOrDefault(
-                x => x.Name.Equals(
-                    name,
-                    StringComparison.OrdinalIgnoreCase
-                )
+            DialogResult antwort = MessageBox.Show(
+                $"Soll {deleteNameBox.Text} wirklich gelöscht werden?",
+                "Schüler löschen",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question
             );
 
-            if (schueler == null)
+            if (antwort != DialogResult.Yes)
             {
-                MessageBox.Show(name + " wurde nicht gefunden.");
                 return;
             }
 
-            schuelerListe.Remove(schueler);
+            try
+            {
+                bool geloescht = schuelerService.Loeschen(ausgewaehlteSchuelerId.Value);
 
-            SchuelerSpeichern();
-            SchuelerListeAktualisieren();
+                if (!geloescht)
+                {
+                    MessageBox.Show("Der Schüler wurde nicht gefunden.");
+                }
+                else
+                {
+                    MessageBox.Show("Schüler wurde gelöscht.");
+                }
 
-            deleteNameBox.Text = "";
-
-            MessageBox.Show(name + " wurde gelöscht.");
+                SchuelerListeAktualisieren();
+            }
+            catch (SqlException ex)
+            {
+                MessageBox.Show("Der Schüler konnte nicht gelöscht werden.\n\n" + ex.Message);
+            }
         }
 
-
-        // =========================================================
-        // EasterEgg
-        // =========================================================
+        private void AuswahlZuruecksetzen()
+        {
+            ausgewaehlteSchuelerId = null;
+            oldName.Text = "";
+            newName.Text = "";
+            deleteNameBox.Text = "";
+        }
 
         private void newStudentName_TextChanged(object sender, EventArgs e)
         {
-            if (newStudentName.Text == "EasterEgg")
-            {
-                MessageBox.Show("EasterEgg xD");
-            }
         }
-
 
         private void label1_Click(object sender, EventArgs e)
         {
         }
 
-
-        // =========================================================
-        // ZURÜCK
-        // =========================================================
-
         private void back_Click(object sender, EventArgs e)
         {
-            Hauptmenue hauptmenue = new Hauptmenue();
-            hauptmenue.StartPosition = FormStartPosition.Manual;
-            hauptmenue.Location = this.Location;
-            hauptmenue.Show();
-
-            this.Close();
+            Close();
         }
-    }
-
-
-    // =============================================================
-    // DATEN EINES SCHÜLERS
-    // =============================================================
-
-    public class SchuelerDaten
-    {
-        public string Name { get; set; } = ""; //Getter & Setter (C# vereinfacht) gleich wie Javas Getter Setter einfach verkürtzt
     }
 }

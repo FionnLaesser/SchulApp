@@ -1,16 +1,9 @@
-﻿namespace SchulApp
+namespace SchulApp
 {
     partial class Lehrer
     {
-        /// <summary>
-        /// Required designer variable.
-        /// </summary>
         private System.ComponentModel.IContainer components = null;
 
-        /// <summary>
-        /// Clean up any resources being used.
-        /// </summary>
-        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
             if (disposing && (components != null))
@@ -22,220 +15,327 @@
 
         #region Windows Form Designer generated code
 
-        /// <summary>
-        /// Required method for Designer support - do not modify
-        /// the contents of this method with the code editor.
-        /// </summary>
         private void InitializeComponent()
         {
             back = new Button();
-            label1 = new Label();
-            label2 = new Label();
-            showLehrer = new Label();
+            labelNeu = new Label();
+            newTeacherName = new TextBox();
+            newTeacherEmail = new TextBox();
+            newTeacherTelefon = new TextBox();
+            labelNeuName = new Label();
+            labelNeuEmail = new Label();
+            labelNeuTelefon = new Label();
             OKnewTeacherBtn = new Button();
-            newTeacherTextBox = new TextBox();
-            oldName = new TextBox();
-            newName = new TextBox();
-            OKchangeNameBtn = new Button();
-            label3 = new Label();
-            label4 = new Label();
-            label5 = new Label();
-            OKdeleteBtn = new Button();
-            nameToDelete = new TextBox();
-            label6 = new Label();
-            nameTeacherForInfo = new TextBox();
-            info = new TextBox();
+            labelBearbeiten = new Label();
+            currentTeacherName = new TextBox();
+            editTeacherName = new TextBox();
+            editTeacherEmail = new TextBox();
+            editTeacherTelefon = new TextBox();
+            labelAktuell = new Label();
+            labelEditName = new Label();
+            labelEditEmail = new Label();
+            labelEditTelefon = new Label();
+            OKchangeTeacherBtn = new Button();
+            labelLoeschen = new Label();
+            deleteTeacherName = new TextBox();
+            OKdeleteTeacherBtn = new Button();
+            reloadTeacherBtn = new Button();
+            lehrerGrid = new DataGridView();
+            labelInfo = new Label();
             infoTitel = new TextBox();
-            label8 = new Label();
-            label7 = new Label();
-            label9 = new Label();
+            info = new TextBox();
+            labelInfoTitel = new Label();
+            labelInformation = new Label();
             OKchangingInfo = new Button();
+            lehrerInfoGrid = new DataGridView();
+            ((System.ComponentModel.ISupportInitialize)lehrerGrid).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)lehrerInfoGrid).BeginInit();
             SuspendLayout();
             // 
             // back
             // 
-            back.Location = new Point(897, 12);
+            back.Location = new Point(885, 12);
             back.Name = "back";
             back.Size = new Size(75, 23);
-            back.TabIndex = 16;
+            back.TabIndex = 0;
             back.Text = "zurück";
             back.UseVisualStyleBackColor = true;
             back.Click += back_Click;
             // 
-            // label1
+            // labelNeu
             // 
-            label1.AutoSize = true;
-            label1.Location = new Point(22, 55);
-            label1.Name = "label1";
-            label1.Size = new Size(125, 15);
-            label1.TabIndex = 17;
-            label1.Text = "Neuen Lehrer erstellen";
+            labelNeu.AutoSize = true;
+            labelNeu.Location = new Point(12, 12);
+            labelNeu.Name = "labelNeu";
+            labelNeu.Size = new Size(144, 15);
+            labelNeu.TabIndex = 1;
+            labelNeu.Text = "Neuen Lehrer hinzufügen";
             // 
-            // label2
+            // labelNeuName
             // 
-            label2.AutoSize = true;
-            label2.Location = new Point(22, 122);
-            label2.Name = "label2";
-            label2.Size = new Size(198, 15);
-            label2.TabIndex = 18;
-            label2.Text = "Hier kannst du die Lehrer Bearbeiten";
+            labelNeuName.AutoSize = true;
+            labelNeuName.Location = new Point(12, 37);
+            labelNeuName.Name = "labelNeuName";
+            labelNeuName.Size = new Size(39, 15);
+            labelNeuName.TabIndex = 2;
+            labelNeuName.Text = "Name";
             // 
-            // showLehrer
+            // newTeacherName
             // 
-            showLehrer.AutoSize = true;
-            showLehrer.Location = new Point(471, 37);
-            showLehrer.Name = "showLehrer";
-            showLehrer.Size = new Size(38, 15);
-            showLehrer.TabIndex = 19;
-            showLehrer.Text = "label3";
+            newTeacherName.Location = new Point(12, 55);
+            newTeacherName.Name = "newTeacherName";
+            newTeacherName.Size = new Size(205, 23);
+            newTeacherName.TabIndex = 3;
+            // 
+            // labelNeuEmail
+            // 
+            labelNeuEmail.AutoSize = true;
+            labelNeuEmail.Location = new Point(12, 83);
+            labelNeuEmail.Name = "labelNeuEmail";
+            labelNeuEmail.Size = new Size(41, 15);
+            labelNeuEmail.TabIndex = 4;
+            labelNeuEmail.Text = "E-Mail";
+            // 
+            // newTeacherEmail
+            // 
+            newTeacherEmail.Location = new Point(12, 101);
+            newTeacherEmail.Name = "newTeacherEmail";
+            newTeacherEmail.Size = new Size(205, 23);
+            newTeacherEmail.TabIndex = 5;
+            // 
+            // labelNeuTelefon
+            // 
+            labelNeuTelefon.AutoSize = true;
+            labelNeuTelefon.Location = new Point(12, 129);
+            labelNeuTelefon.Name = "labelNeuTelefon";
+            labelNeuTelefon.Size = new Size(45, 15);
+            labelNeuTelefon.TabIndex = 6;
+            labelNeuTelefon.Text = "Telefon";
+            // 
+            // newTeacherTelefon
+            // 
+            newTeacherTelefon.Location = new Point(12, 147);
+            newTeacherTelefon.Name = "newTeacherTelefon";
+            newTeacherTelefon.Size = new Size(205, 23);
+            newTeacherTelefon.TabIndex = 7;
             // 
             // OKnewTeacherBtn
             // 
-            OKnewTeacherBtn.Location = new Point(145, 74);
+            OKnewTeacherBtn.Location = new Point(223, 55);
             OKnewTeacherBtn.Name = "OKnewTeacherBtn";
-            OKnewTeacherBtn.Size = new Size(75, 23);
-            OKnewTeacherBtn.TabIndex = 20;
-            OKnewTeacherBtn.Text = "Bestätigen";
+            OKnewTeacherBtn.Size = new Size(100, 115);
+            OKnewTeacherBtn.TabIndex = 8;
+            OKnewTeacherBtn.Text = "Speichern";
             OKnewTeacherBtn.UseVisualStyleBackColor = true;
+            OKnewTeacherBtn.Click += OKnewTeacherBtn_Click;
             // 
-            // newTeacherTextBox
+            // labelBearbeiten
             // 
-            newTeacherTextBox.Location = new Point(22, 73);
-            newTeacherTextBox.Name = "newTeacherTextBox";
-            newTeacherTextBox.Size = new Size(100, 23);
-            newTeacherTextBox.TabIndex = 21;
+            labelBearbeiten.AutoSize = true;
+            labelBearbeiten.Location = new Point(12, 191);
+            labelBearbeiten.Name = "labelBearbeiten";
+            labelBearbeiten.Size = new Size(151, 15);
+            labelBearbeiten.TabIndex = 9;
+            labelBearbeiten.Text = "Ausgewählten Lehrer ändern";
             // 
-            // oldName
+            // labelAktuell
             // 
-            oldName.Location = new Point(23, 155);
-            oldName.Name = "oldName";
-            oldName.Size = new Size(100, 23);
-            oldName.TabIndex = 22;
+            labelAktuell.AutoSize = true;
+            labelAktuell.Location = new Point(12, 214);
+            labelAktuell.Name = "labelAktuell";
+            labelAktuell.Size = new Size(91, 15);
+            labelAktuell.TabIndex = 10;
+            labelAktuell.Text = "Aktueller Name";
             // 
-            // newName
+            // currentTeacherName
             // 
-            newName.Location = new Point(146, 155);
-            newName.Name = "newName";
-            newName.Size = new Size(100, 23);
-            newName.TabIndex = 23;
+            currentTeacherName.Location = new Point(12, 232);
+            currentTeacherName.Name = "currentTeacherName";
+            currentTeacherName.ReadOnly = true;
+            currentTeacherName.Size = new Size(205, 23);
+            currentTeacherName.TabIndex = 11;
             // 
-            // OKchangeNameBtn
+            // labelEditName
             // 
-            OKchangeNameBtn.Location = new Point(266, 154);
-            OKchangeNameBtn.Name = "OKchangeNameBtn";
-            OKchangeNameBtn.Size = new Size(75, 23);
-            OKchangeNameBtn.TabIndex = 24;
-            OKchangeNameBtn.Text = "Bestätigen";
-            OKchangeNameBtn.UseVisualStyleBackColor = true;
+            labelEditName.AutoSize = true;
+            labelEditName.Location = new Point(12, 260);
+            labelEditName.Name = "labelEditName";
+            labelEditName.Size = new Size(68, 15);
+            labelEditName.TabIndex = 12;
+            labelEditName.Text = "Neuer Name";
             // 
-            // label3
+            // editTeacherName
             // 
-            label3.AutoSize = true;
-            label3.Location = new Point(23, 137);
-            label3.Name = "label3";
-            label3.Size = new Size(67, 15);
-            label3.TabIndex = 25;
-            label3.Text = "Alter Name";
+            editTeacherName.Location = new Point(12, 278);
+            editTeacherName.Name = "editTeacherName";
+            editTeacherName.Size = new Size(205, 23);
+            editTeacherName.TabIndex = 13;
             // 
-            // label4
+            // labelEditEmail
             // 
-            label4.AutoSize = true;
-            label4.Location = new Point(146, 137);
-            label4.Name = "label4";
-            label4.Size = new Size(74, 15);
-            label4.TabIndex = 26;
-            label4.Text = "Neuer Name";
+            labelEditEmail.AutoSize = true;
+            labelEditEmail.Location = new Point(12, 306);
+            labelEditEmail.Name = "labelEditEmail";
+            labelEditEmail.Size = new Size(41, 15);
+            labelEditEmail.TabIndex = 14;
+            labelEditEmail.Text = "E-Mail";
             // 
-            // label5
+            // editTeacherEmail
             // 
-            label5.AutoSize = true;
-            label5.Location = new Point(23, 201);
-            label5.Name = "label5";
-            label5.Size = new Size(167, 15);
-            label5.TabIndex = 27;
-            label5.Text = "Name zum Löschen eingeben:";
+            editTeacherEmail.Location = new Point(12, 324);
+            editTeacherEmail.Name = "editTeacherEmail";
+            editTeacherEmail.Size = new Size(205, 23);
+            editTeacherEmail.TabIndex = 15;
             // 
-            // OKdeleteBtn
+            // labelEditTelefon
             // 
-            OKdeleteBtn.Location = new Point(219, 218);
-            OKdeleteBtn.Name = "OKdeleteBtn";
-            OKdeleteBtn.Size = new Size(75, 23);
-            OKdeleteBtn.TabIndex = 28;
-            OKdeleteBtn.Text = "Bestätigen";
-            OKdeleteBtn.UseVisualStyleBackColor = true;
+            labelEditTelefon.AutoSize = true;
+            labelEditTelefon.Location = new Point(12, 352);
+            labelEditTelefon.Name = "labelEditTelefon";
+            labelEditTelefon.Size = new Size(45, 15);
+            labelEditTelefon.TabIndex = 16;
+            labelEditTelefon.Text = "Telefon";
             // 
-            // nameToDelete
+            // editTeacherTelefon
             // 
-            nameToDelete.Location = new Point(23, 218);
-            nameToDelete.Name = "nameToDelete";
-            nameToDelete.Size = new Size(167, 23);
-            nameToDelete.TabIndex = 29;
+            editTeacherTelefon.Location = new Point(12, 370);
+            editTeacherTelefon.Name = "editTeacherTelefon";
+            editTeacherTelefon.Size = new Size(205, 23);
+            editTeacherTelefon.TabIndex = 17;
             // 
-            // label6
+            // OKchangeTeacherBtn
             // 
-            label6.AutoSize = true;
-            label6.Location = new Point(22, 256);
-            label6.Name = "label6";
-            label6.Size = new Size(148, 30);
-            label6.TabIndex = 30;
-            label6.Text = "Hier kannst du eine Info zu\r\n einem Lehrer hinzufügen";
+            OKchangeTeacherBtn.Location = new Point(223, 278);
+            OKchangeTeacherBtn.Name = "OKchangeTeacherBtn";
+            OKchangeTeacherBtn.Size = new Size(100, 115);
+            OKchangeTeacherBtn.TabIndex = 18;
+            OKchangeTeacherBtn.Text = "Ändern";
+            OKchangeTeacherBtn.UseVisualStyleBackColor = true;
+            OKchangeTeacherBtn.Click += OKchangeTeacherBtn_Click;
             // 
-            // nameTeacherForInfo
+            // labelLoeschen
             // 
-            nameTeacherForInfo.Location = new Point(38, 315);
-            nameTeacherForInfo.Name = "nameTeacherForInfo";
-            nameTeacherForInfo.Size = new Size(100, 23);
-            nameTeacherForInfo.TabIndex = 31;
+            labelLoeschen.AutoSize = true;
+            labelLoeschen.Location = new Point(12, 414);
+            labelLoeschen.Name = "labelLoeschen";
+            labelLoeschen.Size = new Size(176, 15);
+            labelLoeschen.TabIndex = 19;
+            labelLoeschen.Text = "Ausgewählten Lehrer löschen";
             // 
-            // info
+            // deleteTeacherName
             // 
-            info.Location = new Point(176, 332);
-            info.Name = "info";
-            info.Size = new Size(161, 23);
-            info.TabIndex = 32;
+            deleteTeacherName.Location = new Point(12, 437);
+            deleteTeacherName.Name = "deleteTeacherName";
+            deleteTeacherName.ReadOnly = true;
+            deleteTeacherName.Size = new Size(205, 23);
+            deleteTeacherName.TabIndex = 20;
+            // 
+            // OKdeleteTeacherBtn
+            // 
+            OKdeleteTeacherBtn.Location = new Point(223, 437);
+            OKdeleteTeacherBtn.Name = "OKdeleteTeacherBtn";
+            OKdeleteTeacherBtn.Size = new Size(100, 23);
+            OKdeleteTeacherBtn.TabIndex = 21;
+            OKdeleteTeacherBtn.Text = "Löschen";
+            OKdeleteTeacherBtn.UseVisualStyleBackColor = true;
+            OKdeleteTeacherBtn.Click += OKdeleteTeacherBtn_Click;
+            // 
+            // reloadTeacherBtn
+            // 
+            reloadTeacherBtn.Location = new Point(12, 485);
+            reloadTeacherBtn.Name = "reloadTeacherBtn";
+            reloadTeacherBtn.Size = new Size(311, 29);
+            reloadTeacherBtn.TabIndex = 22;
+            reloadTeacherBtn.Text = "Lehrer neu laden";
+            reloadTeacherBtn.UseVisualStyleBackColor = true;
+            reloadTeacherBtn.Click += reloadTeacherBtn_Click;
+            // 
+            // lehrerGrid
+            // 
+            lehrerGrid.AllowUserToAddRows = false;
+            lehrerGrid.AllowUserToDeleteRows = false;
+            lehrerGrid.AllowUserToResizeRows = false;
+            lehrerGrid.BackgroundColor = SystemColors.Window;
+            lehrerGrid.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            lehrerGrid.Location = new Point(350, 42);
+            lehrerGrid.MultiSelect = false;
+            lehrerGrid.Name = "lehrerGrid";
+            lehrerGrid.ReadOnly = true;
+            lehrerGrid.RowHeadersVisible = false;
+            lehrerGrid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            lehrerGrid.Size = new Size(610, 245);
+            lehrerGrid.TabIndex = 23;
+            lehrerGrid.SelectionChanged += lehrerGrid_SelectionChanged;
+            // 
+            // labelInfo
+            // 
+            labelInfo.AutoSize = true;
+            labelInfo.Location = new Point(350, 301);
+            labelInfo.Name = "labelInfo";
+            labelInfo.Size = new Size(207, 15);
+            labelInfo.TabIndex = 24;
+            labelInfo.Text = "Information zum ausgewählten Lehrer";
+            // 
+            // labelInfoTitel
+            // 
+            labelInfoTitel.AutoSize = true;
+            labelInfoTitel.Location = new Point(350, 324);
+            labelInfoTitel.Name = "labelInfoTitel";
+            labelInfoTitel.Size = new Size(29, 15);
+            labelInfoTitel.TabIndex = 25;
+            labelInfoTitel.Text = "Titel";
             // 
             // infoTitel
             // 
-            infoTitel.Location = new Point(176, 288);
+            infoTitel.Location = new Point(350, 342);
             infoTitel.Name = "infoTitel";
-            infoTitel.Size = new Size(161, 23);
-            infoTitel.TabIndex = 33;
+            infoTitel.PlaceholderText = "z.B. Lieblingsfach";
+            infoTitel.Size = new Size(165, 23);
+            infoTitel.TabIndex = 26;
             // 
-            // label8
+            // labelInformation
             // 
-            label8.AutoSize = true;
-            label8.Location = new Point(38, 297);
-            label8.Name = "label8";
-            label8.Size = new Size(101, 15);
-            label8.TabIndex = 35;
-            label8.Text = "Name des Lehrers";
+            labelInformation.AutoSize = true;
+            labelInformation.Location = new Point(521, 324);
+            labelInformation.Name = "labelInformation";
+            labelInformation.Size = new Size(69, 15);
+            labelInformation.TabIndex = 27;
+            labelInformation.Text = "Information";
             // 
-            // label7
+            // info
             // 
-            label7.AutoSize = true;
-            label7.Location = new Point(176, 270);
-            label7.Name = "label7";
-            label7.Size = new Size(164, 15);
-            label7.TabIndex = 36;
-            label7.Text = "Titel der Info (z.B: GreenFlags)";
-            // 
-            // label9
-            // 
-            label9.AutoSize = true;
-            label9.Location = new Point(176, 314);
-            label9.Name = "label9";
-            label9.Size = new Size(161, 15);
-            label9.TabIndex = 37;
-            label9.Text = "Die Eigentliche Info (z.B Nett)";
+            info.Location = new Point(521, 342);
+            info.Name = "info";
+            info.PlaceholderText = "z.B. Mathematik";
+            info.Size = new Size(270, 23);
+            info.TabIndex = 28;
             // 
             // OKchangingInfo
             // 
-            OKchangingInfo.Location = new Point(358, 306);
+            OKchangingInfo.Location = new Point(797, 342);
             OKchangingInfo.Name = "OKchangingInfo";
-            OKchangingInfo.Size = new Size(75, 23);
-            OKchangingInfo.TabIndex = 38;
-            OKchangingInfo.Text = "Bestätigen";
+            OKchangingInfo.Size = new Size(163, 23);
+            OKchangingInfo.TabIndex = 29;
+            OKchangingInfo.Text = "Information speichern";
             OKchangingInfo.UseVisualStyleBackColor = true;
+            OKchangingInfo.Click += OKchangingInfo_Click;
+            // 
+            // lehrerInfoGrid
+            // 
+            lehrerInfoGrid.AllowUserToAddRows = false;
+            lehrerInfoGrid.AllowUserToDeleteRows = false;
+            lehrerInfoGrid.AllowUserToResizeRows = false;
+            lehrerInfoGrid.BackgroundColor = SystemColors.Window;
+            lehrerInfoGrid.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            lehrerInfoGrid.Location = new Point(350, 376);
+            lehrerInfoGrid.MultiSelect = false;
+            lehrerInfoGrid.Name = "lehrerInfoGrid";
+            lehrerInfoGrid.ReadOnly = true;
+            lehrerInfoGrid.RowHeadersVisible = false;
+            lehrerInfoGrid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            lehrerInfoGrid.Size = new Size(610, 138);
+            lehrerInfoGrid.TabIndex = 30;
+            lehrerInfoGrid.SelectionChanged += lehrerInfoGrid_SelectionChanged;
             // 
             // Lehrer
             // 
@@ -243,30 +343,42 @@
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = SystemColors.ActiveCaption;
             ClientSize = new Size(984, 561);
+            Controls.Add(lehrerInfoGrid);
             Controls.Add(OKchangingInfo);
-            Controls.Add(label9);
-            Controls.Add(label7);
-            Controls.Add(label8);
-            Controls.Add(infoTitel);
             Controls.Add(info);
-            Controls.Add(nameTeacherForInfo);
-            Controls.Add(label6);
-            Controls.Add(nameToDelete);
-            Controls.Add(OKdeleteBtn);
-            Controls.Add(label5);
-            Controls.Add(label4);
-            Controls.Add(label3);
-            Controls.Add(OKchangeNameBtn);
-            Controls.Add(newName);
-            Controls.Add(oldName);
-            Controls.Add(newTeacherTextBox);
+            Controls.Add(labelInformation);
+            Controls.Add(infoTitel);
+            Controls.Add(labelInfoTitel);
+            Controls.Add(labelInfo);
+            Controls.Add(lehrerGrid);
+            Controls.Add(reloadTeacherBtn);
+            Controls.Add(OKdeleteTeacherBtn);
+            Controls.Add(deleteTeacherName);
+            Controls.Add(labelLoeschen);
+            Controls.Add(OKchangeTeacherBtn);
+            Controls.Add(editTeacherTelefon);
+            Controls.Add(labelEditTelefon);
+            Controls.Add(editTeacherEmail);
+            Controls.Add(labelEditEmail);
+            Controls.Add(editTeacherName);
+            Controls.Add(labelEditName);
+            Controls.Add(currentTeacherName);
+            Controls.Add(labelAktuell);
+            Controls.Add(labelBearbeiten);
             Controls.Add(OKnewTeacherBtn);
-            Controls.Add(showLehrer);
-            Controls.Add(label2);
-            Controls.Add(label1);
+            Controls.Add(newTeacherTelefon);
+            Controls.Add(labelNeuTelefon);
+            Controls.Add(newTeacherEmail);
+            Controls.Add(labelNeuEmail);
+            Controls.Add(newTeacherName);
+            Controls.Add(labelNeuName);
+            Controls.Add(labelNeu);
             Controls.Add(back);
             Name = "Lehrer";
-            Text = "Form1";
+            StartPosition = FormStartPosition.Manual;
+            Text = "SchulApp - Lehrer";
+            ((System.ComponentModel.ISupportInitialize)lehrerGrid).EndInit();
+            ((System.ComponentModel.ISupportInitialize)lehrerInfoGrid).EndInit();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -274,26 +386,35 @@
         #endregion
 
         private Button back;
-        private Label label1;
-        private Label label2;
-        private Label showLehrer;
+        private Label labelNeu;
+        private TextBox newTeacherName;
+        private TextBox newTeacherEmail;
+        private TextBox newTeacherTelefon;
+        private Label labelNeuName;
+        private Label labelNeuEmail;
+        private Label labelNeuTelefon;
         private Button OKnewTeacherBtn;
-        private TextBox newTeacherTextBox;
-        private TextBox oldName;
-        private TextBox newName;
-        private Button OKchangeNameBtn;
-        private Label label3;
-        private Label label4;
-        private Label label5;
-        private Button OKdeleteBtn;
-        private TextBox nameToDelete;
-        private Label label6;
-        private TextBox nameTeacherForInfo;
-        private TextBox info;
+        private Label labelBearbeiten;
+        private TextBox currentTeacherName;
+        private TextBox editTeacherName;
+        private TextBox editTeacherEmail;
+        private TextBox editTeacherTelefon;
+        private Label labelAktuell;
+        private Label labelEditName;
+        private Label labelEditEmail;
+        private Label labelEditTelefon;
+        private Button OKchangeTeacherBtn;
+        private Label labelLoeschen;
+        private TextBox deleteTeacherName;
+        private Button OKdeleteTeacherBtn;
+        private Button reloadTeacherBtn;
+        private DataGridView lehrerGrid;
+        private Label labelInfo;
         private TextBox infoTitel;
-        private Label label8;
-        private Label label7;
-        private Label label9;
+        private TextBox info;
+        private Label labelInfoTitel;
+        private Label labelInformation;
         private Button OKchangingInfo;
+        private DataGridView lehrerInfoGrid;
     }
 }

@@ -1,16 +1,9 @@
-﻿namespace SchulApp
+namespace SchulApp
 {
     partial class Hauptmenue
     {
-        /// <summary>
-        /// Required designer variable.
-        /// </summary>
         private System.ComponentModel.IContainer components = null;
 
-        /// <summary>
-        /// Clean up any resources being used.
-        /// </summary>
-        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
             if (disposing && (components != null))
@@ -20,63 +13,91 @@
             base.Dispose(disposing);
         }
 
-        #region Windows Form Designer generated code
-
-        /// <summary>
-        /// Required method for Designer support - do not modify
-        /// the contents of this method with the code editor.
-        /// </summary>
         private void InitializeComponent()
         {
-            lehrerPage = new Button();
+            titleLabel = new Label();
+            subtitleLabel = new Label();
             schuelerPage = new Button();
-            startBild = new PictureBox();
-            label1 = new Label();
-            ((System.ComponentModel.ISupportInitialize)startBild).BeginInit();
+            lehrerPage = new Button();
+            klassenPage = new Button();
+            kursePage = new Button();
+            stundenplanPage = new Button();
             SuspendLayout();
             // 
-            // lehrerPage
+            // titleLabel
             // 
-            lehrerPage.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            lehrerPage.Location = new Point(398, 214);
-            lehrerPage.Name = "lehrerPage";
-            lehrerPage.Size = new Size(75, 23);
-            lehrerPage.TabIndex = 0;
-            lehrerPage.Text = "Lehrer";
-            lehrerPage.UseVisualStyleBackColor = true;
-            lehrerPage.Click += lehrerPage_Click;
+            titleLabel.AutoSize = true;
+            titleLabel.Font = new Font("Segoe UI", 30F, FontStyle.Bold);
+            titleLabel.Location = new Point(300, 72);
+            titleLabel.Name = "titleLabel";
+            titleLabel.Size = new Size(381, 54);
+            titleLabel.TabIndex = 0;
+            titleLabel.Text = "Schulverwaltung";
+            // 
+            // subtitleLabel
+            // 
+            subtitleLabel.AutoSize = true;
+            subtitleLabel.Font = new Font("Segoe UI", 12F);
+            subtitleLabel.Location = new Point(323, 136);
+            subtitleLabel.Name = "subtitleLabel";
+            subtitleLabel.Size = new Size(336, 21);
+            subtitleLabel.TabIndex = 1;
+            subtitleLabel.Text = "Wähle den Bereich, den du verwalten möchtest.";
             // 
             // schuelerPage
             // 
-            schuelerPage.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            schuelerPage.Location = new Point(398, 243);
+            schuelerPage.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+            schuelerPage.Location = new Point(340, 196);
             schuelerPage.Name = "schuelerPage";
-            schuelerPage.Size = new Size(75, 23);
-            schuelerPage.TabIndex = 1;
+            schuelerPage.Size = new Size(300, 50);
+            schuelerPage.TabIndex = 2;
             schuelerPage.Text = "Schüler";
             schuelerPage.UseVisualStyleBackColor = true;
             schuelerPage.Click += schuelerPage_Click;
             // 
-            // startBild
+            // lehrerPage
             // 
-            startBild.InitialImage = null;
-            startBild.Location = new Point(0, 0);
-            startBild.Name = "startBild";
-            startBild.Size = new Size(1000, 600);
-            startBild.SizeMode = PictureBoxSizeMode.StretchImage;
-            startBild.TabIndex = 2;
-            startBild.TabStop = false;
-            startBild.Click += startBild_Click;
+            lehrerPage.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+            lehrerPage.Location = new Point(340, 255);
+            lehrerPage.Name = "lehrerPage";
+            lehrerPage.Size = new Size(300, 50);
+            lehrerPage.TabIndex = 3;
+            lehrerPage.Text = "Lehrer";
+            lehrerPage.UseVisualStyleBackColor = true;
+            lehrerPage.Click += lehrerPage_Click;
             // 
-            // label1
+            // klassenPage
             // 
-            label1.AutoSize = true;
-            label1.Font = new Font("Segoe UI", 50F);
-            label1.Location = new Point(88, 33);
-            label1.Name = "label1";
-            label1.Size = new Size(792, 178);
-            label1.TabIndex = 3;
-            label1.Text = "Herzlich Willkommen zur \r\nSchülerverwaltungs App";
+            klassenPage.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+            klassenPage.Location = new Point(340, 314);
+            klassenPage.Name = "klassenPage";
+            klassenPage.Size = new Size(300, 50);
+            klassenPage.TabIndex = 4;
+            klassenPage.Text = "Klassen";
+            klassenPage.UseVisualStyleBackColor = true;
+            klassenPage.Click += klassenPage_Click;
+            // 
+            // kursePage
+            // 
+            kursePage.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+            kursePage.Location = new Point(340, 373);
+            kursePage.Name = "kursePage";
+            kursePage.Size = new Size(300, 50);
+            kursePage.TabIndex = 5;
+            kursePage.Text = "Kurse";
+            kursePage.UseVisualStyleBackColor = true;
+            kursePage.Click += kursePage_Click;
+            // 
+            // stundenplanPage
+            // 
+            stundenplanPage.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+            stundenplanPage.Location = new Point(340, 432);
+            stundenplanPage.Name = "stundenplanPage";
+            stundenplanPage.Size = new Size(300, 50);
+            stundenplanPage.TabIndex = 6;
+            stundenplanPage.Text = "Stundenplan";
+            stundenplanPage.UseVisualStyleBackColor = true;
+            stundenplanPage.Click += stundenplanPage_Click;
             // 
             // Hauptmenue
             // 
@@ -84,23 +105,28 @@
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = SystemColors.ActiveCaption;
             ClientSize = new Size(984, 561);
-            Controls.Add(startBild);
-            Controls.Add(schuelerPage);
+            Controls.Add(stundenplanPage);
+            Controls.Add(kursePage);
+            Controls.Add(klassenPage);
             Controls.Add(lehrerPage);
-            Controls.Add(label1);
+            Controls.Add(schuelerPage);
+            Controls.Add(subtitleLabel);
+            Controls.Add(titleLabel);
+            FormBorderStyle = FormBorderStyle.FixedSingle;
+            MaximizeBox = false;
             Name = "Hauptmenue";
-            StartPosition = FormStartPosition.Manual;
-            Text = "Form1";
-            ((System.ComponentModel.ISupportInitialize)startBild).EndInit();
+            StartPosition = FormStartPosition.CenterScreen;
+            Text = "SchulApp - Hauptmenü";
             ResumeLayout(false);
             PerformLayout();
         }
 
-        #endregion
-
-        private Button lehrerPage;
+        private Label titleLabel;
+        private Label subtitleLabel;
         private Button schuelerPage;
-        private PictureBox startBild;
-        private Label label1;
+        private Button lehrerPage;
+        private Button klassenPage;
+        private Button kursePage;
+        private Button stundenplanPage;
     }
 }
