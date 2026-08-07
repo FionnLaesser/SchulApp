@@ -6,7 +6,7 @@ namespace SchulApp
         static void Main()
         {
             ApplicationConfiguration.Initialize();
-            Application.Run(new Hauptmenue());
+            Application.Run(new LoadingScreen());
         }
     }
 }
