@@ -60,7 +60,6 @@
             // 
             // startBild
             // 
-            startBild.Image = (Image)resources.GetObject("startBild.Image");
             startBild.InitialImage = (Image)resources.GetObject("startBild.InitialImage");
             startBild.Location = new Point(0, 0);
             startBild.Name = "startBild";

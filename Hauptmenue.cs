@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.IO;
 using System.Windows.Forms;
 
 namespace SchulApp
@@ -21,10 +22,18 @@ namespace SchulApp
 
             if (schonGestartet == false)
             {
-                startBild.Visible = true;
-                originalBild = startBild.Image;
+                string bildPfad = Path.Combine(
+                    AppContext.BaseDirectory,
+                    "images",
+                    "hauptbild.png"
+                );
 
+                originalBild = Image.FromFile(bildPfad);
+                startBild.Image = originalBild;
+
+                startBild.Visible = true;
                 startBild.BringToFront();
+
                 StartBildVerschwinden();
 
                 schonGestartet = true;
