@@ -28,7 +28,6 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Hauptmenue));
             lehrerPage = new Button();
             schuelerPage = new Button();
             startBild = new PictureBox();
@@ -60,13 +59,14 @@
             // 
             // startBild
             // 
-            startBild.InitialImage = (Image)resources.GetObject("startBild.InitialImage");
+            startBild.InitialImage = null;
             startBild.Location = new Point(0, 0);
             startBild.Name = "startBild";
             startBild.Size = new Size(1000, 600);
             startBild.SizeMode = PictureBoxSizeMode.StretchImage;
             startBild.TabIndex = 2;
             startBild.TabStop = false;
+            startBild.Click += startBild_Click;
             // 
             // label1
             // 
@@ -89,6 +89,7 @@
             Controls.Add(lehrerPage);
             Controls.Add(label1);
             Name = "Hauptmenue";
+            StartPosition = FormStartPosition.Manual;
             Text = "Form1";
             ((System.ComponentModel.ISupportInitialize)startBild).EndInit();
             ResumeLayout(false);

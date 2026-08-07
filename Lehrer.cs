@@ -298,6 +298,8 @@ namespace SchulApp
         private void back_Click(object sender, EventArgs e)
         {
             Hauptmenue hauptmenue = new Hauptmenue();
+            hauptmenue.StartPosition = FormStartPosition.Manual;
+            hauptmenue.Location = this.Location;
             hauptmenue.Show();
 
             this.Close();

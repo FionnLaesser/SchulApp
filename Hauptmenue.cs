@@ -43,6 +43,8 @@ namespace SchulApp
         private void lehrerPage_Click(object sender, EventArgs e)
         {
             Lehrer lehrerFenster = new Lehrer();
+            lehrerFenster.StartPosition = FormStartPosition.Manual;
+            lehrerFenster.Location = this.Location;
             lehrerFenster.Show();
 
             this.Hide();
@@ -51,6 +53,8 @@ namespace SchulApp
         private void schuelerPage_Click(object sender, EventArgs e)
         {
             Schueler schuelerFenster = new Schueler();
+            schuelerFenster.StartPosition = FormStartPosition.Manual;
+            schuelerFenster.Location = this.Location;
             schuelerFenster.Show();
 
             this.Hide();
@@ -106,6 +110,16 @@ namespace SchulApp
             }
 
             return bmp;
+        }
+
+        private void startBild_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void label2_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }
