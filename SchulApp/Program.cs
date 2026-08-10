@@ -21,7 +21,7 @@ namespace SchulApp
                     }
                 }
             };
-            Application.Run(new Hauptmenue());
+            Application.Run(new LoadingScreen());
         }
     }
 }

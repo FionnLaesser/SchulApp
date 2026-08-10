@@ -1,4 +1,4 @@
-﻿using Microsoft.Data.SqlClient;
+﻿using SchulApp.Data;
 using System.Drawing;
 using System.Windows.Forms;
 
@@ -11,53 +11,51 @@ namespace SchulApp
 
         public static void Laden()
         {
-            const string sql = @"
-                SELECT HintergrundFarbe, TextFarbe
-                FROM dbo.Einstellung
-                WHERE Id = 1;";
+            // Erstellt eine Verbindung zur Datenbank über Entity Framework
+            using SchulAppContext context = new SchulAppContext();
 
-            using SqlConnection connection = Database.GetConnection();
-            connection.Open();
+            // Sucht die Einstellung mit der Id 1
+            // Entity Framework erstellt die SELECT-Abfrage automatisch
+            var einstellung = context.Einstellungen.Find(1);
 
-            using SqlCommand command = new SqlCommand(sql, connection);
-            using SqlDataReader reader = command.ExecuteReader();
-
-            if (reader.Read())
+            // Prüft, ob die Einstellung gefunden wurde
+            if (einstellung != null)
             {
+                // Wandelt den gespeicherten Integer wieder in eine Farbe um
                 HintergrundFarbe = Color.FromArgb(
-                    reader.GetInt32(0)
+                    einstellung.HintergrundFarbe
                 );
 
+                // Wandelt den gespeicherten Integer wieder in eine Farbe um
                 TextFarbe = Color.FromArgb(
-                    reader.GetInt32(1)
+                    einstellung.TextFarbe
                 );
             }
         }
 
         public static void Speichern()
         {
-            const string sql = @"
-                UPDATE dbo.Einstellung
-                SET HintergrundFarbe = @HintergrundFarbe,
-                    TextFarbe = @TextFarbe
-                WHERE Id = 1;";
+            // Erstellt eine Verbindung zur Datenbank über Entity Framework
+            using SchulAppContext context = new SchulAppContext();
 
-            using SqlConnection connection = Database.GetConnection();
-            connection.Open();
+            // Lädt die Einstellung mit der Id 1 aus der Datenbank
+            var einstellung = context.Einstellungen.Find(1);
 
-            using SqlCommand command = new SqlCommand(sql, connection);
+            
+            if (einstellung == null)
+            {
+                return;
+            }
 
-            command.Parameters.AddWithValue(
-                "@HintergrundFarbe",
-                HintergrundFarbe.ToArgb()
-            );
+            
+            einstellung.HintergrundFarbe = HintergrundFarbe.ToArgb();
 
-            command.Parameters.AddWithValue(
-                "@TextFarbe",
-                TextFarbe.ToArgb()
-            );
+            
+            einstellung.TextFarbe = TextFarbe.ToArgb();
 
-            command.ExecuteNonQuery();
+            // Speichert alle Änderungen automatisch in der Datenbank
+            // Entity Framework erstellt die UPDATE-Abfrage selbst
+            context.SaveChanges();
         }
 
         public static void HintergrundSetzen(Color farbe)
@@ -135,10 +133,12 @@ namespace SchulApp
                 Anwenden(form, alteTextFarbe);
             }
         }
+
         private static bool FarbenSindGleich(Color farbe1, Color farbe2)
         {
             return farbe1.ToArgb() == farbe2.ToArgb();
         }
+
         public static void Zurücksetzen()
         {
             Color alteTextFarbe = TextFarbe;

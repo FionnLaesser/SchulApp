@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore;
+using SchulApp.Data;
+using System;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -13,14 +15,17 @@ namespace SchulApp
         }
 
         private async void LoadingScreen_Shown(object sender, EventArgs e)
-        { 
+        {
             try
             {
                 loadingLabel.Text = "Verbinde mit Datenbank...";
-
+                await Task.Delay(500); // Simuliert eine kurze Ladezeit
+                // Prüft die Datenbankverbindung über Entity Framework
                 await DatenbankPruefen();
-                await Task.Delay(1000);
+
                 loadingLabel.Text = "Datenbank verbunden";
+
+                await Task.Delay(500);
 
                 Hauptmenue hauptmenue = new Hauptmenue();
 
@@ -44,9 +49,19 @@ namespace SchulApp
 
         private async Task DatenbankPruefen()
         {
-            using var connection = Database.GetConnection();
+            // Erstellt den Entity-Framework-Datenbankkontext
+            using SchulAppContext context = new SchulAppContext();
 
-            await connection.OpenAsync();
+            // Prüft, ob Entity Framework eine Verbindung
+            // zur Datenbank herstellen kann
+            bool verbunden = await context.Database.CanConnectAsync();
+
+            if (!verbunden)
+            {
+                throw new Exception(
+                    "Es konnte keine Verbindung zur Datenbank hergestellt werden."
+                );
+            }
         }
     }
 }

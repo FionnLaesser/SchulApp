@@ -1,11 +1,21 @@
-using Microsoft.Data.SqlClient;
-using System.Data;
+using Microsoft.EntityFrameworkCore;
+using SchulApp.Data;
+using SchulApp.Models;
 
 namespace SchulApp
 {
     public partial class Klassen : Form
     {
         private int? ausgewaehlteKlassenId;
+
+        // Hilfsklasse für die Klassenlehrer-ComboBox.
+        // LehrerId darf null sein für "(Kein Klassenlehrer)".
+        private class LehrerAuswahl
+        {
+            public int? LehrerId { get; set; }
+
+            public string Name { get; set; } = "";
+        }
 
         public Klassen()
         {
@@ -19,36 +29,47 @@ namespace SchulApp
         {
             try
             {
-                const string sql = @"
-                    SELECT
-                        CAST(NULL AS INT) AS LehrerId,
-                        CAST('(Kein Klassenlehrer)' AS NVARCHAR(100)) AS Name,
-                        0 AS Sortierung
-                    UNION ALL
-                    SELECT
-                        LehrerId,
-                        Name,
-                        1 AS Sortierung
-                    FROM dbo.Lehrer
-                    ORDER BY Sortierung, Name;";
+                // Erstellt den Entity-Framework-Datenbankkontext.
+                using SchulAppContext context = new SchulAppContext();
 
-                using SqlConnection connection = Database.GetConnection();
-                using SqlDataAdapter adapter = new SqlDataAdapter(sql, connection);
+                // Lädt alle Lehrer aus der Datenbank.
+                // Entity Framework erstellt die SELECT-Abfrage automatisch.
+                List<LehrerAuswahl> lehrer = context.Lehrer
+                    .AsNoTracking()
+                    .OrderBy(l => l.Name)
+                    .Select(l => new LehrerAuswahl
+                    {
+                        LehrerId = l.LehrerId,
+                        Name = l.Name
+                    })
+                    .ToList();
 
-                DataTable lehrer = new DataTable();
-                adapter.Fill(lehrer);
+                // Fügt die Auswahl für eine Klasse ohne Klassenlehrer hinzu.
+                lehrer.Insert(0, new LehrerAuswahl
+                {
+                    LehrerId = null,
+                    Name = "(Kein Klassenlehrer)"
+                });
 
                 newKlassenlehrer.DisplayMember = "Name";
                 newKlassenlehrer.ValueMember = "LehrerId";
-                newKlassenlehrer.DataSource = lehrer.Copy();
+
+                // Eigene Liste, damit die beiden ComboBoxen unabhängig sind.
+                newKlassenlehrer.DataSource =
+                    new List<LehrerAuswahl>(lehrer);
 
                 editKlassenlehrer.DisplayMember = "Name";
                 editKlassenlehrer.ValueMember = "LehrerId";
-                editKlassenlehrer.DataSource = lehrer.Copy();
+
+                editKlassenlehrer.DataSource =
+                    new List<LehrerAuswahl>(lehrer);
             }
-            catch (SqlException ex)
+            catch (Exception ex)
             {
-                MessageBox.Show("Die Lehrer konnten nicht geladen werden.\n\n" + ex.Message);
+                MessageBox.Show(
+                    "Die Lehrer konnten nicht geladen werden.\n\n" +
+                    ex.Message
+                );
             }
         }
 
@@ -56,30 +77,28 @@ namespace SchulApp
         {
             try
             {
-                const string sql = @"
-                    SELECT
+                using SchulAppContext context = new SchulAppContext();
+
+                // Lädt Klassen, Klassenlehrer und Anzahl Schüler.
+                // JOIN, COUNT und SELECT werden von Entity Framework erzeugt.
+                var klassen = context.Klassen
+                    .AsNoTracking()
+                    .OrderBy(k => k.KlassenId)
+                    .Select(k => new
+                    {
                         k.KlassenId,
                         k.Bezeichnung,
                         k.KlassenlehrerId,
-                        COALESCE(l.Name, '(Kein Klassenlehrer)') AS Klassenlehrer,
-                        COUNT(DISTINCT s.SchuelerId) AS AnzahlSchueler
-                    FROM dbo.Klassen AS k
-                    LEFT JOIN dbo.Lehrer AS l
-                        ON k.KlassenlehrerId = l.LehrerId
-                    LEFT JOIN dbo.Schueler AS s
-                        ON k.KlassenId = s.KlasseId
-                    GROUP BY
-                        k.KlassenId,
-                        k.Bezeichnung,
-                        k.KlassenlehrerId,
-                        l.Name
-                    ORDER BY k.KlassenId;";
 
-                using SqlConnection connection = Database.GetConnection();
-                using SqlDataAdapter adapter = new SqlDataAdapter(sql, connection);
+                        Klassenlehrer =
+                            k.Klassenlehrer != null
+                                ? k.Klassenlehrer.Name
+                                : "(Kein Klassenlehrer)",
 
-                DataTable klassen = new DataTable();
-                adapter.Fill(klassen);
+                        AnzahlSchueler = k.Schueler.Count
+                    })
+                    .ToList();
+
                 klassenGrid.DataSource = klassen;
 
                 if (klassenGrid.Columns.Contains("KlassenId"))
@@ -101,7 +120,8 @@ namespace SchulApp
 
                 if (klassenGrid.Columns.Contains("Klassenlehrer"))
                 {
-                    klassenGrid.Columns["Klassenlehrer"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+                    klassenGrid.Columns["Klassenlehrer"].AutoSizeMode =
+                        DataGridViewAutoSizeColumnMode.Fill;
                 }
 
                 if (klassenGrid.Columns.Contains("AnzahlSchueler"))
@@ -111,20 +131,26 @@ namespace SchulApp
                 }
 
                 klassenGrid.ClearSelection();
+
                 AuswahlZuruecksetzen();
                 SchuelerDerKlasseLaden();
             }
-            catch (SqlException ex)
+            catch (Exception ex)
             {
-                MessageBox.Show("Die Klassen konnten nicht geladen werden.\n\n" + ex.Message);
+                MessageBox.Show(
+                    "Die Klassen konnten nicht geladen werden.\n\n" +
+                    ex.Message
+                );
             }
         }
 
-        private static object LehrerParameter(ComboBox comboBox)
+        // Holt die LehrerId aus der ComboBox.
+        // Gibt null zurück, wenn "(Kein Klassenlehrer)" ausgewählt ist.
+        private static int? LehrerIdAusComboBox(ComboBox comboBox)
         {
-            if (comboBox.SelectedValue == null || comboBox.SelectedValue == DBNull.Value)
+            if (comboBox.SelectedValue == null)
             {
-                return DBNull.Value;
+                return null;
             }
 
             return Convert.ToInt32(comboBox.SelectedValue);
@@ -136,138 +162,222 @@ namespace SchulApp
 
             if (bezeichnung == "")
             {
-                MessageBox.Show("Bitte eine Klassenbezeichnung eingeben.");
+                MessageBox.Show(
+                    "Bitte eine Klassenbezeichnung eingeben."
+                );
+
                 return;
             }
 
             try
             {
-                const string sql = @"
-                    INSERT INTO dbo.Klassen (Bezeichnung, KlassenlehrerId)
-                    VALUES (@Bezeichnung, @KlassenlehrerId);";
+                using SchulAppContext context = new SchulAppContext();
 
-                using SqlConnection connection = Database.GetConnection();
-                using SqlCommand command = new SqlCommand(sql, connection);
+                // Prüft ohne selbst geschriebenes SQL,
+                // ob die Klassenbezeichnung bereits existiert.
+                bool existiertBereits = context.Klassen
+                    .Any(k => k.Bezeichnung == bezeichnung);
 
-                command.Parameters.Add("@Bezeichnung", SqlDbType.NVarChar, 50).Value = bezeichnung;
-                command.Parameters.Add("@KlassenlehrerId", SqlDbType.Int).Value = LehrerParameter(newKlassenlehrer);
+                if (existiertBereits)
+                {
+                    MessageBox.Show(
+                        "Diese Klassenbezeichnung existiert bereits."
+                    );
 
-                connection.Open();
-                command.ExecuteNonQuery();
+                    return;
+                }
+
+                // Erstellt ein neues Klassenobjekt.
+                KlasseModel neueKlasse = new KlasseModel
+                {
+                    Bezeichnung = bezeichnung,
+
+                    KlassenlehrerId =
+                        LehrerIdAusComboBox(newKlassenlehrer)
+                };
+
+                // Markiert die neue Klasse zum Einfügen.
+                context.Klassen.Add(neueKlasse);
+
+                // Entity Framework erstellt das INSERT automatisch.
+                context.SaveChanges();
 
                 newKlasseName.Text = "";
                 newKlassenlehrer.SelectedIndex = 0;
+
                 KlassenListeAktualisieren();
-                MessageBox.Show("Klasse wurde gespeichert.");
+
+                MessageBox.Show(
+                    "Klasse wurde gespeichert."
+                );
             }
-            catch (SqlException ex) when (ex.Number == 2627 || ex.Number == 2601)
+            catch (DbUpdateException ex)
             {
-                MessageBox.Show("Diese Klassenbezeichnung existiert bereits.");
-            }
-            catch (SqlException ex)
-            {
-                MessageBox.Show("Die Klasse konnte nicht gespeichert werden.\n\n" + ex.Message);
+                MessageBox.Show(
+                    "Die Klasse konnte nicht gespeichert werden.\n\n" +
+                    ex.Message
+                );
             }
         }
 
-        private void klassenGrid_SelectionChanged(object sender, EventArgs e)
+        private void klassenGrid_SelectionChanged(
+            object sender,
+            EventArgs e)
         {
             if (klassenGrid.SelectedRows.Count == 0)
             {
                 return;
             }
 
-            DataGridViewRow row = klassenGrid.SelectedRows[0];
+            DataGridViewRow row =
+                klassenGrid.SelectedRows[0];
+
             if (row.Cells["KlassenId"].Value == null)
             {
                 return;
             }
 
-            ausgewaehlteKlassenId = Convert.ToInt32(row.Cells["KlassenId"].Value);
-            editKlasseName.Text = Convert.ToString(row.Cells["Bezeichnung"].Value) ?? "";
-            deleteKlasseName.Text = editKlasseName.Text;
+            ausgewaehlteKlassenId =
+                Convert.ToInt32(
+                    row.Cells["KlassenId"].Value
+                );
 
-            object lehrerId = row.Cells["KlassenlehrerId"].Value;
-            if (lehrerId == null || lehrerId == DBNull.Value)
+            editKlasseName.Text =
+                Convert.ToString(
+                    row.Cells["Bezeichnung"].Value
+                ) ?? "";
+
+            deleteKlasseName.Text =
+                editKlasseName.Text;
+
+            object? lehrerId =
+                row.Cells["KlassenlehrerId"].Value;
+
+            if (lehrerId == null ||
+                lehrerId == DBNull.Value)
             {
                 editKlassenlehrer.SelectedIndex = 0;
             }
             else
             {
-                editKlassenlehrer.SelectedValue = Convert.ToInt32(lehrerId);
+                editKlassenlehrer.SelectedValue =
+                    Convert.ToInt32(lehrerId);
             }
 
             SchuelerDerKlasseLaden();
         }
 
-        private void updateKlasseBtn_Click(object sender, EventArgs e)
+        private void updateKlasseBtn_Click(
+            object sender,
+            EventArgs e)
         {
             if (ausgewaehlteKlassenId == null)
             {
-                MessageBox.Show("Bitte zuerst eine Klasse auswählen.");
+                MessageBox.Show(
+                    "Bitte zuerst eine Klasse auswählen."
+                );
+
                 return;
             }
 
-            string bezeichnung = editKlasseName.Text.Trim();
+            string bezeichnung =
+                editKlasseName.Text.Trim();
+
             if (bezeichnung == "")
             {
-                MessageBox.Show("Bitte eine Klassenbezeichnung eingeben.");
+                MessageBox.Show(
+                    "Bitte eine Klassenbezeichnung eingeben."
+                );
+
                 return;
             }
 
             try
             {
-                const string sql = @"
-                    UPDATE dbo.Klassen
-                    SET Bezeichnung = @Bezeichnung,
-                        KlassenlehrerId = @KlassenlehrerId
-                    WHERE KlassenId = @KlassenId;";
+                using SchulAppContext context =
+                    new SchulAppContext();
 
-                using SqlConnection connection = Database.GetConnection();
-                using SqlCommand command = new SqlCommand(sql, connection);
+                int klassenId =
+                    ausgewaehlteKlassenId.Value;
 
-                command.Parameters.Add("@Bezeichnung", SqlDbType.NVarChar, 50).Value = bezeichnung;
-                command.Parameters.Add("@KlassenlehrerId", SqlDbType.Int).Value = LehrerParameter(editKlassenlehrer);
-                command.Parameters.Add("@KlassenId", SqlDbType.Int).Value = ausgewaehlteKlassenId.Value;
+                // Prüft, ob eine andere Klasse
+                // bereits dieselbe Bezeichnung hat.
+                bool existiertBereits = context.Klassen
+                    .Any(k =>
+                        k.Bezeichnung == bezeichnung &&
+                        k.KlassenId != klassenId
+                    );
 
-                connection.Open();
-                int anzahl = command.ExecuteNonQuery();
-
-                if (anzahl == 0)
+                if (existiertBereits)
                 {
-                    MessageBox.Show("Die Klasse wurde nicht gefunden.");
+                    MessageBox.Show(
+                        "Diese Klassenbezeichnung existiert bereits."
+                    );
+
+                    return;
                 }
-                else
+
+                // Sucht die Klasse anhand des Primärschlüssels.
+                // Entity Framework erstellt die SELECT-Abfrage selbst.
+                KlasseModel? klasse =
+                    context.Klassen.Find(klassenId);
+
+                if (klasse == null)
                 {
-                    MessageBox.Show("Klasse wurde bearbeitet.");
+                    MessageBox.Show(
+                        "Die Klasse wurde nicht gefunden."
+                    );
+
+                    return;
                 }
+
+                // Ändert die Werte am geladenen Objekt.
+                klasse.Bezeichnung = bezeichnung;
+
+                klasse.KlassenlehrerId =
+                    LehrerIdAusComboBox(
+                        editKlassenlehrer
+                    );
+
+                // Erkennt die Änderungen und erstellt
+                // automatisch das UPDATE.
+                context.SaveChanges();
+
+                MessageBox.Show(
+                    "Klasse wurde bearbeitet."
+                );
 
                 KlassenListeAktualisieren();
             }
-            catch (SqlException ex) when (ex.Number == 2627 || ex.Number == 2601)
+            catch (DbUpdateException ex)
             {
-                MessageBox.Show("Diese Klassenbezeichnung existiert bereits.");
-            }
-            catch (SqlException ex)
-            {
-                MessageBox.Show("Die Klasse konnte nicht bearbeitet werden.\n\n" + ex.Message);
+                MessageBox.Show(
+                    "Die Klasse konnte nicht bearbeitet werden.\n\n" +
+                    ex.Message
+                );
             }
         }
 
-        private void deleteKlasseBtn_Click(object sender, EventArgs e)
+        private void deleteKlasseBtn_Click(
+            object sender,
+            EventArgs e)
         {
             if (ausgewaehlteKlassenId == null)
             {
-                MessageBox.Show("Bitte zuerst eine Klasse auswählen.");
+                MessageBox.Show(
+                    "Bitte zuerst eine Klasse auswählen."
+                );
+
                 return;
             }
 
-            DialogResult antwort = MessageBox.Show(
-                $"Soll die Klasse {deleteKlasseName.Text} wirklich gelöscht werden?",
-                "Klasse löschen",
-                MessageBoxButtons.YesNo,
-                MessageBoxIcon.Question
-            );
+            DialogResult antwort =
+                MessageBox.Show(
+                    $"Soll die Klasse {deleteKlasseName.Text} wirklich gelöscht werden?",
+                    "Klasse löschen",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Question
+                );
 
             if (antwort != DialogResult.Yes)
             {
@@ -276,30 +386,44 @@ namespace SchulApp
 
             try
             {
-                const string sql = @"
-                    DELETE FROM dbo.Klassen
-                    WHERE KlassenId = @KlassenId;";
+                using SchulAppContext context =
+                    new SchulAppContext();
 
-                using SqlConnection connection = Database.GetConnection();
-                using SqlCommand command = new SqlCommand(sql, connection);
-                command.Parameters.Add("@KlassenId", SqlDbType.Int).Value = ausgewaehlteKlassenId.Value;
+                // Sucht zuerst die zu löschende Klasse.
+                KlasseModel? klasse =
+                    context.Klassen.Find(
+                        ausgewaehlteKlassenId.Value
+                    );
 
-                connection.Open();
-                command.ExecuteNonQuery();
+                if (klasse == null)
+                {
+                    MessageBox.Show(
+                        "Die Klasse wurde nicht gefunden."
+                    );
+
+                    return;
+                }
+
+                // Markiert die Klasse zum Löschen.
+                context.Klassen.Remove(klasse);
+
+                // Entity Framework erstellt das DELETE automatisch.
+                context.SaveChanges();
 
                 KlassenListeAktualisieren();
-                MessageBox.Show("Klasse wurde gelöscht.");
+
+                MessageBox.Show(
+                    "Klasse wurde gelöscht."
+                );
             }
-            catch (SqlException ex) when (ex.Number == 547)
+            catch (DbUpdateException)
             {
+                // Dieser Fehler tritt zum Beispiel auf,
+                // wenn noch Schüler oder Kurse mit der Klasse verbunden sind.
                 MessageBox.Show(
                     "Diese Klasse kann noch nicht gelöscht werden, weil ihr Schüler oder Kurse zugeordnet sind.\n\n" +
                     "Ordne die Schüler zuerst einer anderen Klasse zu und entferne oder ändere die Kurse."
                 );
-            }
-            catch (SqlException ex)
-            {
-                MessageBox.Show("Die Klasse konnte nicht gelöscht werden.\n\n" + ex.Message);
             }
         }
 
@@ -313,39 +437,55 @@ namespace SchulApp
 
             try
             {
-                const string sql = @"
-                    SELECT SchuelerId, Name
-                    FROM dbo.Schueler
-                    WHERE KlasseId = @KlassenId
-                    ORDER BY SchuelerId;";
+                using SchulAppContext context =
+                    new SchulAppContext();
 
-                using SqlConnection connection = Database.GetConnection();
-                using SqlCommand command = new SqlCommand(sql, connection);
-                command.Parameters.Add("@KlassenId", SqlDbType.Int).Value = ausgewaehlteKlassenId.Value;
-                using SqlDataAdapter adapter = new SqlDataAdapter(command);
+                int klassenId =
+                    ausgewaehlteKlassenId.Value;
 
-                DataTable schueler = new DataTable();
-                adapter.Fill(schueler);
-                klassenSchuelerGrid.DataSource = schueler;
+                // Lädt nur die Schüler der ausgewählten Klasse.
+                // WHERE und ORDER BY werden automatisch als SQL erzeugt.
+                var schueler = context.Schueler
+                    .AsNoTracking()
+                    .Where(s => s.KlasseId == klassenId)
+                    .OrderBy(s => s.SchuelerId)
+                    .Select(s => new
+                    {
+                        s.SchuelerId,
+                        s.Name
+                    })
+                    .ToList();
+
+                klassenSchuelerGrid.DataSource =
+                    schueler;
 
                 if (klassenSchuelerGrid.Columns.Contains("SchuelerId"))
                 {
-                    klassenSchuelerGrid.Columns["SchuelerId"].HeaderText = "ID";
-                    klassenSchuelerGrid.Columns["SchuelerId"].Width = 55;
+                    klassenSchuelerGrid.Columns["SchuelerId"].HeaderText =
+                        "ID";
+
+                    klassenSchuelerGrid.Columns["SchuelerId"].Width =
+                        55;
                 }
 
                 if (klassenSchuelerGrid.Columns.Contains("Name"))
                 {
-                    klassenSchuelerGrid.Columns["Name"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+                    klassenSchuelerGrid.Columns["Name"].AutoSizeMode =
+                        DataGridViewAutoSizeColumnMode.Fill;
                 }
             }
-            catch (SqlException ex)
+            catch (Exception ex)
             {
-                MessageBox.Show("Die Schüler der Klasse konnten nicht geladen werden.\n\n" + ex.Message);
+                MessageBox.Show(
+                    "Die Schüler der Klasse konnten nicht geladen werden.\n\n" +
+                    ex.Message
+                );
             }
         }
 
-        private void reloadBtn_Click(object sender, EventArgs e)
+        private void reloadBtn_Click(
+            object sender,
+            EventArgs e)
         {
             LehrerLaden();
             KlassenListeAktualisieren();
@@ -356,13 +496,16 @@ namespace SchulApp
             ausgewaehlteKlassenId = null;
             editKlasseName.Text = "";
             deleteKlasseName.Text = "";
+
             if (editKlassenlehrer.Items.Count > 0)
             {
                 editKlassenlehrer.SelectedIndex = 0;
             }
         }
 
-        private void back_Click(object sender, EventArgs e)
+        private void back_Click(
+            object sender,
+            EventArgs e)
         {
             Close();
         }

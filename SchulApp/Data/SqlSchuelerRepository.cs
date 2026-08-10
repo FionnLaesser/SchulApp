@@ -1,6 +1,5 @@
-using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using SchulApp.Models;
-using System.Data;
 
 namespace SchulApp.Data
 {
@@ -8,88 +7,86 @@ namespace SchulApp.Data
     {
         public IReadOnlyList<SchuelerModel> AlleLaden()
         {
-            const string sql = @"
-                SELECT
-                    s.SchuelerId,
-                    s.Name,
-                    s.KlasseId,
-                    k.Bezeichnung AS Klasse
-                FROM dbo.Schueler AS s
-                INNER JOIN dbo.Klassen AS k
-                    ON s.KlasseId = k.KlassenId
-                ORDER BY s.Name;";
+            // Erstellt den Entity-Framework-Datenbankkontext
+            using SchulAppContext context = new SchulAppContext();
 
-            List<SchuelerModel> ergebnis = new List<SchuelerModel>();
-
-            using SqlConnection connection = Database.GetConnection();
-            using SqlCommand command = new SqlCommand(sql, connection);
-
-            connection.Open();
-            using SqlDataReader reader = command.ExecuteReader();
-
-            while (reader.Read())
-            {
-                ergebnis.Add(new SchuelerModel
-                {
-                    SchuelerId = reader.GetInt32(reader.GetOrdinal("SchuelerId")),
-                    Name = reader.GetString(reader.GetOrdinal("Name")),
-                    KlasseId = reader.GetInt32(reader.GetOrdinal("KlasseId")),
-                    Klasse = reader.GetString(reader.GetOrdinal("Klasse"))
-                });
-            }
+            // Lädt alle Schüler inklusive ihrer zugehörigen Klasse.
+            // Entity Framework erstellt SELECT und JOIN automatisch.
+            List<SchuelerModel> ergebnis = context.Schueler
+                .Include(s => s.Klasse)
+                .AsNoTracking()
+                .OrderBy(s => s.Name)
+                .ToList();
 
             return ergebnis;
         }
 
         public int Erstellen(string name, int klasseId)
         {
-            const string sql = @"
-                INSERT INTO dbo.Schueler (Name, KlasseId)
-                OUTPUT INSERTED.SchuelerId
-                VALUES (@Name, @KlasseId);";
+            using SchulAppContext context = new SchulAppContext();
 
-            using SqlConnection connection = Database.GetConnection();
-            using SqlCommand command = new SqlCommand(sql, connection);
+            // Erstellt ein neues Schüler-Objekt
+            SchuelerModel neuerSchueler = new SchuelerModel
+            {
+                Name = name,
+                KlasseId = klasseId
+            };
 
-            command.Parameters.Add("@Name", SqlDbType.NVarChar, 100).Value = name;
-            command.Parameters.Add("@KlasseId", SqlDbType.Int).Value = klasseId;
+            // Fügt den Schüler zu Entity Framework hinzu
+            context.Schueler.Add(neuerSchueler);
 
-            connection.Open();
-            return Convert.ToInt32(command.ExecuteScalar());
+            // Entity Framework erstellt das INSERT automatisch
+            context.SaveChanges();
+
+            // Nach SaveChanges enthält das Objekt die von der
+            // Datenbank erstellte SchuelerId
+            return neuerSchueler.SchuelerId;
         }
 
         public bool Bearbeiten(int schuelerId, string name, int klasseId)
         {
-            const string sql = @"
-                UPDATE dbo.Schueler
-                SET Name = @Name,
-                    KlasseId = @KlasseId
-                WHERE SchuelerId = @SchuelerId;";
+            using SchulAppContext context = new SchulAppContext();
 
-            using SqlConnection connection = Database.GetConnection();
-            using SqlCommand command = new SqlCommand(sql, connection);
+            // Sucht den Schüler anhand seiner ID
+            SchuelerModel? schueler = context.Schueler.Find(schuelerId);
 
-            command.Parameters.Add("@Name", SqlDbType.NVarChar, 100).Value = name;
-            command.Parameters.Add("@KlasseId", SqlDbType.Int).Value = klasseId;
-            command.Parameters.Add("@SchuelerId", SqlDbType.Int).Value = schuelerId;
+            // Schüler existiert nicht
+            if (schueler == null)
+            {
+                return false;
+            }
 
-            connection.Open();
-            return command.ExecuteNonQuery() == 1;
+            // Ändert die Daten am geladenen Objekt
+            schueler.Name = name;
+            schueler.KlasseId = klasseId;
+
+            // Entity Framework erkennt die Änderungen
+            // und erstellt das UPDATE automatisch
+            context.SaveChanges();
+
+            return true;
         }
 
         public bool Loeschen(int schuelerId)
         {
-            const string sql = @"
-                DELETE FROM dbo.Schueler
-                WHERE SchuelerId = @SchuelerId;";
+            using SchulAppContext context = new SchulAppContext();
 
-            using SqlConnection connection = Database.GetConnection();
-            using SqlCommand command = new SqlCommand(sql, connection);
+            // Sucht zuerst den Schüler
+            SchuelerModel? schueler = context.Schueler.Find(schuelerId);
 
-            command.Parameters.Add("@SchuelerId", SqlDbType.Int).Value = schuelerId;
+            // Schüler wurde nicht gefunden
+            if (schueler == null)
+            {
+                return false;
+            }
 
-            connection.Open();
-            return command.ExecuteNonQuery() == 1;
+            // Markiert den Schüler zum Löschen
+            context.Schueler.Remove(schueler);
+
+            // Entity Framework erstellt das DELETE automatisch
+            context.SaveChanges();
+
+            return true;
         }
     }
 }

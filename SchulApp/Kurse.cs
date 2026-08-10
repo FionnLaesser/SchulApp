@@ -1,5 +1,6 @@
-using Microsoft.Data.SqlClient;
-using System.Data;
+using Microsoft.EntityFrameworkCore;
+using SchulApp.Data;
+using SchulApp.Models;
 
 namespace SchulApp
 {
@@ -19,50 +20,80 @@ namespace SchulApp
         {
             try
             {
-                const string klassenSql = @"
-                    SELECT KlassenId, Bezeichnung
-                    FROM dbo.Klassen
-                    ORDER BY KlassenId;";
+                // Erstellt den Entity-Framework-Datenbankkontext
+                using SchulAppContext context = new SchulAppContext();
 
-                const string lehrerSql = @"
-                    SELECT LehrerId, Name
-                    FROM dbo.Lehrer
-                    ORDER BY LehrerId;";
+                // Lädt alle Klassen ohne selbst geschriebenes SELECT
+                var klassen = context.Klassen
+                    .AsNoTracking()
+                    .OrderBy(k => k.KlassenId)
+                    .Select(k => new
+                    {
+                        k.KlassenId,
+                        k.Bezeichnung
+                    })
+                    .ToList();
 
-                using SqlConnection connection = Database.GetConnection();
-                connection.Open();
-
-                using SqlDataAdapter klassenAdapter = new SqlDataAdapter(klassenSql, connection);
-                DataTable klassen = new DataTable();
-                klassenAdapter.Fill(klassen);
-
-                using SqlDataAdapter lehrerAdapter = new SqlDataAdapter(lehrerSql, connection);
-                DataTable lehrer = new DataTable();
-                lehrerAdapter.Fill(lehrer);
+                // Lädt alle Lehrer ohne selbst geschriebenes SELECT
+                var lehrer = context.Lehrer
+                    .AsNoTracking()
+                    .OrderBy(l => l.LehrerId)
+                    .Select(l => new
+                    {
+                        l.LehrerId,
+                        l.Name
+                    })
+                    .ToList();
 
                 newKursKlasse.DisplayMember = "Bezeichnung";
                 newKursKlasse.ValueMember = "KlassenId";
-                newKursKlasse.DataSource = klassen.Copy();
+                newKursKlasse.DataSource = klassen;
 
                 editKursKlasse.DisplayMember = "Bezeichnung";
                 editKursKlasse.ValueMember = "KlassenId";
-                editKursKlasse.DataSource = klassen.Copy();
+
+                // Eigene Liste für die zweite ComboBox
+                editKursKlasse.DataSource = context.Klassen
+                    .AsNoTracking()
+                    .OrderBy(k => k.KlassenId)
+                    .Select(k => new
+                    {
+                        k.KlassenId,
+                        k.Bezeichnung
+                    })
+                    .ToList();
 
                 newKursLehrer.DisplayMember = "Name";
                 newKursLehrer.ValueMember = "LehrerId";
-                newKursLehrer.DataSource = lehrer.Copy();
+                newKursLehrer.DataSource = lehrer;
 
                 editKursLehrer.DisplayMember = "Name";
                 editKursLehrer.ValueMember = "LehrerId";
-                editKursLehrer.DataSource = lehrer.Copy();
 
-                bool kannSpeichern = klassen.Rows.Count > 0 && lehrer.Rows.Count > 0;
+                // Eigene Liste für die zweite ComboBox
+                editKursLehrer.DataSource = context.Lehrer
+                    .AsNoTracking()
+                    .OrderBy(l => l.LehrerId)
+                    .Select(l => new
+                    {
+                        l.LehrerId,
+                        l.Name
+                    })
+                    .ToList();
+
+                bool kannSpeichern =
+                    klassen.Count > 0 &&
+                    lehrer.Count > 0;
+
                 createKursBtn.Enabled = kannSpeichern;
                 updateKursBtn.Enabled = kannSpeichern;
             }
-            catch (SqlException ex)
+            catch (Exception ex)
             {
-                MessageBox.Show("Klassen und Lehrer konnten nicht geladen werden.\n\n" + ex.Message);
+                MessageBox.Show(
+                    "Klassen und Lehrer konnten nicht geladen werden.\n\n" +
+                    ex.Message
+                );
             }
         }
 
@@ -70,26 +101,28 @@ namespace SchulApp
         {
             try
             {
-                const string sql = @"
-                    SELECT
-                        ku.KursId,
-                        ku.Name,
-                        ku.KlasseId,
-                        kl.Bezeichnung AS Klasse,
-                        ku.LehrerId,
-                        l.Name AS Lehrer
-                    FROM dbo.Kurse AS ku
-                    INNER JOIN dbo.Klassen AS kl
-                        ON ku.KlasseId = kl.KlassenId
-                    INNER JOIN dbo.Lehrer AS l
-                        ON ku.LehrerId = l.LehrerId
-                    ORDER BY ku.Name, kl.KlassenId;";
+                using SchulAppContext context = new SchulAppContext();
 
-                using SqlConnection connection = Database.GetConnection();
-                using SqlDataAdapter adapter = new SqlDataAdapter(sql, connection);
+                // Lädt die Kurse inklusive Klassen- und Lehrerinformationen.
+                // Die benötigten JOINs erstellt Entity Framework automatisch.
+                var kurse = context.Kurse
+                    .AsNoTracking()
+                    .OrderBy(k => k.Name)
+                    .ThenBy(k => k.KlasseId)
+                    .Select(k => new
+                    {
+                        k.KursId,
+                        k.Name,
+                        k.KlasseId,
 
-                DataTable kurse = new DataTable();
-                adapter.Fill(kurse);
+                        Klasse = k.Klasse.Bezeichnung,
+
+                        k.LehrerId,
+
+                        Lehrer = k.Lehrer.Name
+                    })
+                    .ToList();
+
                 kurseGrid.DataSource = kurse;
 
                 if (kurseGrid.Columns.Contains("KursId"))
@@ -110,7 +143,8 @@ namespace SchulApp
 
                 if (kurseGrid.Columns.Contains("Name"))
                 {
-                    kurseGrid.Columns["Name"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+                    kurseGrid.Columns["Name"].AutoSizeMode =
+                        DataGridViewAutoSizeColumnMode.Fill;
                 }
 
                 if (kurseGrid.Columns.Contains("Klasse"))
@@ -126,13 +160,22 @@ namespace SchulApp
                 kurseGrid.ClearSelection();
                 AuswahlZuruecksetzen();
             }
-            catch (SqlException ex)
+            catch (Exception ex)
             {
-                MessageBox.Show("Die Kurse konnten nicht geladen werden.\n\n" + ex.Message);
+                MessageBox.Show(
+                    "Die Kurse konnten nicht geladen werden.\n\n" +
+                    ex.Message
+                );
             }
         }
 
-        private bool NeueDatenPruefen(TextBox nameBox, ComboBox klasseBox, ComboBox lehrerBox, out string name, out int klasseId, out int lehrerId)
+        private bool NeueDatenPruefen(
+            TextBox nameBox,
+            ComboBox klasseBox,
+            ComboBox lehrerBox,
+            out string name,
+            out int klasseId,
+            out int lehrerId)
         {
             name = nameBox.Text.Trim();
             klasseId = 0;
@@ -140,129 +183,210 @@ namespace SchulApp
 
             if (name == "")
             {
-                MessageBox.Show("Bitte einen Kursnamen eingeben.");
+                MessageBox.Show(
+                    "Bitte einen Kursnamen eingeben."
+                );
+
                 return false;
             }
 
             if (klasseBox.SelectedValue == null)
             {
-                MessageBox.Show("Bitte eine Klasse auswählen.");
+                MessageBox.Show(
+                    "Bitte eine Klasse auswählen."
+                );
+
                 return false;
             }
 
             if (lehrerBox.SelectedValue == null)
             {
-                MessageBox.Show("Bitte einen Lehrer auswählen.");
+                MessageBox.Show(
+                    "Bitte einen Lehrer auswählen."
+                );
+
                 return false;
             }
 
-            klasseId = Convert.ToInt32(klasseBox.SelectedValue);
-            lehrerId = Convert.ToInt32(lehrerBox.SelectedValue);
+            klasseId =
+                Convert.ToInt32(klasseBox.SelectedValue);
+
+            lehrerId =
+                Convert.ToInt32(lehrerBox.SelectedValue);
+
             return true;
         }
 
-        private void createKursBtn_Click(object sender, EventArgs e)
+        private void createKursBtn_Click(
+            object sender,
+            EventArgs e)
         {
-            if (!NeueDatenPruefen(newKursName, newKursKlasse, newKursLehrer, out string name, out int klasseId, out int lehrerId))
+            if (!NeueDatenPruefen(
+                newKursName,
+                newKursKlasse,
+                newKursLehrer,
+                out string name,
+                out int klasseId,
+                out int lehrerId))
             {
                 return;
             }
 
             try
             {
-                const string sql = @"
-                    INSERT INTO dbo.Kurse (Name, KlasseId, LehrerId)
-                    VALUES (@Name, @KlasseId, @LehrerId);";
+                using SchulAppContext context =
+                    new SchulAppContext();
 
-                using SqlConnection connection = Database.GetConnection();
-                using SqlCommand command = new SqlCommand(sql, connection);
+                // Erstellt einen neuen Kurs als C#-Objekt
+                KursModel neuerKurs = new KursModel
+                {
+                    Name = name,
+                    KlasseId = klasseId,
+                    LehrerId = lehrerId
+                };
 
-                command.Parameters.Add("@Name", SqlDbType.NVarChar, 100).Value = name;
-                command.Parameters.Add("@KlasseId", SqlDbType.Int).Value = klasseId;
-                command.Parameters.Add("@LehrerId", SqlDbType.Int).Value = lehrerId;
+                // Markiert den Kurs zum Einfügen
+                context.Kurse.Add(neuerKurs);
 
-                connection.Open();
-                command.ExecuteNonQuery();
+                // Entity Framework erstellt das INSERT automatisch
+                context.SaveChanges();
 
                 newKursName.Text = "";
+
                 KurseListeAktualisieren();
-                MessageBox.Show("Kurs wurde gespeichert.");
+
+                MessageBox.Show(
+                    "Kurs wurde gespeichert."
+                );
             }
-            catch (SqlException ex)
+            catch (DbUpdateException ex)
             {
-                MessageBox.Show("Der Kurs konnte nicht gespeichert werden.\n\n" + ex.Message);
+                MessageBox.Show(
+                    "Der Kurs konnte nicht gespeichert werden.\n\n" +
+                    ex.Message
+                );
             }
         }
 
-        private void kurseGrid_SelectionChanged(object sender, EventArgs e)
+        private void kurseGrid_SelectionChanged(
+            object sender,
+            EventArgs e)
         {
             if (kurseGrid.SelectedRows.Count == 0)
             {
                 return;
             }
 
-            DataGridViewRow row = kurseGrid.SelectedRows[0];
+            DataGridViewRow row =
+                kurseGrid.SelectedRows[0];
+
             if (row.Cells["KursId"].Value == null)
             {
                 return;
             }
 
-            ausgewaehlteKursId = Convert.ToInt32(row.Cells["KursId"].Value);
-            string name = Convert.ToString(row.Cells["Name"].Value) ?? "";
+            ausgewaehlteKursId =
+                Convert.ToInt32(
+                    row.Cells["KursId"].Value
+                );
+
+            string name =
+                Convert.ToString(
+                    row.Cells["Name"].Value
+                ) ?? "";
 
             editKursName.Text = name;
             deleteKursName.Text = name;
-            editKursKlasse.SelectedValue = Convert.ToInt32(row.Cells["KlasseId"].Value);
-            editKursLehrer.SelectedValue = Convert.ToInt32(row.Cells["LehrerId"].Value);
+
+            editKursKlasse.SelectedValue =
+                Convert.ToInt32(
+                    row.Cells["KlasseId"].Value
+                );
+
+            editKursLehrer.SelectedValue =
+                Convert.ToInt32(
+                    row.Cells["LehrerId"].Value
+                );
         }
 
-        private void updateKursBtn_Click(object sender, EventArgs e)
+        private void updateKursBtn_Click(
+            object sender,
+            EventArgs e)
         {
             if (ausgewaehlteKursId == null)
             {
-                MessageBox.Show("Bitte zuerst einen Kurs auswählen.");
+                MessageBox.Show(
+                    "Bitte zuerst einen Kurs auswählen."
+                );
+
                 return;
             }
 
-            if (!NeueDatenPruefen(editKursName, editKursKlasse, editKursLehrer, out string name, out int klasseId, out int lehrerId))
+            if (!NeueDatenPruefen(
+                editKursName,
+                editKursKlasse,
+                editKursLehrer,
+                out string name,
+                out int klasseId,
+                out int lehrerId))
             {
                 return;
             }
 
             try
             {
-                const string sql = @"
-                    UPDATE dbo.Kurse
-                    SET Name = @Name,
-                        KlasseId = @KlasseId,
-                        LehrerId = @LehrerId
-                    WHERE KursId = @KursId;";
+                using SchulAppContext context =
+                    new SchulAppContext();
 
-                using SqlConnection connection = Database.GetConnection();
-                using SqlCommand command = new SqlCommand(sql, connection);
+                // Sucht den Kurs anhand seiner ID
+                KursModel? kurs =
+                    context.Kurse.Find(
+                        ausgewaehlteKursId.Value
+                    );
 
-                command.Parameters.Add("@Name", SqlDbType.NVarChar, 100).Value = name;
-                command.Parameters.Add("@KlasseId", SqlDbType.Int).Value = klasseId;
-                command.Parameters.Add("@LehrerId", SqlDbType.Int).Value = lehrerId;
-                command.Parameters.Add("@KursId", SqlDbType.Int).Value = ausgewaehlteKursId.Value;
+                if (kurs == null)
+                {
+                    MessageBox.Show(
+                        "Der Kurs wurde nicht gefunden."
+                    );
 
-                connection.Open();
-                int anzahl = command.ExecuteNonQuery();
+                    return;
+                }
 
-                MessageBox.Show(anzahl == 1 ? "Kurs wurde bearbeitet." : "Der Kurs wurde nicht gefunden.");
+                // Ändert die Eigenschaften am geladenen Objekt
+                kurs.Name = name;
+                kurs.KlasseId = klasseId;
+                kurs.LehrerId = lehrerId;
+
+                // Entity Framework erkennt die Änderungen
+                // und erstellt das UPDATE automatisch
+                context.SaveChanges();
+
+                MessageBox.Show(
+                    "Kurs wurde bearbeitet."
+                );
+
                 KurseListeAktualisieren();
             }
-            catch (SqlException ex)
+            catch (DbUpdateException ex)
             {
-                MessageBox.Show("Der Kurs konnte nicht bearbeitet werden.\n\n" + ex.Message);
+                MessageBox.Show(
+                    "Der Kurs konnte nicht bearbeitet werden.\n\n" +
+                    ex.Message
+                );
             }
         }
 
-        private void deleteKursBtn_Click(object sender, EventArgs e)
+        private void deleteKursBtn_Click(
+            object sender,
+            EventArgs e)
         {
             if (ausgewaehlteKursId == null)
             {
-                MessageBox.Show("Bitte zuerst einen Kurs auswählen.");
+                MessageBox.Show(
+                    "Bitte zuerst einen Kurs auswählen."
+                );
+
                 return;
             }
 
@@ -280,34 +404,50 @@ namespace SchulApp
 
             try
             {
-                const string sql = @"
-                    DELETE FROM dbo.Kurse
-                    WHERE KursId = @KursId;";
+                using SchulAppContext context =
+                    new SchulAppContext();
 
-                using SqlConnection connection = Database.GetConnection();
-                using SqlCommand command = new SqlCommand(sql, connection);
-                command.Parameters.Add("@KursId", SqlDbType.Int).Value = ausgewaehlteKursId.Value;
+                // Sucht den Kurs in der Datenbank
+                KursModel? kurs =
+                    context.Kurse.Find(
+                        ausgewaehlteKursId.Value
+                    );
 
-                connection.Open();
-                command.ExecuteNonQuery();
+                if (kurs == null)
+                {
+                    MessageBox.Show(
+                        "Der Kurs wurde nicht gefunden."
+                    );
+
+                    return;
+                }
+
+                // Markiert den Kurs zum Löschen
+                context.Kurse.Remove(kurs);
+
+                // Entity Framework erstellt das DELETE automatisch
+                context.SaveChanges();
 
                 KurseListeAktualisieren();
-                MessageBox.Show("Kurs wurde gelöscht.");
+
+                MessageBox.Show(
+                    "Kurs wurde gelöscht."
+                );
             }
-            catch (SqlException ex) when (ex.Number == 547)
+            catch (DbUpdateException)
             {
+                // Kann auftreten, wenn der Kurs noch
+                // von einem Stundenplaneintrag verwendet wird
                 MessageBox.Show(
                     "Dieser Kurs kann noch nicht gelöscht werden, weil er im Stundenplan verwendet wird.\n\n" +
                     "Lösche oder ändere zuerst die entsprechenden Stundenplaneinträge."
                 );
             }
-            catch (SqlException ex)
-            {
-                MessageBox.Show("Der Kurs konnte nicht gelöscht werden.\n\n" + ex.Message);
-            }
         }
 
-        private void reloadBtn_Click(object sender, EventArgs e)
+        private void reloadBtn_Click(
+            object sender,
+            EventArgs e)
         {
             AuswahlDatenLaden();
             KurseListeAktualisieren();
@@ -320,7 +460,9 @@ namespace SchulApp
             deleteKursName.Text = "";
         }
 
-        private void back_Click(object sender, EventArgs e)
+        private void back_Click(
+            object sender,
+            EventArgs e)
         {
             Close();
         }
