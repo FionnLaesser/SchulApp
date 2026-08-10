@@ -67,9 +67,30 @@ namespace SchulApp
             labelNeu.AutoSize = true;
             labelNeu.Location = new Point(12, 12);
             labelNeu.Name = "labelNeu";
-            labelNeu.Size = new Size(144, 15);
+            labelNeu.Size = new Size(141, 15);
             labelNeu.TabIndex = 1;
             labelNeu.Text = "Neuen Lehrer hinzufügen";
+            // 
+            // newTeacherName
+            // 
+            newTeacherName.Location = new Point(12, 55);
+            newTeacherName.Name = "newTeacherName";
+            newTeacherName.Size = new Size(205, 23);
+            newTeacherName.TabIndex = 3;
+            // 
+            // newTeacherEmail
+            // 
+            newTeacherEmail.Location = new Point(12, 101);
+            newTeacherEmail.Name = "newTeacherEmail";
+            newTeacherEmail.Size = new Size(205, 23);
+            newTeacherEmail.TabIndex = 5;
+            // 
+            // newTeacherTelefon
+            // 
+            newTeacherTelefon.Location = new Point(12, 147);
+            newTeacherTelefon.Name = "newTeacherTelefon";
+            newTeacherTelefon.Size = new Size(205, 23);
+            newTeacherTelefon.TabIndex = 7;
             // 
             // labelNeuName
             // 
@@ -80,13 +101,6 @@ namespace SchulApp
             labelNeuName.TabIndex = 2;
             labelNeuName.Text = "Name";
             // 
-            // newTeacherName
-            // 
-            newTeacherName.Location = new Point(12, 55);
-            newTeacherName.Name = "newTeacherName";
-            newTeacherName.Size = new Size(205, 23);
-            newTeacherName.TabIndex = 3;
-            // 
             // labelNeuEmail
             // 
             labelNeuEmail.AutoSize = true;
@@ -96,28 +110,14 @@ namespace SchulApp
             labelNeuEmail.TabIndex = 4;
             labelNeuEmail.Text = "E-Mail";
             // 
-            // newTeacherEmail
-            // 
-            newTeacherEmail.Location = new Point(12, 101);
-            newTeacherEmail.Name = "newTeacherEmail";
-            newTeacherEmail.Size = new Size(205, 23);
-            newTeacherEmail.TabIndex = 5;
-            // 
             // labelNeuTelefon
             // 
             labelNeuTelefon.AutoSize = true;
             labelNeuTelefon.Location = new Point(12, 129);
             labelNeuTelefon.Name = "labelNeuTelefon";
-            labelNeuTelefon.Size = new Size(45, 15);
+            labelNeuTelefon.Size = new Size(46, 15);
             labelNeuTelefon.TabIndex = 6;
             labelNeuTelefon.Text = "Telefon";
-            // 
-            // newTeacherTelefon
-            // 
-            newTeacherTelefon.Location = new Point(12, 147);
-            newTeacherTelefon.Name = "newTeacherTelefon";
-            newTeacherTelefon.Size = new Size(205, 23);
-            newTeacherTelefon.TabIndex = 7;
             // 
             // OKnewTeacherBtn
             // 
@@ -134,18 +134,9 @@ namespace SchulApp
             labelBearbeiten.AutoSize = true;
             labelBearbeiten.Location = new Point(12, 191);
             labelBearbeiten.Name = "labelBearbeiten";
-            labelBearbeiten.Size = new Size(151, 15);
+            labelBearbeiten.Size = new Size(158, 15);
             labelBearbeiten.TabIndex = 9;
             labelBearbeiten.Text = "Ausgewählten Lehrer ändern";
-            // 
-            // labelAktuell
-            // 
-            labelAktuell.AutoSize = true;
-            labelAktuell.Location = new Point(12, 214);
-            labelAktuell.Name = "labelAktuell";
-            labelAktuell.Size = new Size(91, 15);
-            labelAktuell.TabIndex = 10;
-            labelAktuell.Text = "Aktueller Name";
             // 
             // currentTeacherName
             // 
@@ -155,21 +146,44 @@ namespace SchulApp
             currentTeacherName.Size = new Size(205, 23);
             currentTeacherName.TabIndex = 11;
             // 
-            // labelEditName
-            // 
-            labelEditName.AutoSize = true;
-            labelEditName.Location = new Point(12, 260);
-            labelEditName.Name = "labelEditName";
-            labelEditName.Size = new Size(68, 15);
-            labelEditName.TabIndex = 12;
-            labelEditName.Text = "Neuer Name";
-            // 
             // editTeacherName
             // 
             editTeacherName.Location = new Point(12, 278);
             editTeacherName.Name = "editTeacherName";
             editTeacherName.Size = new Size(205, 23);
             editTeacherName.TabIndex = 13;
+            // 
+            // editTeacherEmail
+            // 
+            editTeacherEmail.Location = new Point(12, 324);
+            editTeacherEmail.Name = "editTeacherEmail";
+            editTeacherEmail.Size = new Size(205, 23);
+            editTeacherEmail.TabIndex = 15;
+            // 
+            // editTeacherTelefon
+            // 
+            editTeacherTelefon.Location = new Point(12, 370);
+            editTeacherTelefon.Name = "editTeacherTelefon";
+            editTeacherTelefon.Size = new Size(205, 23);
+            editTeacherTelefon.TabIndex = 17;
+            // 
+            // labelAktuell
+            // 
+            labelAktuell.AutoSize = true;
+            labelAktuell.Location = new Point(12, 214);
+            labelAktuell.Name = "labelAktuell";
+            labelAktuell.Size = new Size(89, 15);
+            labelAktuell.TabIndex = 10;
+            labelAktuell.Text = "Aktueller Name";
+            // 
+            // labelEditName
+            // 
+            labelEditName.AutoSize = true;
+            labelEditName.Location = new Point(12, 260);
+            labelEditName.Name = "labelEditName";
+            labelEditName.Size = new Size(74, 15);
+            labelEditName.TabIndex = 12;
+            labelEditName.Text = "Neuer Name";
             // 
             // labelEditEmail
             // 
@@ -180,28 +194,14 @@ namespace SchulApp
             labelEditEmail.TabIndex = 14;
             labelEditEmail.Text = "E-Mail";
             // 
-            // editTeacherEmail
-            // 
-            editTeacherEmail.Location = new Point(12, 324);
-            editTeacherEmail.Name = "editTeacherEmail";
-            editTeacherEmail.Size = new Size(205, 23);
-            editTeacherEmail.TabIndex = 15;
-            // 
             // labelEditTelefon
             // 
             labelEditTelefon.AutoSize = true;
             labelEditTelefon.Location = new Point(12, 352);
             labelEditTelefon.Name = "labelEditTelefon";
-            labelEditTelefon.Size = new Size(45, 15);
+            labelEditTelefon.Size = new Size(46, 15);
             labelEditTelefon.TabIndex = 16;
             labelEditTelefon.Text = "Telefon";
-            // 
-            // editTeacherTelefon
-            // 
-            editTeacherTelefon.Location = new Point(12, 370);
-            editTeacherTelefon.Name = "editTeacherTelefon";
-            editTeacherTelefon.Size = new Size(205, 23);
-            editTeacherTelefon.TabIndex = 17;
             // 
             // OKchangeTeacherBtn
             // 
@@ -218,7 +218,7 @@ namespace SchulApp
             labelLoeschen.AutoSize = true;
             labelLoeschen.Location = new Point(12, 414);
             labelLoeschen.Name = "labelLoeschen";
-            labelLoeschen.Size = new Size(176, 15);
+            labelLoeschen.Size = new Size(162, 15);
             labelLoeschen.TabIndex = 19;
             labelLoeschen.Text = "Ausgewählten Lehrer löschen";
             // 
@@ -255,7 +255,6 @@ namespace SchulApp
             lehrerGrid.AllowUserToAddRows = false;
             lehrerGrid.AllowUserToDeleteRows = false;
             lehrerGrid.AllowUserToResizeRows = false;
-            lehrerGrid.BackgroundColor = SystemColors.Window;
             lehrerGrid.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             lehrerGrid.Location = new Point(350, 42);
             lehrerGrid.MultiSelect = false;
@@ -272,18 +271,9 @@ namespace SchulApp
             labelInfo.AutoSize = true;
             labelInfo.Location = new Point(350, 301);
             labelInfo.Name = "labelInfo";
-            labelInfo.Size = new Size(207, 15);
+            labelInfo.Size = new Size(208, 15);
             labelInfo.TabIndex = 24;
             labelInfo.Text = "Information zum ausgewählten Lehrer";
-            // 
-            // labelInfoTitel
-            // 
-            labelInfoTitel.AutoSize = true;
-            labelInfoTitel.Location = new Point(350, 324);
-            labelInfoTitel.Name = "labelInfoTitel";
-            labelInfoTitel.Size = new Size(29, 15);
-            labelInfoTitel.TabIndex = 25;
-            labelInfoTitel.Text = "Titel";
             // 
             // infoTitel
             // 
@@ -293,15 +283,6 @@ namespace SchulApp
             infoTitel.Size = new Size(165, 23);
             infoTitel.TabIndex = 26;
             // 
-            // labelInformation
-            // 
-            labelInformation.AutoSize = true;
-            labelInformation.Location = new Point(521, 324);
-            labelInformation.Name = "labelInformation";
-            labelInformation.Size = new Size(69, 15);
-            labelInformation.TabIndex = 27;
-            labelInformation.Text = "Information";
-            // 
             // info
             // 
             info.Location = new Point(521, 342);
@@ -309,6 +290,24 @@ namespace SchulApp
             info.PlaceholderText = "z.B. Mathematik";
             info.Size = new Size(270, 23);
             info.TabIndex = 28;
+            // 
+            // labelInfoTitel
+            // 
+            labelInfoTitel.AutoSize = true;
+            labelInfoTitel.Location = new Point(350, 324);
+            labelInfoTitel.Name = "labelInfoTitel";
+            labelInfoTitel.Size = new Size(30, 15);
+            labelInfoTitel.TabIndex = 25;
+            labelInfoTitel.Text = "Titel";
+            // 
+            // labelInformation
+            // 
+            labelInformation.AutoSize = true;
+            labelInformation.Location = new Point(521, 324);
+            labelInformation.Name = "labelInformation";
+            labelInformation.Size = new Size(70, 15);
+            labelInformation.TabIndex = 27;
+            labelInformation.Text = "Information";
             // 
             // OKchangingInfo
             // 
@@ -325,7 +324,6 @@ namespace SchulApp
             lehrerInfoGrid.AllowUserToAddRows = false;
             lehrerInfoGrid.AllowUserToDeleteRows = false;
             lehrerInfoGrid.AllowUserToResizeRows = false;
-            lehrerInfoGrid.BackgroundColor = SystemColors.Window;
             lehrerInfoGrid.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             lehrerInfoGrid.Location = new Point(350, 376);
             lehrerInfoGrid.MultiSelect = false;

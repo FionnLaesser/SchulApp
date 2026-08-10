@@ -183,6 +183,29 @@ BEGIN
 END;
 GO
 
+IF OBJECT_ID(N'dbo.Einstellung', N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.Einstellung
+    (
+        Id INT PRIMARY KEY,
+        HintergrundFarbe INT NOT NULL,
+        TextFarbe INT NOT NULL
+    );
+
+    INSERT INTO dbo.Einstellung
+    (
+        Id,
+        HintergrundFarbe,
+        TextFarbe
+    )
+    VALUES
+    (
+        1,
+        -1250856,
+        -16777216
+    );
+END;
+GO
 
 /* =========================================================
    INDEXE FÜR FOREIGN KEYS

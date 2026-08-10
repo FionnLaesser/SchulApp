@@ -377,18 +377,18 @@ namespace SchulApp
             datum.AutoSize = true;
             datum.Location = new Point(419, 9);
             datum.Name = "datum";
-            datum.Size = new Size(38, 15);
+            datum.Size = new Size(93, 15);
             datum.TabIndex = 7;
-            datum.Text = "label1";
+            datum.Text = "Datum: Example";
             // 
             // uhrzeit
             // 
             uhrzeit.AutoSize = true;
             uhrzeit.Location = new Point(419, 32);
             uhrzeit.Name = "uhrzeit";
-            uhrzeit.Size = new Size(38, 15);
+            uhrzeit.Size = new Size(106, 15);
             uhrzeit.TabIndex = 8;
-            uhrzeit.Text = "label1";
+            uhrzeit.Text = "Uhrzeit: HH:mm:ss";
             // 
             // Stundenplan
             // 

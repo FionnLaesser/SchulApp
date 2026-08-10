@@ -22,6 +22,9 @@ namespace SchulApp
             klassenPage = new Button();
             kursePage = new Button();
             stundenplanPage = new Button();
+            hauptbild = new PictureBox();
+            einstellungPage = new Button();
+            ((System.ComponentModel.ISupportInitialize)hauptbild).BeginInit();
             SuspendLayout();
             // 
             // titleLabel
@@ -30,7 +33,7 @@ namespace SchulApp
             titleLabel.Font = new Font("Segoe UI", 30F, FontStyle.Bold);
             titleLabel.Location = new Point(300, 72);
             titleLabel.Name = "titleLabel";
-            titleLabel.Size = new Size(381, 54);
+            titleLabel.Size = new Size(338, 54);
             titleLabel.TabIndex = 0;
             titleLabel.Text = "Schulverwaltung";
             // 
@@ -47,7 +50,7 @@ namespace SchulApp
             // schuelerPage
             // 
             schuelerPage.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
-            schuelerPage.Location = new Point(340, 196);
+            schuelerPage.Location = new Point(338, 172);
             schuelerPage.Name = "schuelerPage";
             schuelerPage.Size = new Size(300, 50);
             schuelerPage.TabIndex = 2;
@@ -58,7 +61,7 @@ namespace SchulApp
             // lehrerPage
             // 
             lehrerPage.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
-            lehrerPage.Location = new Point(340, 255);
+            lehrerPage.Location = new Point(338, 231);
             lehrerPage.Name = "lehrerPage";
             lehrerPage.Size = new Size(300, 50);
             lehrerPage.TabIndex = 3;
@@ -69,7 +72,7 @@ namespace SchulApp
             // klassenPage
             // 
             klassenPage.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
-            klassenPage.Location = new Point(340, 314);
+            klassenPage.Location = new Point(338, 290);
             klassenPage.Name = "klassenPage";
             klassenPage.Size = new Size(300, 50);
             klassenPage.TabIndex = 4;
@@ -80,7 +83,7 @@ namespace SchulApp
             // kursePage
             // 
             kursePage.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
-            kursePage.Location = new Point(340, 373);
+            kursePage.Location = new Point(338, 349);
             kursePage.Name = "kursePage";
             kursePage.Size = new Size(300, 50);
             kursePage.TabIndex = 5;
@@ -91,7 +94,7 @@ namespace SchulApp
             // stundenplanPage
             // 
             stundenplanPage.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
-            stundenplanPage.Location = new Point(340, 432);
+            stundenplanPage.Location = new Point(338, 408);
             stundenplanPage.Name = "stundenplanPage";
             stundenplanPage.Size = new Size(300, 50);
             stundenplanPage.TabIndex = 6;
@@ -99,12 +102,33 @@ namespace SchulApp
             stundenplanPage.UseVisualStyleBackColor = true;
             stundenplanPage.Click += stundenplanPage_Click;
             // 
+            // hauptbild
+            // 
+            hauptbild.Location = new Point(654, 222);
+            hauptbild.Name = "hauptbild";
+            hauptbild.Size = new Size(318, 179);
+            hauptbild.SizeMode = PictureBoxSizeMode.StretchImage;
+            hauptbild.TabIndex = 7;
+            hauptbild.TabStop = false;
+            // 
+            // einstellungPage
+            // 
+            einstellungPage.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+            einstellungPage.Location = new Point(336, 464);
+            einstellungPage.Name = "einstellungPage";
+            einstellungPage.Size = new Size(300, 50);
+            einstellungPage.TabIndex = 8;
+            einstellungPage.Text = "Einstellung";
+            einstellungPage.UseVisualStyleBackColor = true;
+            einstellungPage.Click += einstellungPage_Click;
+            // 
             // Hauptmenue
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = SystemColors.ActiveCaption;
             ClientSize = new Size(984, 561);
+            Controls.Add(einstellungPage);
             Controls.Add(stundenplanPage);
             Controls.Add(kursePage);
             Controls.Add(klassenPage);
@@ -112,11 +136,13 @@ namespace SchulApp
             Controls.Add(schuelerPage);
             Controls.Add(subtitleLabel);
             Controls.Add(titleLabel);
+            Controls.Add(hauptbild);
             FormBorderStyle = FormBorderStyle.FixedSingle;
             MaximizeBox = false;
             Name = "Hauptmenue";
             StartPosition = FormStartPosition.CenterScreen;
             Text = "SchulApp - Hauptmenü";
+            ((System.ComponentModel.ISupportInitialize)hauptbild).EndInit();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -128,5 +154,7 @@ namespace SchulApp
         private Button klassenPage;
         private Button kursePage;
         private Button stundenplanPage;
+        private PictureBox hauptbild;
+        private Button einstellungPage;
     }
 }

@@ -6,7 +6,10 @@ namespace SchulApp
         static void Main()
         {
             ApplicationConfiguration.Initialize();
-            Application.Run(new LoadingScreen());
+
+            ThemeManager.Laden();
+
+            Application.Run(new Hauptmenue());
         }
     }
 }

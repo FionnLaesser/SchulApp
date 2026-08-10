@@ -11,6 +11,7 @@ namespace SchulApp
         {
             InitializeComponent();
             LehrerLaden();
+            ThemeManager.Anwenden(this);
             KlassenListeAktualisieren();
         }
 

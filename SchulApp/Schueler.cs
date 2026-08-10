@@ -14,7 +14,7 @@ namespace SchulApp
         {
             InitializeComponent();
             schuelerService = new SchuelerService(new SqlSchuelerRepository());
-
+            ThemeManager.Anwenden(this);
             KlassenLaden();
             SchuelerListeAktualisieren();
         }

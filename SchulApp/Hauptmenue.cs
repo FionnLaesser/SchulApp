@@ -8,6 +8,8 @@ namespace SchulApp
         public Hauptmenue()
         {
             InitializeComponent();
+            ThemeManager.Anwenden(this);
+            hauptbildLaden();
         }
 
         private void OeffneBereich(Form formular)
@@ -45,5 +47,14 @@ namespace SchulApp
         {
             OeffneBereich(new Stundenplan());
         }
-    }
+        private void hauptbildLaden()
+        {
+            hauptbild.Image = Image.FromFile("images/Hauptbild.png");
+        }
+
+        private void einstellungPage_Click(object sender, EventArgs e)
+        {
+          OeffneBereich(new Einstellungen());      
+        }
+   }
 }

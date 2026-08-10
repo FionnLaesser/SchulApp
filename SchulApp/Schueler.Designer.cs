@@ -58,6 +58,124 @@ namespace SchulApp
             newStudentName.TabIndex = 1;
             newStudentName.TextChanged += newStudentName_TextChanged;
             // 
+            // OKnewStudent
+            // 
+            OKnewStudent.Location = new Point(218, 45);
+            OKnewStudent.Name = "OKnewStudent";
+            OKnewStudent.Size = new Size(100, 72);
+            OKnewStudent.TabIndex = 4;
+            OKnewStudent.Text = "Speichern";
+            OKnewStudent.UseVisualStyleBackColor = true;
+            OKnewStudent.Click += OKnewStudent_Click;
+            // 
+            // showStudents
+            // 
+            showStudents.Location = new Point(12, 444);
+            showStudents.Name = "showStudents";
+            showStudents.Size = new Size(306, 29);
+            showStudents.TabIndex = 17;
+            showStudents.Text = "Schüler neu laden";
+            showStudents.UseVisualStyleBackColor = true;
+            showStudents.Click += showStudents_Click;
+            // 
+            // OKchangeName
+            // 
+            OKchangeName.Location = new Point(218, 246);
+            OKchangeName.Name = "OKchangeName";
+            OKchangeName.Size = new Size(100, 72);
+            OKchangeName.TabIndex = 12;
+            OKchangeName.Text = "Ändern";
+            OKchangeName.UseVisualStyleBackColor = true;
+            OKchangeName.Click += OKchangeName_Click;
+            // 
+            // oldName
+            // 
+            oldName.Location = new Point(12, 197);
+            oldName.Name = "oldName";
+            oldName.ReadOnly = true;
+            oldName.Size = new Size(200, 23);
+            oldName.TabIndex = 7;
+            // 
+            // newName
+            // 
+            newName.Location = new Point(12, 246);
+            newName.Name = "newName";
+            newName.Size = new Size(200, 23);
+            newName.TabIndex = 9;
+            // 
+            // label2
+            // 
+            label2.AutoSize = true;
+            label2.Location = new Point(12, 179);
+            label2.Name = "label2";
+            label2.Size = new Size(89, 15);
+            label2.TabIndex = 6;
+            label2.Text = "Aktueller Name";
+            // 
+            // label3
+            // 
+            label3.AutoSize = true;
+            label3.Location = new Point(12, 228);
+            label3.Name = "label3";
+            label3.Size = new Size(74, 15);
+            label3.TabIndex = 8;
+            label3.Text = "Neuer Name";
+            // 
+            // label4
+            // 
+            label4.AutoSize = true;
+            label4.Location = new Point(12, 151);
+            label4.Name = "label4";
+            label4.Size = new Size(164, 15);
+            label4.TabIndex = 5;
+            label4.Text = "Ausgewählten Schüler ändern";
+            // 
+            // label6
+            // 
+            label6.AutoSize = true;
+            label6.Location = new Point(12, 352);
+            label6.Name = "label6";
+            label6.Size = new Size(168, 15);
+            label6.TabIndex = 13;
+            label6.Text = "Ausgewählten Schüler löschen";
+            // 
+            // deleteNameBox
+            // 
+            deleteNameBox.Location = new Point(12, 395);
+            deleteNameBox.Name = "deleteNameBox";
+            deleteNameBox.ReadOnly = true;
+            deleteNameBox.Size = new Size(200, 23);
+            deleteNameBox.TabIndex = 15;
+            // 
+            // label7
+            // 
+            label7.AutoSize = true;
+            label7.Location = new Point(12, 377);
+            label7.Name = "label7";
+            label7.Size = new Size(39, 15);
+            label7.TabIndex = 14;
+            label7.Text = "Name";
+            // 
+            // OKdeleteBtn
+            // 
+            OKdeleteBtn.Location = new Point(218, 395);
+            OKdeleteBtn.Name = "OKdeleteBtn";
+            OKdeleteBtn.Size = new Size(100, 23);
+            OKdeleteBtn.TabIndex = 16;
+            OKdeleteBtn.Text = "Löschen";
+            OKdeleteBtn.UseVisualStyleBackColor = true;
+            OKdeleteBtn.Click += OKdeleteBtn_Click;
+            // 
+            // back
+            // 
+            back.Location = new Point(885, 12);
+            back.Name = "back";
+            back.Size = new Size(75, 23);
+            back.TabIndex = 19;
+            back.Text = "zurück";
+            back.UseVisualStyleBackColor = true;
+            back.Click += back_Click;
+            // 
             // newStudentKlasse
             // 
             newStudentKlasse.DropDownStyle = ComboBoxStyle.DropDownList;
@@ -72,70 +190,9 @@ namespace SchulApp
             labelKlasseNeu.AutoSize = true;
             labelKlasseNeu.Location = new Point(12, 76);
             labelKlasseNeu.Name = "labelKlasseNeu";
-            labelKlasseNeu.Size = new Size(40, 15);
+            labelKlasseNeu.Size = new Size(39, 15);
             labelKlasseNeu.TabIndex = 3;
             labelKlasseNeu.Text = "Klasse";
-            // 
-            // OKnewStudent
-            // 
-            OKnewStudent.Location = new Point(218, 45);
-            OKnewStudent.Name = "OKnewStudent";
-            OKnewStudent.Size = new Size(100, 72);
-            OKnewStudent.TabIndex = 4;
-            OKnewStudent.Text = "Speichern";
-            OKnewStudent.UseVisualStyleBackColor = true;
-            OKnewStudent.Click += OKnewStudent_Click;
-            // 
-            // label4
-            // 
-            label4.AutoSize = true;
-            label4.Location = new Point(12, 151);
-            label4.Name = "label4";
-            label4.Size = new Size(157, 15);
-            label4.TabIndex = 5;
-            label4.Text = "Ausgewählten Schüler ändern";
-            // 
-            // label2
-            // 
-            label2.AutoSize = true;
-            label2.Location = new Point(12, 179);
-            label2.Name = "label2";
-            label2.Size = new Size(91, 15);
-            label2.TabIndex = 6;
-            label2.Text = "Aktueller Name";
-            // 
-            // oldName
-            // 
-            oldName.Location = new Point(12, 197);
-            oldName.Name = "oldName";
-            oldName.ReadOnly = true;
-            oldName.Size = new Size(200, 23);
-            oldName.TabIndex = 7;
-            // 
-            // label3
-            // 
-            label3.AutoSize = true;
-            label3.Location = new Point(12, 228);
-            label3.Name = "label3";
-            label3.Size = new Size(74, 15);
-            label3.TabIndex = 8;
-            label3.Text = "Neuer Name";
-            // 
-            // newName
-            // 
-            newName.Location = new Point(12, 246);
-            newName.Name = "newName";
-            newName.Size = new Size(200, 23);
-            newName.TabIndex = 9;
-            // 
-            // labelKlasseBearbeiten
-            // 
-            labelKlasseBearbeiten.AutoSize = true;
-            labelKlasseBearbeiten.Location = new Point(12, 277);
-            labelKlasseBearbeiten.Name = "labelKlasseBearbeiten";
-            labelKlasseBearbeiten.Size = new Size(71, 15);
-            labelKlasseBearbeiten.TabIndex = 10;
-            labelKlasseBearbeiten.Text = "Neue Klasse";
             // 
             // editKlasse
             // 
@@ -146,61 +203,14 @@ namespace SchulApp
             editKlasse.Size = new Size(200, 23);
             editKlasse.TabIndex = 11;
             // 
-            // OKchangeName
+            // labelKlasseBearbeiten
             // 
-            OKchangeName.Location = new Point(218, 246);
-            OKchangeName.Name = "OKchangeName";
-            OKchangeName.Size = new Size(100, 72);
-            OKchangeName.TabIndex = 12;
-            OKchangeName.Text = "Ändern";
-            OKchangeName.UseVisualStyleBackColor = true;
-            OKchangeName.Click += OKchangeName_Click;
-            // 
-            // label6
-            // 
-            label6.AutoSize = true;
-            label6.Location = new Point(12, 352);
-            label6.Name = "label6";
-            label6.Size = new Size(185, 15);
-            label6.TabIndex = 13;
-            label6.Text = "Ausgewählten Schüler löschen";
-            // 
-            // label7
-            // 
-            label7.AutoSize = true;
-            label7.Location = new Point(12, 377);
-            label7.Name = "label7";
-            label7.Size = new Size(39, 15);
-            label7.TabIndex = 14;
-            label7.Text = "Name";
-            // 
-            // deleteNameBox
-            // 
-            deleteNameBox.Location = new Point(12, 395);
-            deleteNameBox.Name = "deleteNameBox";
-            deleteNameBox.ReadOnly = true;
-            deleteNameBox.Size = new Size(200, 23);
-            deleteNameBox.TabIndex = 15;
-            // 
-            // OKdeleteBtn
-            // 
-            OKdeleteBtn.Location = new Point(218, 395);
-            OKdeleteBtn.Name = "OKdeleteBtn";
-            OKdeleteBtn.Size = new Size(100, 23);
-            OKdeleteBtn.TabIndex = 16;
-            OKdeleteBtn.Text = "Löschen";
-            OKdeleteBtn.UseVisualStyleBackColor = true;
-            OKdeleteBtn.Click += OKdeleteBtn_Click;
-            // 
-            // showStudents
-            // 
-            showStudents.Location = new Point(12, 444);
-            showStudents.Name = "showStudents";
-            showStudents.Size = new Size(306, 29);
-            showStudents.TabIndex = 17;
-            showStudents.Text = "Schüler neu laden";
-            showStudents.UseVisualStyleBackColor = true;
-            showStudents.Click += showStudents_Click;
+            labelKlasseBearbeiten.AutoSize = true;
+            labelKlasseBearbeiten.Location = new Point(12, 277);
+            labelKlasseBearbeiten.Name = "labelKlasseBearbeiten";
+            labelKlasseBearbeiten.Size = new Size(70, 15);
+            labelKlasseBearbeiten.TabIndex = 10;
+            labelKlasseBearbeiten.Text = "Neue Klasse";
             // 
             // studentGrid
             // 
@@ -208,7 +218,6 @@ namespace SchulApp
             studentGrid.AllowUserToDeleteRows = false;
             studentGrid.AllowUserToResizeRows = false;
             studentGrid.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.AllCells;
-            studentGrid.BackgroundColor = SystemColors.Window;
             studentGrid.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             studentGrid.Location = new Point(350, 45);
             studentGrid.MultiSelect = false;
@@ -219,16 +228,6 @@ namespace SchulApp
             studentGrid.Size = new Size(610, 428);
             studentGrid.TabIndex = 18;
             studentGrid.SelectionChanged += studentGrid_SelectionChanged;
-            // 
-            // back
-            // 
-            back.Location = new Point(885, 12);
-            back.Name = "back";
-            back.Size = new Size(75, 23);
-            back.TabIndex = 19;
-            back.Text = "zurück";
-            back.UseVisualStyleBackColor = true;
-            back.Click += back_Click;
             // 
             // Schueler
             // 

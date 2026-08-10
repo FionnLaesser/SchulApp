@@ -12,6 +12,7 @@ namespace SchulApp
             InitializeComponent();
             WochentageEinrichten();
             KurseLaden();
+            ThemeManager.Anwenden(this);
             StundenplanLaden();
             DatumUndUhrzeitLabel();
         }

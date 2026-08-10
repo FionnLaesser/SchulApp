@@ -11,6 +11,7 @@ namespace SchulApp
         {
             InitializeComponent();
             AuswahlDatenLaden();
+            ThemeManager.Anwenden(this);
             KurseListeAktualisieren();
         }
 
