@@ -5,7 +5,9 @@ namespace SchulApp.Tests
 {
     internal class FakeSchuelerRepository : ISchuelerRepository
     {
-        private readonly List<SchuelerModel> schueler = new List<SchuelerModel>();
+        private readonly List<SchuelerModel> schueler =
+            new List<SchuelerModel>();
+
         private int naechsteId = 1;
 
         public IReadOnlyList<SchuelerModel> AlleLaden()
@@ -16,6 +18,8 @@ namespace SchulApp.Tests
                     SchuelerId = s.SchuelerId,
                     Name = s.Name,
                     KlasseId = s.KlasseId,
+
+                    // Klasse ist jetzt ein KlasseModel und kein String mehr
                     Klasse = s.Klasse
                 })
                 .ToList();
@@ -28,16 +32,30 @@ namespace SchulApp.Tests
                 SchuelerId = naechsteId++,
                 Name = name,
                 KlasseId = klasseId,
-                Klasse = "Testklasse"
+
+                // Erstellt eine Testklasse als Objekt
+                Klasse = new KlasseModel
+                {
+                    KlassenId = klasseId,
+                    Bezeichnung = "Testklasse"
+                }
             };
 
             schueler.Add(neuerSchueler);
+
             return neuerSchueler.SchuelerId;
         }
 
-        public bool Bearbeiten(int schuelerId, string name, int klasseId)
+        public bool Bearbeiten(
+            int schuelerId,
+            string name,
+            int klasseId)
         {
-            SchuelerModel gefunden = schueler.FirstOrDefault(s => s.SchuelerId == schuelerId);
+            SchuelerModel? gefunden =
+                schueler.FirstOrDefault(
+                    s => s.SchuelerId == schuelerId
+                );
+
             if (gefunden == null)
             {
                 return false;
@@ -45,18 +63,31 @@ namespace SchulApp.Tests
 
             gefunden.Name = name;
             gefunden.KlasseId = klasseId;
+
+            // Auch das verknüpfte Klassenobjekt aktualisieren
+            gefunden.Klasse = new KlasseModel
+            {
+                KlassenId = klasseId,
+                Bezeichnung = "Testklasse"
+            };
+
             return true;
         }
 
         public bool Loeschen(int schuelerId)
         {
-            SchuelerModel gefunden = schueler.FirstOrDefault(s => s.SchuelerId == schuelerId);
+            SchuelerModel? gefunden =
+                schueler.FirstOrDefault(
+                    s => s.SchuelerId == schuelerId
+                );
+
             if (gefunden == null)
             {
                 return false;
             }
 
             schueler.Remove(gefunden);
+
             return true;
         }
     }

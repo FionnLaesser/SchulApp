@@ -20,6 +20,7 @@ namespace SchulApp
             {
                 loadingLabel.Text = "Verbinde mit Datenbank...";
                 await Task.Delay(500); // Simuliert eine kurze Ladezeit
+
                 // Prüft die Datenbankverbindung über Entity Framework
                 await DatenbankPruefen();
 
