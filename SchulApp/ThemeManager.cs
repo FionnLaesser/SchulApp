@@ -139,5 +139,15 @@ namespace SchulApp
         {
             return farbe1.ToArgb() == farbe2.ToArgb();
         }
+        public static void Zurücksetzen()
+        {
+            Color alteTextFarbe = TextFarbe;
+
+            HintergrundFarbe = SystemColors.ActiveCaption;
+            TextFarbe = SystemColors.ControlText;
+
+            Speichern();
+            AlleOffenenFormsAktualisieren(alteTextFarbe);
+        }
     }
 }

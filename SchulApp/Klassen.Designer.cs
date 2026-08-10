@@ -60,7 +60,7 @@ namespace SchulApp
             titleLabel.Font = new Font("Segoe UI", 18F, FontStyle.Bold);
             titleLabel.Location = new Point(25, 18);
             titleLabel.Name = "titleLabel";
-            titleLabel.Size = new Size(226, 32);
+            titleLabel.Size = new Size(220, 32);
             titleLabel.TabIndex = 1;
             titleLabel.Text = "Klassen verwalten";
             // 
@@ -102,7 +102,7 @@ namespace SchulApp
             newTeacherLabel.AutoSize = true;
             newTeacherLabel.Location = new Point(15, 85);
             newTeacherLabel.Name = "newTeacherLabel";
-            newTeacherLabel.Size = new Size(84, 15);
+            newTeacherLabel.Size = new Size(76, 15);
             newTeacherLabel.TabIndex = 2;
             newTeacherLabel.Text = "Klassenlehrer";
             // 
@@ -118,7 +118,7 @@ namespace SchulApp
             newNameLabel.AutoSize = true;
             newNameLabel.Location = new Point(15, 31);
             newNameLabel.Name = "newNameLabel";
-            newNameLabel.Size = new Size(74, 15);
+            newNameLabel.Size = new Size(75, 15);
             newNameLabel.TabIndex = 0;
             newNameLabel.Text = "Bezeichnung";
             // 
@@ -160,7 +160,7 @@ namespace SchulApp
             editTeacherLabel.AutoSize = true;
             editTeacherLabel.Location = new Point(15, 85);
             editTeacherLabel.Name = "editTeacherLabel";
-            editTeacherLabel.Size = new Size(84, 15);
+            editTeacherLabel.Size = new Size(76, 15);
             editTeacherLabel.TabIndex = 2;
             editTeacherLabel.Text = "Klassenlehrer";
             // 
@@ -176,7 +176,7 @@ namespace SchulApp
             editNameLabel.AutoSize = true;
             editNameLabel.Location = new Point(15, 31);
             editNameLabel.Name = "editNameLabel";
-            editNameLabel.Size = new Size(74, 15);
+            editNameLabel.Size = new Size(75, 15);
             editNameLabel.TabIndex = 0;
             editNameLabel.Text = "Bezeichnung";
             // 
@@ -215,7 +215,7 @@ namespace SchulApp
             deleteLabel.AutoSize = true;
             deleteLabel.Location = new Point(15, 32);
             deleteLabel.Name = "deleteLabel";
-            deleteLabel.Size = new Size(41, 15);
+            deleteLabel.Size = new Size(39, 15);
             deleteLabel.TabIndex = 0;
             deleteLabel.Text = "Klasse";
             // 
@@ -251,7 +251,7 @@ namespace SchulApp
             studentLabel.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
             studentLabel.Location = new Point(365, 356);
             studentLabel.Name = "studentLabel";
-            studentLabel.Size = new Size(205, 19);
+            studentLabel.Size = new Size(225, 19);
             studentLabel.TabIndex = 7;
             studentLabel.Text = "Schüler der ausgewählten Klasse";
             // 

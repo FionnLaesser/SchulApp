@@ -31,12 +31,17 @@ namespace SchulApp
                     colorDialogTextFarbe.Color
                 );
             }
-            
+
         }
 
         private void back_Click_Click(object sender, EventArgs e)
         {
             Close();
+        }
+
+        private void resetSettingsBtn_Click(object sender, EventArgs e)
+        {
+            ThemeManager.Zurücksetzen();
         }
     }
 }
