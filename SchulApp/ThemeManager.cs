@@ -62,6 +62,18 @@ namespace SchulApp
 
         public static void HintergrundSetzen(Color farbe)
         {
+            if (FarbenSindGleich(farbe, TextFarbe))
+            {
+                MessageBox.Show(
+                    "Die Hintergrundfarbe kann nicht gleich wie die Textfarbe sein, da der Text sonst unlesbar wäre.",
+                    "Ungültige Farbe",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning
+                );
+
+                return;
+            }
+
             HintergrundFarbe = farbe;
             Speichern();
             AlleOffenenFormsAktualisieren();
@@ -69,6 +81,18 @@ namespace SchulApp
 
         public static void TextfarbeSetzen(Color farbe)
         {
+            if (FarbenSindGleich(farbe, HintergrundFarbe))
+            {
+                MessageBox.Show(
+                    "Die Textfarbe kann nicht gleich wie die Hintergrundfarbe sein, da der Text sonst unlesbar wäre.",
+                    "Ungültige Farbe",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning
+                );
+
+                return;
+            }
+
             Color alteTextFarbe = TextFarbe;
 
             TextFarbe = farbe;
@@ -110,6 +134,10 @@ namespace SchulApp
             {
                 Anwenden(form, alteTextFarbe);
             }
+        }
+        private static bool FarbenSindGleich(Color farbe1, Color farbe2)
+        {
+            return farbe1.ToArgb() == farbe2.ToArgb();
         }
     }
 }
