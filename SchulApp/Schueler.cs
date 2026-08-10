@@ -26,7 +26,7 @@ namespace SchulApp
                 const string sql = @"
                     SELECT KlassenId, Bezeichnung
                     FROM dbo.Klassen
-                    ORDER BY Bezeichnung;";
+                    ORDER BY KlassenId;";
 
                 using SqlConnection connection = Database.GetConnection();
                 using SqlDataAdapter adapter = new SqlDataAdapter(sql, connection);
@@ -56,7 +56,9 @@ namespace SchulApp
         {
             try
             {
-                studentGrid.DataSource = schuelerService.AlleLaden().ToList();
+                studentGrid.DataSource = schuelerService.AlleLaden()
+    .OrderBy(s => s.SchuelerId)
+    .ToList();
 
                 if (studentGrid.Columns.Contains("KlasseId"))
                 {

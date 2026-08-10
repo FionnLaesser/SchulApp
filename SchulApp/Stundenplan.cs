@@ -13,6 +13,7 @@ namespace SchulApp
             WochentageEinrichten();
             KurseLaden();
             StundenplanLaden();
+            DatumUndUhrzeitLabel();
         }
 
         private void WochentageEinrichten()
@@ -374,6 +375,21 @@ namespace SchulApp
         private void back_Click(object sender, EventArgs e)
         {
             Close();
+        }
+        private async void DatumUndUhrzeitLabel()
+        {
+            while (true)
+            {
+                DateTime jetzt = DateTime.Now;
+
+                string datum = jetzt.ToString("dddd, dd.MM.yyyy");
+                string uhrzeit = jetzt.ToString("HH:mm:ss");
+
+                this.datum.Text = $"Datum: {datum}";
+                this.uhrzeit.Text = $"Uhrzeit: {uhrzeit}";
+
+                await Task.Delay(1000);
+            }
         }
     }
 }

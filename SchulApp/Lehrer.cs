@@ -31,7 +31,7 @@ namespace SchulApp
                         Email,
                         Telefon
                     FROM dbo.Lehrer
-                    ORDER BY Name;";
+                    ORDER BY LehrerId;";
 
                 using SqlConnection connection = Database.GetConnection();
                 using SqlDataAdapter adapter = new SqlDataAdapter(sql, connection);
@@ -321,7 +321,7 @@ namespace SchulApp
                         Information
                     FROM dbo.LehrerInformationen
                     WHERE LehrerId = @LehrerId
-                    ORDER BY Titel;";
+                    ORDER BY LehrerId;";
 
                 using SqlConnection connection = Database.GetConnection();
                 using SqlCommand command = new SqlCommand(sql, connection);

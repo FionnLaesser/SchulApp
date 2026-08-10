@@ -72,7 +72,7 @@ namespace SchulApp
                         k.Bezeichnung,
                         k.KlassenlehrerId,
                         l.Name
-                    ORDER BY k.Bezeichnung;";
+                    ORDER BY k.KlassenId;";
 
                 using SqlConnection connection = Database.GetConnection();
                 using SqlDataAdapter adapter = new SqlDataAdapter(sql, connection);
@@ -316,7 +316,7 @@ namespace SchulApp
                     SELECT SchuelerId, Name
                     FROM dbo.Schueler
                     WHERE KlasseId = @KlassenId
-                    ORDER BY Name;";
+                    ORDER BY SchuelerId;";
 
                 using SqlConnection connection = Database.GetConnection();
                 using SqlCommand command = new SqlCommand(sql, connection);

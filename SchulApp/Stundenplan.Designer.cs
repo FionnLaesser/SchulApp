@@ -46,6 +46,8 @@ namespace SchulApp
             deleteInfo = new TextBox();
             reloadBtn = new Button();
             stundenplanGrid = new DataGridView();
+            datum = new Label();
+            uhrzeit = new Label();
             newGroup.SuspendLayout();
             editGroup.SuspendLayout();
             deleteGroup.SuspendLayout();
@@ -68,7 +70,7 @@ namespace SchulApp
             titleLabel.Font = new Font("Segoe UI", 18F, FontStyle.Bold);
             titleLabel.Location = new Point(25, 18);
             titleLabel.Name = "titleLabel";
-            titleLabel.Size = new Size(280, 32);
+            titleLabel.Size = new Size(278, 32);
             titleLabel.TabIndex = 1;
             titleLabel.Text = "Stundenplan verwalten";
             // 
@@ -114,7 +116,7 @@ namespace SchulApp
             newRaumLabel.AutoSize = true;
             newRaumLabel.Location = new Point(15, 147);
             newRaumLabel.Name = "newRaumLabel";
-            newRaumLabel.Size = new Size(36, 15);
+            newRaumLabel.Size = new Size(38, 15);
             newRaumLabel.TabIndex = 8;
             newRaumLabel.Text = "Raum";
             // 
@@ -134,7 +136,7 @@ namespace SchulApp
             newEndLabel.AutoSize = true;
             newEndLabel.Location = new Point(170, 94);
             newEndLabel.Name = "newEndLabel";
-            newEndLabel.Size = new Size(46, 15);
+            newEndLabel.Size = new Size(45, 15);
             newEndLabel.TabIndex = 6;
             newEndLabel.Text = "Endzeit";
             // 
@@ -154,7 +156,7 @@ namespace SchulApp
             newStartLabel.AutoSize = true;
             newStartLabel.Location = new Point(15, 94);
             newStartLabel.Name = "newStartLabel";
-            newStartLabel.Size = new Size(48, 15);
+            newStartLabel.Size = new Size(49, 15);
             newStartLabel.TabIndex = 4;
             newStartLabel.Text = "Startzeit";
             // 
@@ -172,7 +174,7 @@ namespace SchulApp
             newTagLabel.AutoSize = true;
             newTagLabel.Location = new Point(170, 40);
             newTagLabel.Name = "newTagLabel";
-            newTagLabel.Size = new Size(69, 15);
+            newTagLabel.Size = new Size(68, 15);
             newTagLabel.TabIndex = 2;
             newTagLabel.Text = "Wochentag";
             // 
@@ -190,7 +192,7 @@ namespace SchulApp
             newKursLabel.AutoSize = true;
             newKursLabel.Location = new Point(15, 40);
             newKursLabel.Name = "newKursLabel";
-            newKursLabel.Size = new Size(31, 15);
+            newKursLabel.Size = new Size(30, 15);
             newKursLabel.TabIndex = 0;
             newKursLabel.Text = "Kurs";
             // 
@@ -236,7 +238,7 @@ namespace SchulApp
             editRaumLabel.AutoSize = true;
             editRaumLabel.Location = new Point(15, 147);
             editRaumLabel.Name = "editRaumLabel";
-            editRaumLabel.Size = new Size(36, 15);
+            editRaumLabel.Size = new Size(38, 15);
             editRaumLabel.TabIndex = 8;
             editRaumLabel.Text = "Raum";
             // 
@@ -256,7 +258,7 @@ namespace SchulApp
             editEndLabel.AutoSize = true;
             editEndLabel.Location = new Point(170, 94);
             editEndLabel.Name = "editEndLabel";
-            editEndLabel.Size = new Size(46, 15);
+            editEndLabel.Size = new Size(45, 15);
             editEndLabel.TabIndex = 6;
             editEndLabel.Text = "Endzeit";
             // 
@@ -276,7 +278,7 @@ namespace SchulApp
             editStartLabel.AutoSize = true;
             editStartLabel.Location = new Point(15, 94);
             editStartLabel.Name = "editStartLabel";
-            editStartLabel.Size = new Size(48, 15);
+            editStartLabel.Size = new Size(49, 15);
             editStartLabel.TabIndex = 4;
             editStartLabel.Text = "Startzeit";
             // 
@@ -294,7 +296,7 @@ namespace SchulApp
             editTagLabel.AutoSize = true;
             editTagLabel.Location = new Point(170, 40);
             editTagLabel.Name = "editTagLabel";
-            editTagLabel.Size = new Size(69, 15);
+            editTagLabel.Size = new Size(68, 15);
             editTagLabel.TabIndex = 2;
             editTagLabel.Text = "Wochentag";
             // 
@@ -312,7 +314,7 @@ namespace SchulApp
             editKursLabel.AutoSize = true;
             editKursLabel.Location = new Point(15, 40);
             editKursLabel.Name = "editKursLabel";
-            editKursLabel.Size = new Size(31, 15);
+            editKursLabel.Size = new Size(30, 15);
             editKursLabel.TabIndex = 0;
             editKursLabel.Text = "Kurs";
             // 
@@ -370,12 +372,32 @@ namespace SchulApp
             stundenplanGrid.TabIndex = 6;
             stundenplanGrid.SelectionChanged += stundenplanGrid_SelectionChanged;
             // 
+            // datum
+            // 
+            datum.AutoSize = true;
+            datum.Location = new Point(419, 9);
+            datum.Name = "datum";
+            datum.Size = new Size(38, 15);
+            datum.TabIndex = 7;
+            datum.Text = "label1";
+            // 
+            // uhrzeit
+            // 
+            uhrzeit.AutoSize = true;
+            uhrzeit.Location = new Point(419, 32);
+            uhrzeit.Name = "uhrzeit";
+            uhrzeit.Size = new Size(38, 15);
+            uhrzeit.TabIndex = 8;
+            uhrzeit.Text = "label1";
+            // 
             // Stundenplan
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = SystemColors.ActiveCaption;
             ClientSize = new Size(984, 561);
+            Controls.Add(uhrzeit);
+            Controls.Add(datum);
             Controls.Add(stundenplanGrid);
             Controls.Add(reloadBtn);
             Controls.Add(deleteGroup);
@@ -429,5 +451,7 @@ namespace SchulApp
         private TextBox deleteInfo;
         private Button reloadBtn;
         private DataGridView stundenplanGrid;
+        private Label datum;
+        private Label uhrzeit;
     }
 }

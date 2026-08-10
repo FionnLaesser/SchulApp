@@ -21,12 +21,12 @@ namespace SchulApp
                 const string klassenSql = @"
                     SELECT KlassenId, Bezeichnung
                     FROM dbo.Klassen
-                    ORDER BY Bezeichnung;";
+                    ORDER BY KlassenId;";
 
                 const string lehrerSql = @"
                     SELECT LehrerId, Name
                     FROM dbo.Lehrer
-                    ORDER BY Name;";
+                    ORDER BY LehrerId;";
 
                 using SqlConnection connection = Database.GetConnection();
                 connection.Open();
@@ -82,7 +82,7 @@ namespace SchulApp
                         ON ku.KlasseId = kl.KlassenId
                     INNER JOIN dbo.Lehrer AS l
                         ON ku.LehrerId = l.LehrerId
-                    ORDER BY ku.Name, kl.Bezeichnung;";
+                    ORDER BY ku.Name, kl.KlassenId;";
 
                 using SqlConnection connection = Database.GetConnection();
                 using SqlDataAdapter adapter = new SqlDataAdapter(sql, connection);
