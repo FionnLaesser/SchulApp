@@ -39,6 +39,11 @@ Mit der Anwendung können **Schüler, Lehrer, Klassen, Kurse und Stundenpläne**
 
 ![Stundenplaneintrag bearbeitet](MeldungStundenplaneintragBearbeitet.png)
 
+## Einstellungen
+![Einstellungenseite](EinstellungSeite.png)
+
+![Beipsiel Einstellungsseite](BeispielEinstellung.png)
+
 ## Weitere Ansichten
 
 ### Loading Screen
@@ -48,3 +53,6 @@ Mit der Anwendung können **Schüler, Lehrer, Klassen, Kurse und Stundenpläne**
 ### Löschbestätigung
 
 ![Bestätigung Löschen](BestaetigungLoeschen.png)
+
+### Farbauswahl
+![Farbe Auswählen](Farbauswahl.png)

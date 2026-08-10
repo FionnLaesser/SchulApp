@@ -6,6 +6,7 @@ Die Anwendung dient dazu, wichtige Schuldaten wie Schüler, Lehrer, Klassen, Kur
 ## Inhaltsverzeichnis
 
 - [Funktionen](#funktionen)
+- [App-Demo](#app-demo)
 - [Zusätzliche Erweiterungen](#zusätzliche-erweiterungen)
 - [Verwaltete Daten](#verwaltete-daten)
   - [Schüler](#schüler)
@@ -43,6 +44,10 @@ Zu den wichtigsten Funktionen gehören:
 - Stundenplaneinträge nach Datum und Uhrzeit sortiert darstellen
 - Daten übersichtlich in Tabellen darstellen
 - Löschen von Datensätzen bestätigen
+
+## App Demo
+Im Ordner Screenshots findest du ein README das alle Seiten zeigt.
+[Screenshots](Screenshots/README.md)
 
 ## Zusätzliche Erweiterungen
 
