@@ -42,6 +42,8 @@ Mit der Anwendung können **Schüler, Lehrer, Klassen, Kurse und Stundenpläne**
 ## Einstellungen
 ![Einstellungenseite](EinstellungSeite.png)
 
+### Beispiel Einstellungen
+
 ![Beipsiel Einstellungsseite](BeispielEinstellung.png)
 
 ## Weitere Ansichten
