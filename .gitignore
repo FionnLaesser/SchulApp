@@ -80,3 +80,4 @@ Generated Files/
 BenchmarkDotNet.Artifacts/
 MigrationBackup/
 .localhistory/
+.env

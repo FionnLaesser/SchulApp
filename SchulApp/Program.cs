@@ -8,10 +8,15 @@ namespace SchulApp
         static void Main()
         {
             ApplicationConfiguration.Initialize();
-            ThemeManager.Laden(); // Load the theme settings
-            Icon? appIcon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);  // Extrahiert das Symbol aus der .exe Datei.
+            // Lädt die .env Datei
+            DotNetEnv.Env.TraversePath().Load();
 
-            Application.Idle += (_, _) => // Setzt das Symbol für alle offenen Forms, wenn die Anwendung im Leerlauf ist.
+            // Extrahiert das Symbol aus der .exe Datei
+            Icon? appIcon =
+                Icon.ExtractAssociatedIcon(Application.ExecutablePath);
+
+            // Setzt das Symbol für alle offenen Forms
+            Application.Idle += (_, _) =>
             {
                 foreach (Form form in Application.OpenForms)
                 {
@@ -21,6 +26,20 @@ namespace SchulApp
                     }
                 }
             };
+
+            // Login wird zuerst angezeigt
+            using Login login = new Login();
+
+            // Nur bei erfolgreichem Login geht die App weiter
+            if (login.ShowDialog() != DialogResult.OK)
+            {
+                return;
+            }
+
+            // Einstellungen erst nach erfolgreichem Login laden
+            ThemeManager.Laden();
+
+            // Danach startet der LoadingScreen
             Application.Run(new LoadingScreen());
         }
     }
