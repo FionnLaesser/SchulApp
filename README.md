@@ -6,6 +6,7 @@ Die Anwendung dient dazu, wichtige Schuldaten wie Schüler, Lehrer, Klassen, Kur
 ## Inhaltsverzeichnis
 
 - [Funktionen](#funktionen)
+- [Zusätzliche Erweiterungen](#zusätzliche-erweiterungen)
 - [Verwaltete Daten](#verwaltete-daten)
   - [Schüler](#schüler)
   - [Lehrer](#lehrer)
@@ -42,6 +43,26 @@ Zu den wichtigsten Funktionen gehören:
 - Stundenplaneinträge nach Datum und Uhrzeit sortiert darstellen
 - Daten übersichtlich in Tabellen darstellen
 - Löschen von Datensätzen bestätigen
+
+## Zusätzliche Erweiterungen
+
+Die ursprünglich geplanten Anforderungen des Projekts konnten frühzeitig fertiggestellt werden. Deshalb wurde die Anwendung anschliessend freiwillig um zusätzliche Funktionen erweitert, die über den ursprünglich geplanten Umfang hinausgehen.
+
+Zu diesen zusätzlichen Erweiterungen gehören:
+
+- Eine eigene Einstellungsseite für die Darstellung der Anwendung
+- Frei wählbare Hintergrundfarbe über einen `ColorDialog`
+- Frei wählbare Textfarbe über einen `ColorDialog`
+- Ein zentraler `ThemeManager`, der das gewählte Design auf die verschiedenen Fenster und Steuerelemente der Anwendung anwendet
+- Speicherung der gewählten Hintergrund- und Textfarbe in der SQL-Datenbank
+- Automatisches Laden des zuletzt verwendeten Designs beim Start der Anwendung
+- Sofortige Aktualisierung des Designs bei bereits geöffneten Fenstern
+- Möglichkeit, das Design wieder auf die Standardfarben zurückzusetzen
+- Ein Loading- beziehungsweise Splashscreen beim Start der Anwendung
+- Überprüfung der SQL-Verbindung während des Startvorgangs
+- Verwendung eigener Bilder aus dem `images`-Ordner innerhalb der Benutzeroberfläche
+
+Diese Funktionen waren nicht Bestandteil der ursprünglichen Anforderungen, sondern wurden zusätzlich umgesetzt, da die geplanten Aufgaben bereits früher abgeschlossen waren.
 
 ## Verwaltete Daten
 
@@ -115,6 +136,8 @@ Dabei werden unter anderem folgende Elemente verwendet:
 - `ComboBox`
 - `Button`
 - `DataGridView`
+- `PictureBox`
+- `ColorDialog`
 
 Die verschiedenen Bereiche der Anwendung sind in eigene Ansichten aufgeteilt:
 
