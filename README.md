@@ -86,6 +86,15 @@ Zu diesen zusätzlichen Erweiterungen gehören:
 
 Diese Funktionen waren nicht Bestandteil der ursprünglichen Anforderungen, sondern wurden zusätzlich umgesetzt, da die geplanten Aufgaben bereits früher abgeschlossen waren.
 
+## Login
+
+Das Programm verfügt über ein **Login-System mit Benutzername und Passwort**.
+
+Bevor die Anwendung gestartet werden kann, müssen zuerst die Schritte aus der [Setup](SETUP.md) durchgeführt werden. Dort wird beschrieben, wie die benötigten Zugangsdaten eingerichtet werden.
+
+Erst nach einem erfolgreichen Login wird die eigentliche Anwendung gestartet.
+
+
 ## Verwaltete Daten
 
 ### Schüler
