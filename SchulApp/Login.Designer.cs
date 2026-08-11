@@ -45,14 +45,14 @@
             // 
             // userText
             // 
-            userText.Location = new Point(308, 192);
+            userText.Location = new Point(348, 182);
             userText.Name = "userText";
             userText.Size = new Size(100, 23);
             userText.TabIndex = 1;
             // 
             // passwordText
             // 
-            passwordText.Location = new Point(308, 233);
+            passwordText.Location = new Point(348, 223);
             passwordText.Name = "passwordText";
             passwordText.Size = new Size(100, 23);
             passwordText.TabIndex = 2;
@@ -60,7 +60,7 @@
             // label1
             // 
             label1.AutoSize = true;
-            label1.Location = new Point(308, 174);
+            label1.Location = new Point(348, 164);
             label1.Name = "label1";
             label1.Size = new Size(60, 15);
             label1.TabIndex = 3;
@@ -69,7 +69,7 @@
             // label2
             // 
             label2.AutoSize = true;
-            label2.Location = new Point(308, 218);
+            label2.Location = new Point(348, 208);
             label2.Name = "label2";
             label2.Size = new Size(57, 15);
             label2.TabIndex = 4;
@@ -79,7 +79,7 @@
             // 
             label3.AutoSize = true;
             label3.Font = new Font("Segoe UI", 25F);
-            label3.Location = new Point(118, 91);
+            label3.Location = new Point(158, 81);
             label3.Name = "label3";
             label3.Size = new Size(526, 46);
             label3.TabIndex = 5;
@@ -87,7 +87,7 @@
             // 
             // loginBtn
             // 
-            loginBtn.Location = new Point(310, 266);
+            loginBtn.Location = new Point(350, 256);
             loginBtn.Name = "loginBtn";
             loginBtn.Size = new Size(75, 23);
             loginBtn.TabIndex = 6;

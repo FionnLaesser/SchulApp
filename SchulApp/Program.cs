@@ -8,9 +8,31 @@ namespace SchulApp
         static void Main()
         {
             ApplicationConfiguration.Initialize();
+
             // Lädt die .env Datei
             DotNetEnv.Env.TraversePath().Load();
 
+            using LoadingScreen loadingScreen = new LoadingScreen();
+
+            loadingScreen.Icon = Icon.ExtractAssociatedIcon(
+                Application.ExecutablePath
+            );
+
+            Application.Run(loadingScreen);
+
+            // Danach Login
+            using Login login = new Login();
+            // Icon setzen, weil der erste Application.Run bereits beendet wurde
+            login.Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
+
+
+            if (login.ShowDialog() != DialogResult.OK)
+            {
+                return;
+            }
+
+            // Einstellungen laden
+            ThemeManager.Laden();
             // Extrahiert das Symbol aus der .exe Datei
             Icon? appIcon =
                 Icon.ExtractAssociatedIcon(Application.ExecutablePath);
@@ -25,22 +47,10 @@ namespace SchulApp
                         form.Icon = appIcon;
                     }
                 }
+
             };
-
-            // Login wird zuerst angezeigt
-            using Login login = new Login();
-
-            // Nur bei erfolgreichem Login geht die App weiter
-            if (login.ShowDialog() != DialogResult.OK)
-            {
-                return;
-            }
-
-            // Einstellungen erst nach erfolgreichem Login laden
-            ThemeManager.Laden();
-
-            // Danach startet der LoadingScreen
-            Application.Run(new LoadingScreen());
+            // Hauptprogramm starten
+            Application.Run(new Hauptmenue());
         }
     }
 }

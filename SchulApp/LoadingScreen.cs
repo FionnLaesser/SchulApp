@@ -28,11 +28,6 @@ namespace SchulApp
 
                 await Task.Delay(500);
 
-                Hauptmenue hauptmenue = new Hauptmenue();
-
-                Hide();
-                hauptmenue.ShowDialog();
-
                 Close();
             }
             catch (Exception ex)

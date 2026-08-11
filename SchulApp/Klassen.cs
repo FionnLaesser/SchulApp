@@ -82,7 +82,7 @@ namespace SchulApp
                 // Lädt Klassen, Klassenlehrer und Anzahl Schüler.
                 // JOIN, COUNT und SELECT werden von Entity Framework erzeugt.
                 var klassen = context.Klassen
-                    .AsNoTracking()
+                    .AsNoTracking() //Nur lesen, speichersparsam und schneller.
                     .OrderBy(k => k.KlassenId)
                     .Select(k => new
                     {
