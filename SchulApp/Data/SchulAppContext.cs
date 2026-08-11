@@ -26,6 +26,18 @@ namespace SchulApp.Data
         // Tabelle dbo.Stundenplan
         public DbSet<StundenplanModel> Stundenplan { get; set; }
 
+        // Tabelle dbo.Benutzer
+        public DbSet<LoginBenutzer> Benutzer { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.ApplyConfigurationsFromAssembly(
+                typeof(SchulAppContext).Assembly
+            );
+        }
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder.UseSqlServer(

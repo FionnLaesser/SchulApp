@@ -207,6 +207,32 @@ BEGIN
 END;
 GO
 
+IF OBJECT_ID(N'[dbo].[Benutzer]', N'U') IS NULL
+BEGIN
+    CREATE TABLE [dbo].[Benutzer]
+    (
+        [Id] INT IDENTITY(1,1) NOT NULL,
+        [Benutzername] NVARCHAR(50) NOT NULL,
+        [PasswortHash] NVARCHAR(255) NOT NULL,
+        [ErstelltAm] DATETIME2 NOT NULL,
+
+        CONSTRAINT [PK_Benutzer]
+            PRIMARY KEY ([Id])
+    );
+END;
+
+IF NOT EXISTS
+(
+    SELECT 1
+    FROM sys.indexes
+    WHERE name = N'IX_Benutzer_Benutzername'
+      AND object_id = OBJECT_ID(N'[dbo].[Benutzer]')
+)
+BEGIN
+    CREATE UNIQUE INDEX [IX_Benutzer_Benutzername]
+    ON [dbo].[Benutzer] ([Benutzername]);
+END;
+
 /* =========================================================
    INDEXE FÜR FOREIGN KEYS
 

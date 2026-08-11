@@ -1,6 +1,6 @@
 namespace SchulApp
 {
-    partial class Login
+    partial class Register
     {
         private System.ComponentModel.IContainer components = null;
 
@@ -21,8 +21,10 @@ namespace SchulApp
             brandSubtitleLabel = new Label();
             brandLabel = new Label();
             cardPanel = new Panel();
+            backToLoginBtn = new Button();
             registerBtn = new Button();
-            loginBtn = new Button();
+            repeatPasswordText = new TextBox();
+            repeatPasswordLabel = new Label();
             passwordText = new TextBox();
             passwordLabel = new Label();
             userText = new TextBox();
@@ -52,7 +54,7 @@ namespace SchulApp
             brandSubtitleLabel.Name = "brandSubtitleLabel";
             brandSubtitleLabel.Size = new Size(244, 58);
             brandSubtitleLabel.TabIndex = 1;
-            brandSubtitleLabel.Text = "Deine zentrale Verwaltung für Schüler, Lehrer, Klassen und Stundenpläne.";
+            brandSubtitleLabel.Text = "Erstelle dein Konto und starte direkt mit der Schulverwaltung.";
             // 
             // brandLabel
             // 
@@ -68,61 +70,85 @@ namespace SchulApp
             // cardPanel
             // 
             cardPanel.BackColor = Color.White;
+            cardPanel.Controls.Add(backToLoginBtn);
             cardPanel.Controls.Add(registerBtn);
-            cardPanel.Controls.Add(loginBtn);
+            cardPanel.Controls.Add(repeatPasswordText);
+            cardPanel.Controls.Add(repeatPasswordLabel);
             cardPanel.Controls.Add(passwordText);
             cardPanel.Controls.Add(passwordLabel);
             cardPanel.Controls.Add(userText);
             cardPanel.Controls.Add(userLabel);
             cardPanel.Controls.Add(subtitleLabel);
             cardPanel.Controls.Add(titleLabel);
-            cardPanel.Location = new Point(404, 65);
+            cardPanel.Location = new Point(404, 38);
             cardPanel.Name = "cardPanel";
             cardPanel.Padding = new Padding(36);
-            cardPanel.Size = new Size(430, 430);
+            cardPanel.Size = new Size(430, 485);
             cardPanel.TabIndex = 1;
+            // 
+            // backToLoginBtn
+            // 
+            backToLoginBtn.BackColor = Color.White;
+            backToLoginBtn.Cursor = Cursors.Hand;
+            backToLoginBtn.FlatAppearance.BorderColor = Color.FromArgb(31, 65, 114);
+            backToLoginBtn.FlatAppearance.BorderSize = 1;
+            backToLoginBtn.FlatStyle = FlatStyle.Flat;
+            backToLoginBtn.Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold);
+            backToLoginBtn.ForeColor = Color.FromArgb(31, 65, 114);
+            backToLoginBtn.Location = new Point(43, 402);
+            backToLoginBtn.Name = "backToLoginBtn";
+            backToLoginBtn.Size = new Size(344, 42);
+            backToLoginBtn.TabIndex = 5;
+            backToLoginBtn.Text = "Zurück zum Login";
+            backToLoginBtn.UseVisualStyleBackColor = false;
+            backToLoginBtn.Click += backToLoginBtn_Click;
             // 
             // registerBtn
             // 
-            registerBtn.BackColor = Color.White;
+            registerBtn.BackColor = Color.FromArgb(31, 65, 114);
             registerBtn.Cursor = Cursors.Hand;
-            registerBtn.FlatAppearance.BorderColor = Color.FromArgb(31, 65, 114);
-            registerBtn.FlatAppearance.BorderSize = 1;
+            registerBtn.FlatAppearance.BorderSize = 0;
             registerBtn.FlatStyle = FlatStyle.Flat;
             registerBtn.Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold);
-            registerBtn.ForeColor = Color.FromArgb(31, 65, 114);
-            registerBtn.Location = new Point(43, 347);
+            registerBtn.ForeColor = Color.White;
+            registerBtn.Location = new Point(43, 348);
             registerBtn.Name = "registerBtn";
             registerBtn.Size = new Size(344, 42);
             registerBtn.TabIndex = 4;
-            registerBtn.Text = "Neues Konto registrieren";
+            registerBtn.Text = "Konto erstellen";
             registerBtn.UseVisualStyleBackColor = false;
             registerBtn.Click += registerBtn_Click;
             // 
-            // loginBtn
+            // repeatPasswordText
             // 
-            loginBtn.BackColor = Color.FromArgb(31, 65, 114);
-            loginBtn.Cursor = Cursors.Hand;
-            loginBtn.FlatAppearance.BorderSize = 0;
-            loginBtn.FlatStyle = FlatStyle.Flat;
-            loginBtn.Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold);
-            loginBtn.ForeColor = Color.White;
-            loginBtn.Location = new Point(43, 293);
-            loginBtn.Name = "loginBtn";
-            loginBtn.Size = new Size(344, 42);
-            loginBtn.TabIndex = 3;
-            loginBtn.Text = "Anmelden";
-            loginBtn.UseVisualStyleBackColor = false;
-            loginBtn.Click += loginBtn_Click;
+            repeatPasswordText.BackColor = Color.FromArgb(247, 249, 252);
+            repeatPasswordText.BorderStyle = BorderStyle.FixedSingle;
+            repeatPasswordText.Font = new Font("Segoe UI", 11F);
+            repeatPasswordText.Location = new Point(43, 300);
+            repeatPasswordText.Name = "repeatPasswordText";
+            repeatPasswordText.PlaceholderText = "Passwort wiederholen";
+            repeatPasswordText.Size = new Size(344, 27);
+            repeatPasswordText.TabIndex = 3;
+            // 
+            // repeatPasswordLabel
+            // 
+            repeatPasswordLabel.AutoSize = true;
+            repeatPasswordLabel.Font = new Font("Segoe UI Semibold", 9.5F, FontStyle.Bold);
+            repeatPasswordLabel.ForeColor = Color.FromArgb(45, 55, 72);
+            repeatPasswordLabel.Location = new Point(43, 276);
+            repeatPasswordLabel.Name = "repeatPasswordLabel";
+            repeatPasswordLabel.Size = new Size(136, 17);
+            repeatPasswordLabel.TabIndex = 7;
+            repeatPasswordLabel.Text = "Passwort wiederholen";
             // 
             // passwordText
             // 
             passwordText.BackColor = Color.FromArgb(247, 249, 252);
             passwordText.BorderStyle = BorderStyle.FixedSingle;
             passwordText.Font = new Font("Segoe UI", 11F);
-            passwordText.Location = new Point(43, 240);
+            passwordText.Location = new Point(43, 230);
             passwordText.Name = "passwordText";
-            passwordText.PlaceholderText = "Passwort eingeben";
+            passwordText.PlaceholderText = "Mindestens 8 Zeichen";
             passwordText.Size = new Size(344, 27);
             passwordText.TabIndex = 2;
             // 
@@ -131,7 +157,7 @@ namespace SchulApp
             passwordLabel.AutoSize = true;
             passwordLabel.Font = new Font("Segoe UI Semibold", 9.5F, FontStyle.Bold);
             passwordLabel.ForeColor = Color.FromArgb(45, 55, 72);
-            passwordLabel.Location = new Point(43, 216);
+            passwordLabel.Location = new Point(43, 206);
             passwordLabel.Name = "passwordLabel";
             passwordLabel.Size = new Size(64, 17);
             passwordLabel.TabIndex = 5;
@@ -142,9 +168,10 @@ namespace SchulApp
             userText.BackColor = Color.FromArgb(247, 249, 252);
             userText.BorderStyle = BorderStyle.FixedSingle;
             userText.Font = new Font("Segoe UI", 11F);
-            userText.Location = new Point(43, 169);
+            userText.Location = new Point(43, 160);
+            userText.MaxLength = 50;
             userText.Name = "userText";
-            userText.PlaceholderText = "Benutzername eingeben";
+            userText.PlaceholderText = "Benutzername wählen";
             userText.Size = new Size(344, 27);
             userText.TabIndex = 1;
             // 
@@ -153,7 +180,7 @@ namespace SchulApp
             userLabel.AutoSize = true;
             userLabel.Font = new Font("Segoe UI Semibold", 9.5F, FontStyle.Bold);
             userLabel.ForeColor = Color.FromArgb(45, 55, 72);
-            userLabel.Location = new Point(43, 145);
+            userLabel.Location = new Point(43, 136);
             userLabel.Name = "userLabel";
             userLabel.Size = new Size(94, 17);
             userLabel.TabIndex = 4;
@@ -164,26 +191,26 @@ namespace SchulApp
             subtitleLabel.AutoSize = true;
             subtitleLabel.Font = new Font("Segoe UI", 10F);
             subtitleLabel.ForeColor = Color.FromArgb(100, 116, 139);
-            subtitleLabel.Location = new Point(43, 96);
+            subtitleLabel.Location = new Point(43, 91);
             subtitleLabel.Name = "subtitleLabel";
-            subtitleLabel.Size = new Size(250, 19);
+            subtitleLabel.Size = new Size(237, 19);
             subtitleLabel.TabIndex = 1;
-            subtitleLabel.Text = "Melde dich mit deinem Konto an.";
+            subtitleLabel.Text = "Erstelle ein neues Benutzerkonto.";
             // 
             // titleLabel
             // 
             titleLabel.AutoSize = true;
             titleLabel.Font = new Font("Segoe UI Semibold", 24F, FontStyle.Bold);
             titleLabel.ForeColor = Color.FromArgb(20, 33, 61);
-            titleLabel.Location = new Point(39, 42);
+            titleLabel.Location = new Point(39, 37);
             titleLabel.Name = "titleLabel";
-            titleLabel.Size = new Size(109, 45);
+            titleLabel.Size = new Size(206, 45);
             titleLabel.TabIndex = 0;
-            titleLabel.Text = "Login";
+            titleLabel.Text = "Registrieren";
             // 
-            // Login
+            // Register
             // 
-            AcceptButton = loginBtn;
+            AcceptButton = registerBtn;
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.FromArgb(238, 243, 250);
@@ -192,9 +219,9 @@ namespace SchulApp
             Controls.Add(leftPanel);
             FormBorderStyle = FormBorderStyle.FixedSingle;
             MaximizeBox = false;
-            Name = "Login";
+            Name = "Register";
             StartPosition = FormStartPosition.CenterScreen;
-            Text = "SchulApp - Login";
+            Text = "SchulApp - Registrieren";
             leftPanel.ResumeLayout(false);
             leftPanel.PerformLayout();
             cardPanel.ResumeLayout(false);
@@ -214,7 +241,9 @@ namespace SchulApp
         private TextBox userText;
         private Label passwordLabel;
         private TextBox passwordText;
-        private Button loginBtn;
+        private Label repeatPasswordLabel;
+        private TextBox repeatPasswordText;
         private Button registerBtn;
+        private Button backToLoginBtn;
     }
 }

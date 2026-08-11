@@ -1,5 +1,3 @@
-using SchulApp.Properties;
-
 namespace SchulApp
 {
     internal static class Program
@@ -9,7 +7,7 @@ namespace SchulApp
         {
             ApplicationConfiguration.Initialize();
 
-            // Lädt die .env Datei
+            // Lädt optionale Einstellungen aus der .env Datei.
             DotNetEnv.Env.TraversePath().Load();
 
             using LoadingScreen loadingScreen = new LoadingScreen();
@@ -20,24 +18,24 @@ namespace SchulApp
 
             Application.Run(loadingScreen);
 
-            // Danach Login
             using Login login = new Login();
-            // Icon setzen, weil der erste Application.Run bereits beendet wurde
-            login.Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
 
+            login.Icon = Icon.ExtractAssociatedIcon(
+                Application.ExecutablePath
+            );
 
             if (login.ShowDialog() != DialogResult.OK)
             {
                 return;
             }
 
-            // Einstellungen laden
             ThemeManager.Laden();
-            // Extrahiert das Symbol aus der .exe Datei
-            Icon? appIcon =
-                Icon.ExtractAssociatedIcon(Application.ExecutablePath);
 
-            // Setzt das Symbol für alle offenen Forms
+            Icon? appIcon =
+                Icon.ExtractAssociatedIcon(
+                    Application.ExecutablePath
+                );
+
             Application.Idle += (_, _) =>
             {
                 foreach (Form form in Application.OpenForms)
@@ -47,9 +45,8 @@ namespace SchulApp
                         form.Icon = appIcon;
                     }
                 }
-
             };
-            // Hauptprogramm starten
+
             Application.Run(new Hauptmenue());
         }
     }

@@ -114,14 +114,14 @@ namespace SchulApp
             // einstellungPage
             // 
             einstellungPage.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
-            einstellungPage.Location = new Point(336, 464);
+            einstellungPage.Location = new Point(338, 464);
             einstellungPage.Name = "einstellungPage";
             einstellungPage.Size = new Size(300, 50);
             einstellungPage.TabIndex = 8;
             einstellungPage.Text = "Einstellung";
             einstellungPage.UseVisualStyleBackColor = true;
             einstellungPage.Click += einstellungPage_Click;
-            // 
+            //
             // Hauptmenue
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);

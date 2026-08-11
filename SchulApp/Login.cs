@@ -1,62 +1,137 @@
-﻿namespace SchulApp
+using Microsoft.EntityFrameworkCore;
+using SchulApp.Data;
+using SchulApp.Models;
+
+namespace SchulApp
 {
     public partial class Login : Form
     {
         public Login()
         {
             InitializeComponent();
-
             passwordText.UseSystemPasswordChar = true;
         }
 
-        private void loginBtn_Click(object sender, EventArgs e)
+        private async void loginBtn_Click(object sender, EventArgs e)
         {
             string benutzername = userText.Text.Trim();
             string passwort = passwordText.Text;
 
-            string? adminBenutzername =
-                Environment.GetEnvironmentVariable("ADMIN_USERNAME");
-
-            string? adminPasswort =
-                Environment.GetEnvironmentVariable("ADMIN_PASSWORD");
-
-            if (string.IsNullOrEmpty(adminBenutzername) ||
-                string.IsNullOrEmpty(adminPasswort))
+            if (string.IsNullOrWhiteSpace(benutzername) ||
+                string.IsNullOrWhiteSpace(passwort))
             {
                 MessageBox.Show(
-                    "Admin-Zugangsdaten konnten nicht geladen werden."
+                    "Bitte Benutzername und Passwort eingeben.",
+                    "Login",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information
                 );
 
                 return;
             }
 
-            bool benutzernameKorrekt =
-                benutzername == adminBenutzername;
+            SetBusy(true);
 
-            // Passwort aus der .env wird mit BCrypt gehasht
-            string adminPasswortHash =
-                BcryptHasher.HashPassword(adminPasswort);
-
-            // Eingegebenes Passwort wird mit dem Hash verglichen
-            bool passwortKorrekt =
-                BCrypt.Net.BCrypt.Verify(
-                    passwort,
-                    adminPasswortHash
-                );
-
-            if (benutzernameKorrekt && passwortKorrekt)
+            try
             {
+                await using SchulAppContext db = new SchulAppContext();
+
+                // Der Benutzer wird nur gelesen und nicht verändert.
+                LoginBenutzer? benutzer = await db.Benutzer
+                    .AsNoTracking()
+                    .SingleOrDefaultAsync(
+                        x => x.Benutzername == benutzername
+                    );
+
+                bool loginKorrekt =
+                    benutzer != null &&
+                    BCrypt.Net.BCrypt.Verify(
+                        passwort,
+                        benutzer.PasswortHash
+                    );
+
+                if (!loginKorrekt)
+                {
+                    MessageBox.Show(
+                        "Benutzername oder Passwort ist falsch.",
+                        "Login fehlgeschlagen",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning
+                    );
+
+                    passwordText.Clear();
+                    passwordText.Focus();
+
+                    return;
+                }
+
                 DialogResult = DialogResult.OK;
                 Close();
             }
-            else
+            catch (Exception)
             {
                 MessageBox.Show(
-                    "Benutzername oder Passwort ist falsch."
+                    "Die Verbindung zur Datenbank ist fehlgeschlagen.",
+                    "Datenbankfehler",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error
                 );
+            }
+            finally
+            {
+                if (!IsDisposed)
+                {
+                    SetBusy(false);
+                }
+            }
+        }
 
+        private void registerBtn_Click(object sender, EventArgs e)
+        {
+            Point aktuellePosition = Location;
+
+            Hide();
+
+            using Register register = new Register(aktuellePosition)
+            {
+                Icon = Icon
+            };
+
+            DialogResult result = register.ShowDialog();
+
+            // Die Position des Register-Fensters wird übernommen.
+            StartPosition = FormStartPosition.Manual;
+            Location = register.Location;
+
+            if (result == DialogResult.OK)
+            {
+                userText.Text = register.RegisteredUsername;
                 passwordText.Clear();
             }
+
+            Show();
+            Activate();
+
+            if (string.IsNullOrWhiteSpace(userText.Text))
+            {
+                userText.Focus();
+            }
+            else
+            {
+                passwordText.Focus();
+            }
+        }
+
+        private void SetBusy(bool busy)
+        {
+            loginBtn.Enabled = !busy;
+            registerBtn.Enabled = !busy;
+            userText.Enabled = !busy;
+            passwordText.Enabled = !busy;
+
+            Cursor = busy
+                ? Cursors.WaitCursor
+                : Cursors.Default;
         }
     }
 }
