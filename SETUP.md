@@ -1,39 +1,33 @@
 # Setup
 
-Damit die Anwendung gestartet werden kann, müssen zuerst die Umgebungsvariablen eingerichtet werden.
+Damit die Anwendung gestartet werden kann, müssen zuerst die lokalen Umgebungsvariablen eingerichtet werden.
 
 ## 1. `.env` Datei erstellen
 
 Kopiere die vorhandene `.env.example` Datei und benenne die Kopie in `.env` um.
 
-```powershell
+``` powershell
 copy .env.example .env
 ```
+Die .env Datei enthält lokale Zugangsdaten und Einstellungen und sollte deshalb nicht auf GitHub hochgeladen werden.
 
-Die `.env` Datei enthält lokale Einstellungen und sollte nicht auf GitHub hochgeladen werden.
+2. Benutzername und Passwort eintragen
 
-## 2. Passwort-Hash erstellen
-
-Öffne die Datei:
-
-```text
-BcryptHasher.cs
-```
-
-Trage dort das gewünschte Passwort ein und starte den Hasher.
-
-Dadurch wird ein BCrypt-Hash des Passworts erstellt.
-
-## 3. Hash in `.env` eintragen
-
-Kopiere den generierten BCrypt-Hash und füge ihn in die entsprechende Variable der `.env` Datei ein.
+Öffne die .env Datei und trage den gewünschten Admin-Benutzernamen und das Passwort ein.
 
 Beispiel:
-
-```env
-ADMIN_PASSWORD_HASH=hier_den_generierten_hash_einfügen
+``` text
+ADMIN_USERNAME=Admin
+ADMIN_PASSWORD=hier_dein_passwort
 ```
+Das Passwort wird von der Anwendung mit BCrypt verarbeitet und nicht direkt als Klartext für den Passwortvergleich verwendet.
 
-## 4. Anwendung starten
+3. Datenbank vorbereiten
 
-Nachdem die `.env` Datei eingerichtet und der Passwort-Hash eingetragen wurde, kann die Anwendung normal gestartet werden.
+Stelle sicher, dass der lokale SQL Server läuft und die benötigte Datenbank eingerichtet wurde. Importiere dafür das SQL aus der Datei [SchulApp](SchulApp/SQL/SchulAppDB.sql)
+
+Die Anwendung prüft beim Start automatisch, ob eine Verbindung zur Datenbank hergestellt werden kann.
+
+4. Anwendung starten
+
+Nachdem die .env Datei eingerichtet und die Datenbank verfügbar ist, kann die Anwendung normal über Visual Studio gestartet werden.
