@@ -1,33 +1,124 @@
 # Setup
 
-Damit die Anwendung gestartet werden kann, müssen zuerst die lokalen Umgebungsvariablen eingerichtet werden.
+Damit die SchulApp gestartet werden kann, müssen zuerst die lokale SQL-Datenbank und die benötigten Projektabhängigkeiten verfügbar sein.
 
-## 1. `.env` Datei erstellen
+Benutzerkonten werden direkt über die Anwendung registriert und in der SQL-Datenbank gespeichert. Die `.env` Datei ist deshalb nicht mehr für Admin-Benutzername und Admin-Passwort zuständig.
 
-Kopiere die vorhandene `.env.example` Datei und benenne die Kopie in `.env` um.
+## 1. Projekt öffnen
 
-``` powershell
+Klone das Repository oder lade es von GitHub herunter und öffne das Projekt anschliessend in **Visual Studio 2022**.
+
+Stelle sicher, dass die für das Projekt benötigte .NET-Version installiert ist.
+
+## 2. NuGet-Pakete wiederherstellen
+
+Visual Studio stellt die NuGet-Pakete normalerweise automatisch wieder her.
+
+Unter anderem werden folgende Pakete beziehungsweise Bibliotheken verwendet:
+
+```text
+Microsoft.EntityFrameworkCore.SqlServer
+Microsoft.EntityFrameworkCore.Tools
+Microsoft.Data.SqlClient
+DotNetEnv
+BCrypt.Net
+xunit
+```
+
+Falls Pakete fehlen, können sie über die NuGet-Paketverwaltung von Visual Studio wiederhergestellt werden.
+
+## 3. Datenbank vorbereiten
+
+Stelle sicher, dass der lokale **Microsoft SQL Server** läuft.
+
+Richte anschliessend die benötigte Datenbank mit dem SQL-Skript ein:
+
+[SchulAppDB.sql](SchulApp/SQL/SchulAppDB.sql)
+
+Die Anwendung verwendet `SchulAppContext` mit Entity Framework Core für den Zugriff auf die SQL-Datenbank.
+
+Die Datenbank enthält unter anderem Tabellen beziehungsweise Daten für:
+
+- Einstellungen
+- Klassen
+- Lehrer
+- Schüler
+- Lehrerinformationen
+- Kurse
+- Stundenplan
+- Benutzer
+
+Beim Start prüft die Anwendung automatisch mit Entity Framework Core, ob eine Verbindung zur Datenbank hergestellt werden kann.
+
+Kann keine Verbindung hergestellt werden, zeigt die Anwendung eine Fehlermeldung an und der normale Startvorgang wird nicht fortgesetzt.
+
+## 4. ~~`.env` Datei optional einrichten~~
+
+~~Die Anwendung kann beim Start eine lokale `.env` Datei einlesen.~~
+
+~~Falls für deine lokale Umgebung Werte aus `.env.example` benötigt werden, kopiere die Datei und benenne die Kopie in `.env` um.~~
+
+```powershell
 copy .env.example .env
 ```
-Die .env Datei enthält lokale Zugangsdaten und Einstellungen und sollte deshalb nicht auf GitHub hochgeladen werden.
 
-2. Benutzername und Passwort eintragen
+~~Die `.env` Datei kann lokale Einstellungen oder Umgebungswerte enthalten und sollte nicht auf GitHub hochgeladen werden.~~
 
-Öffne die .env Datei und trage den gewünschten Admin-Benutzernamen und das Passwort ein.
+~~Wichtig: Benutzername und Passwort für das Login werden nicht in der `.env` Datei gespeichert. Benutzerkonten werden über die Registrierungsseite angelegt und in der SQL-Datenbank gespeichert.~~
+> **Veraltet:** Dieser Abschnitt wird nicht mehr benötigt.
 
-Beispiel:
-``` text
-ADMIN_USERNAME=Admin
-ADMIN_PASSWORD=hier_dein_passwort
-```
-Das Passwort wird von der Anwendung mit BCrypt verarbeitet und nicht direkt als Klartext für den Passwortvergleich verwendet.
 
-3. Datenbank vorbereiten
+## 5. Anwendung starten
 
-Stelle sicher, dass der lokale SQL Server läuft und die benötigte Datenbank eingerichtet wurde. Importiere dafür das SQL aus der Datei [SchulApp](SchulApp/SQL/SchulAppDB.sql)
+Nachdem SQL Server läuft, die Datenbank eingerichtet ist und die benötigten Pakete verfügbar sind, kann die Anwendung normal über Visual Studio gestartet werden.
 
-Die Anwendung prüft beim Start automatisch, ob eine Verbindung zur Datenbank hergestellt werden kann.
+Beim Start passiert vereinfacht Folgendes:
 
-4. Anwendung starten
+1. Die Anwendung wird initialisiert.
+2. Eine vorhandene `.env` Datei wird eingelesen.
+3. Der LoadingScreen wird angezeigt.
+4. Die Datenbankverbindung wird geprüft.
+5. Bei erfolgreicher Verbindung wird das Login geöffnet.
 
-Nachdem die .env Datei eingerichtet und die Datenbank verfügbar ist, kann die Anwendung normal über Visual Studio gestartet werden.
+## 6. Benutzer registrieren
+
+Falls noch kein passender Benutzer vorhanden ist, öffne über das Login die Registrierungsseite.
+
+Für neue Benutzer gelten unter anderem folgende Anforderungen:
+
+- Benutzername mindestens 3 Zeichen
+- Passwort mindestens 8 Zeichen
+- Benutzername muss eindeutig sein
+
+Das Passwort wird vor dem Speichern mit **BCrypt** gehasht. In der Datenbank wird nur der Passwort-Hash gespeichert.
+
+## 7. Anmelden
+
+Melde dich anschliessend mit dem registrierten Benutzernamen und dem zugehörigen Passwort an.
+
+Beim Login wird das eingegebene Passwort mit BCrypt gegen den in der Datenbank gespeicherten Hash geprüft.
+
+Erst nach erfolgreicher Anmeldung wird die eigentliche SchulApp geöffnet und die gespeicherten Design-Einstellungen werden geladen.
+
+## Hinweise bei Problemen
+
+### Datenbankverbindung schlägt fehl
+
+Prüfe:
+
+- Läuft Microsoft SQL Server?
+- Wurde `SchulAppDB.sql` ausgeführt?
+- Existiert die benötigte Datenbank?
+- Passt die im `SchulAppContext` konfigurierte SQL-Server-Verbindung zur lokalen Installation?
+- Hat der aktuell angemeldete Windows-Benutzer Zugriff auf die Datenbank?
+
+### Login funktioniert nicht
+
+Prüfe:
+
+- Existiert der Benutzer bereits in der Benutzertabelle?
+- Wurde der Benutzer über die Registrierungsseite erstellt?
+- Ist der Benutzername korrekt geschrieben?
+- Wird das richtige Passwort verwendet?
+
+Das Klartext-Passwort kann nicht aus dem gespeicherten BCrypt-Hash zurückgelesen werden.

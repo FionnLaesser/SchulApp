@@ -7,8 +7,8 @@ namespace SchulApp
         {
             ApplicationConfiguration.Initialize();
 
-            // Lädt optionale Einstellungen aus der .env Datei.
-            DotNetEnv.Env.TraversePath().Load();
+            // Könnte optionale Einstellungen aus der .env Datei. Wird gerade nicht benutzt
+            // DotNetEnv.Env.TraversePath().Load();
 
             using LoadingScreen loadingScreen = new LoadingScreen();
 
