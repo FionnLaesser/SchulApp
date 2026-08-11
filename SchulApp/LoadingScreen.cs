@@ -11,6 +11,7 @@ namespace SchulApp
         public LoadingScreen()
         {
             InitializeComponent();
+
             Shown += LoadingScreen_Shown;
         }
 
@@ -19,10 +20,15 @@ namespace SchulApp
             try
             {
                 loadingLabel.Text = "Verbinde mit Datenbank...";
-                await Task.Delay(500); // Simuliert eine kurze Ladezeit
 
-                // Prüft die Datenbankverbindung über Entity Framework
-                await DatenbankPruefen();
+                await Task.Delay(500);
+
+                // Datenbankprüfung im Hintergrund durchführen,
+                // damit der LoadingScreen nicht hängen bleibt
+                await Task.Run(async () =>
+                {
+                    await DatenbankPruefen();
+                });
 
                 loadingLabel.Text = "Datenbank verbunden";
 
@@ -45,12 +51,10 @@ namespace SchulApp
 
         private async Task DatenbankPruefen()
         {
-            // Erstellt den Entity-Framework-Datenbankkontext
             using SchulAppContext context = new SchulAppContext();
 
-            // Prüft, ob Entity Framework eine Verbindung
-            // zur Datenbank herstellen kann
-            bool verbunden = await context.Database.CanConnectAsync();
+            bool verbunden =
+                await context.Database.CanConnectAsync();
 
             if (!verbunden)
             {

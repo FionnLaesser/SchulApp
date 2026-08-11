@@ -17,11 +17,11 @@
             string? adminBenutzername =
                 Environment.GetEnvironmentVariable("ADMIN_USERNAME");
 
-            string? adminPasswortHash =
-                Environment.GetEnvironmentVariable("ADMIN_PASSWORD_HASH");
+            string? adminPasswort =
+                Environment.GetEnvironmentVariable("ADMIN_PASSWORD");
 
             if (string.IsNullOrEmpty(adminBenutzername) ||
-                string.IsNullOrEmpty(adminPasswortHash))
+                string.IsNullOrEmpty(adminPasswort))
             {
                 MessageBox.Show(
                     "Admin-Zugangsdaten konnten nicht geladen werden."
@@ -33,6 +33,11 @@
             bool benutzernameKorrekt =
                 benutzername == adminBenutzername;
 
+            // Passwort aus der .env wird mit BCrypt gehasht
+            string adminPasswortHash =
+                BcryptHasher.HashPassword(adminPasswort);
+
+            // Eingegebenes Passwort wird mit dem Hash verglichen
             bool passwortKorrekt =
                 BCrypt.Net.BCrypt.Verify(
                     passwort,
