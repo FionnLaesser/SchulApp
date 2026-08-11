@@ -117,55 +117,70 @@ Diese Funktionen waren nicht Bestandteil der ursprünglichen Anforderungen und w
 
 ## Verwaltete Daten
 
-### Schüler
+## Entity-Relationship-Diagramm
 
-Für Schüler werden unter anderem folgende Daten verwaltet:
+Das folgende ERD zeigt die wichtigsten Tabellen und Beziehungen der SchulApp.
 
-- ID
-- Name
-- Klasse
+```mermaid
+erDiagram
 
-### Lehrer
+    SCHUELER {
+        int Id PK
+        string Name
+        int KlasseId FK
+    }
 
-Für Lehrer können folgende Daten gespeichert werden:
+    LEHRER {
+        int Id PK
+        string Name
+        string Email
+        string Telefonnummer
+        string Titel
+        string Informationen
+        string Fach
+    }
 
-- ID
-- Name
-- E-Mail
-- Telefonnummer
-- Informationen und Titel
-- Fach
+    KLASSE {
+        int Id PK
+        string Klassenname
+        int KlassenlehrerId FK
+    }
 
-### Klassen
+    KURS {
+        int Id PK
+        string Kursname
+        int LehrerId FK
+        int KlasseId FK
+    }
 
-Für Klassen werden folgende Daten verwaltet:
+    STUNDENPLAN {
+        int Id PK
+        string Wochentag
+        time Startzeit
+        time Endzeit
+        int KursId FK
+        int LehrerId FK
+        string Raum
+        int KlasseId FK
+    }
 
-- ID
-- Klassenname
-- Klassenlehrer
-- Zugeordnete Schüler
+    KLASSE ||--o{ SCHUELER : "hat"
+    LEHRER ||--o{ KLASSE : "ist Klassenlehrer"
+    LEHRER ||--o{ KURS : "unterrichtet"
+    KLASSE ||--o{ KURS : "hat"
+    KURS ||--o{ STUNDENPLAN : "kommt vor in"
+    LEHRER ||--o{ STUNDENPLAN : "unterrichtet"
+    KLASSE ||--o{ STUNDENPLAN : "hat"
+```
+### Beziehungen kurz erklärt
 
-### Kurse
-
-Für Kurse werden folgende Daten verwaltet:
-
-- ID
-- Kursname
-- Lehrer
-- Klasse
-
-### Stundenplan
-
-Ein Stundenplaneintrag kann folgende Daten enthalten:
-
-- ID
-- Wochentag
-- Startzeit
-- Endzeit
-- Kurs
-- Lehrer
-- Raum
-- Klasse
+- Eine **Klasse** kann mehrere **Schüler** haben.
+- Ein **Schüler** gehört zu einer Klasse.
+- Ein **Lehrer** kann Klassenlehrer von einer oder mehreren Klassen sein.
+- Ein **Lehrer** kann mehrere Kurse unterrichten.
+- Eine **Klasse** kann mehrere Kurse haben.
+- Ein **Kurs** kann mehrere Stundenplaneinträge besitzen.
+- Ein **Stundenplaneintrag** gehört zu einem Kurs, einem Lehrer und einer Klasse.
 
 ### Einstellungen
 
