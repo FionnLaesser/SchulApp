@@ -6,7 +6,6 @@ namespace SchulApp
         static void Main()
         {
             ApplicationConfiguration.Initialize();
-
             // Könnte optionale Einstellungen aus der .env Datei laden. Wird gerade nicht benutzt.
             // DotNetEnv.Env.TraversePath().Load();
 

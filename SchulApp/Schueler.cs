@@ -4,7 +4,7 @@ using SchulApp.Services;
 
 namespace SchulApp
 {
-    public partial class Schueler : Form
+    public partial class Schueler : CustomForm
     {
         private readonly SchuelerService schuelerService;
         private readonly bool nurHinzufuegen;

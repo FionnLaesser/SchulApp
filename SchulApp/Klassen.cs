@@ -4,7 +4,7 @@ using SchulApp.Models;
 
 namespace SchulApp
 {
-    public partial class Klassen : Form
+    public partial class Klassen : CustomForm
     {
         private int? ausgewaehlteKlassenId;
 

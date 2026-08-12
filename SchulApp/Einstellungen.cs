@@ -1,6 +1,6 @@
 namespace SchulApp
 {
-    public partial class Einstellungen : Form
+    public partial class Einstellungen : CustomForm
     {
         public Einstellungen()
         {

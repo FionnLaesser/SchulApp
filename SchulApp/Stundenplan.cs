@@ -4,7 +4,7 @@ using SchulApp.Models;
 
 namespace SchulApp
 {
-    public partial class Stundenplan : Form
+    public partial class Stundenplan : CustomForm
     {
         private readonly bool darfBearbeiten;
         private int? ausgewaehlteStundenplanId;

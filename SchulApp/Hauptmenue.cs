@@ -2,7 +2,7 @@ using SchulApp.Models;
 
 namespace SchulApp
 {
-    public partial class Hauptmenue : Form
+    public partial class Hauptmenue : CustomForm
     {
         private readonly string rolle;
 

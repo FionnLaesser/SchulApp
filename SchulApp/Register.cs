@@ -4,7 +4,7 @@ using SchulApp.Models;
 
 namespace SchulApp
 {
-    public partial class Register : Form
+    public partial class Register : CustomForm
     {
         public string RegisteredUsername { get; private set; } = string.Empty;
 

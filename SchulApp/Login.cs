@@ -4,7 +4,7 @@ using SchulApp.Models;
 
 namespace SchulApp
 {
-    public partial class Login : Form
+    public partial class Login : CustomForm
     {
         public int AngemeldeteBenutzerId { get; private set; }
 
