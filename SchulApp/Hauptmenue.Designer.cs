@@ -24,6 +24,7 @@ namespace SchulApp
             stundenplanPage = new Button();
             hauptbild = new PictureBox();
             einstellungPage = new Button();
+            abmeldenBtn = new Button();
             ((System.ComponentModel.ISupportInitialize)hauptbild).BeginInit();
             SuspendLayout();
             // 
@@ -121,6 +122,17 @@ namespace SchulApp
             einstellungPage.Text = "Einstellung";
             einstellungPage.UseVisualStyleBackColor = true;
             einstellungPage.Click += einstellungPage_Click;
+            // 
+            // abmeldenBtn
+            // 
+            abmeldenBtn.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+            abmeldenBtn.Location = new Point(824, 18);
+            abmeldenBtn.Name = "abmeldenBtn";
+            abmeldenBtn.Size = new Size(130, 38);
+            abmeldenBtn.TabIndex = 9;
+            abmeldenBtn.Text = "Abmelden";
+            abmeldenBtn.UseVisualStyleBackColor = true;
+            abmeldenBtn.Click += abmeldenBtn_Click;
             //
             // Hauptmenue
             // 
@@ -128,6 +140,7 @@ namespace SchulApp
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = SystemColors.ActiveCaption;
             ClientSize = new Size(984, 561);
+            Controls.Add(abmeldenBtn);
             Controls.Add(einstellungPage);
             Controls.Add(stundenplanPage);
             Controls.Add(kursePage);
@@ -156,5 +169,6 @@ namespace SchulApp
         private Button stundenplanPage;
         private PictureBox hauptbild;
         private Button einstellungPage;
+        private Button abmeldenBtn;
     }
 }

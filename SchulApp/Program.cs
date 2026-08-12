@@ -7,34 +7,12 @@ namespace SchulApp
         {
             ApplicationConfiguration.Initialize();
 
-            // Könnte optionale Einstellungen aus der .env Datei. Wird gerade nicht benutzt
+            // Könnte optionale Einstellungen aus der .env Datei laden. Wird gerade nicht benutzt.
             // DotNetEnv.Env.TraversePath().Load();
 
-            using LoadingScreen loadingScreen = new LoadingScreen();
-
-            loadingScreen.Icon = Icon.ExtractAssociatedIcon(
+            Icon? appIcon = Icon.ExtractAssociatedIcon(
                 Application.ExecutablePath
             );
-
-            Application.Run(loadingScreen);
-
-            using Login login = new Login();
-
-            login.Icon = Icon.ExtractAssociatedIcon(
-                Application.ExecutablePath
-            );
-
-            if (login.ShowDialog() != DialogResult.OK)
-            {
-                return;
-            }
-
-            ThemeManager.Laden();
-
-            Icon? appIcon =
-                Icon.ExtractAssociatedIcon(
-                    Application.ExecutablePath
-                );
 
             Application.Idle += (_, _) =>
             {
@@ -47,7 +25,42 @@ namespace SchulApp
                 }
             };
 
-            Application.Run(new Hauptmenue(login.AngemeldeteRolle));
+            using (LoadingScreen loadingScreen = new LoadingScreen())
+            {
+                loadingScreen.Icon = appIcon;
+                Application.Run(loadingScreen);
+            }
+
+            while (true)
+            {
+                using Login login = new Login
+                {
+                    Icon = appIcon
+                };
+
+                if (login.ShowDialog() != DialogResult.OK)
+                {
+                    return;
+                }
+
+                ThemeManager.Laden(login.AngemeldeteBenutzerId);
+
+                using Hauptmenue hauptmenue = new Hauptmenue(
+                    login.AngemeldeteRolle
+                )
+                {
+                    Icon = appIcon
+                };
+
+                Application.Run(hauptmenue);
+
+                if (!hauptmenue.AbmeldenAngefordert)
+                {
+                    return;
+                }
+
+                ThemeManager.SitzungBeenden();
+            }
         }
     }
 }

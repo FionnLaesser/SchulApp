@@ -6,6 +6,8 @@ namespace SchulApp
     {
         private readonly string rolle;
 
+        public bool AbmeldenAngefordert { get; private set; }
+
         public Hauptmenue(string rolle)
         {
             this.rolle = rolle switch
@@ -46,7 +48,7 @@ namespace SchulApp
             if (IstLehrer)
             {
                 subtitleLabel.Text =
-                    "Lehrer: Schüler hinzufügen und Stundenpläne bearbeiten.";
+                    "Lehrer: Schüler verwalten und Stundenpläne bearbeiten.";
 
                 schuelerPage.Location = new Point(338, 231);
                 stundenplanPage.Location = new Point(338, 290);
@@ -80,7 +82,7 @@ namespace SchulApp
                 return;
             }
 
-            OeffneBereich(new Schueler(nurHinzufuegen: IstLehrer));
+            OeffneBereich(new Schueler());
         }
 
         private void lehrerPage_Click(object sender, EventArgs e)
@@ -121,6 +123,12 @@ namespace SchulApp
         private void hauptbildLaden()
         {
             hauptbild.Image = Image.FromFile("images/Hauptbild.png");
+        }
+
+        private void abmeldenBtn_Click(object sender, EventArgs e)
+        {
+            AbmeldenAngefordert = true;
+            Close();
         }
 
         private void einstellungPage_Click(object sender, EventArgs e)

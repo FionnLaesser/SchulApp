@@ -1,4 +1,5 @@
 ﻿using SchulApp.Data;
+using SchulApp.Models;
 using System.Drawing;
 using System.Windows.Forms;
 
@@ -6,55 +7,68 @@ namespace SchulApp
 {
     public static class ThemeManager
     {
-        public static Color HintergrundFarbe { get; private set; } = SystemColors.Control;
+        private static int? aktuellerBenutzerId;
+
+        public static Color HintergrundFarbe { get; private set; } = SystemColors.ActiveCaption;
         public static Color TextFarbe { get; private set; } = SystemColors.ControlText;
 
-        public static void Laden()
+        public static void Laden(int benutzerId)
         {
-            // Erstellt eine Verbindung zur Datenbank über Entity Framework
+            aktuellerBenutzerId = benutzerId;
+
+            // Jeder Benutzer startet mit den Standardfarben, falls noch keine
+            // persönliche Einstellung in der Datenbank gespeichert wurde.
+            HintergrundFarbe = SystemColors.ActiveCaption;
+            TextFarbe = SystemColors.ControlText;
+
             using SchulAppContext context = new SchulAppContext();
 
-            // Sucht die Einstellung mit der Id 1
-            // Entity Framework erstellt die SELECT-Abfrage automatisch
-            var einstellung = context.Einstellungen.Find(1);
+            // Die Id der Einstellung entspricht der Id des angemeldeten Benutzers.
+            Einstellung? einstellung = context.Einstellungen.Find(benutzerId);
 
-            // Prüft, ob die Einstellung gefunden wurde
-            if (einstellung != null)
-            {
-                // Wandelt den gespeicherten Integer wieder in eine Farbe um
-                HintergrundFarbe = Color.FromArgb(
-                    einstellung.HintergrundFarbe
-                );
-
-                // Wandelt den gespeicherten Integer wieder in eine Farbe um
-                TextFarbe = Color.FromArgb(
-                    einstellung.TextFarbe
-                );
-            }
-        }
-
-        public static void Speichern()
-        {
-            // Erstellt eine Verbindung zur Datenbank über Entity Framework
-            using SchulAppContext context = new SchulAppContext();
-
-            // Lädt die Einstellung mit der Id 1 aus der Datenbank
-            var einstellung = context.Einstellungen.Find(1);
-
-            
             if (einstellung == null)
             {
                 return;
             }
 
-            
-            einstellung.HintergrundFarbe = HintergrundFarbe.ToArgb();
+            HintergrundFarbe = Color.FromArgb(
+                einstellung.HintergrundFarbe
+            );
 
-            
-            einstellung.TextFarbe = TextFarbe.ToArgb();
+            TextFarbe = Color.FromArgb(
+                einstellung.TextFarbe
+            );
+        }
 
-            // Speichert alle Änderungen automatisch in der Datenbank
-            // Entity Framework erstellt die UPDATE-Abfrage selbst
+        public static void Speichern()
+        {
+            if (aktuellerBenutzerId == null)
+            {
+                return;
+            }
+
+            using SchulAppContext context = new SchulAppContext();
+
+            int benutzerId = aktuellerBenutzerId.Value;
+            Einstellung? einstellung = context.Einstellungen.Find(benutzerId);
+
+            if (einstellung == null)
+            {
+                einstellung = new Einstellung
+                {
+                    Id = benutzerId,
+                    HintergrundFarbe = HintergrundFarbe.ToArgb(),
+                    TextFarbe = TextFarbe.ToArgb()
+                };
+
+                context.Einstellungen.Add(einstellung);
+            }
+            else
+            {
+                einstellung.HintergrundFarbe = HintergrundFarbe.ToArgb();
+                einstellung.TextFarbe = TextFarbe.ToArgb();
+            }
+
             context.SaveChanges();
         }
 
@@ -148,6 +162,13 @@ namespace SchulApp
 
             Speichern();
             AlleOffenenFormsAktualisieren(alteTextFarbe);
+        }
+
+        public static void SitzungBeenden()
+        {
+            aktuellerBenutzerId = null;
+            HintergrundFarbe = SystemColors.ActiveCaption;
+            TextFarbe = SystemColors.ControlText;
         }
     }
 }
