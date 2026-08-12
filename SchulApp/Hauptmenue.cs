@@ -43,7 +43,6 @@ namespace SchulApp
             lehrerPage.Visible = false;
             klassenPage.Visible = false;
             kursePage.Visible = false;
-            einstellungPage.Visible = false;
 
             if (IstLehrer)
             {
@@ -64,19 +63,19 @@ namespace SchulApp
             stundenplanPage.Location = new Point(338, 260);
         }
 
-        private void OeffneBereich(Form formular)
-        {
-            formular.StartPosition = FormStartPosition.Manual;
-            formular.Location = Location;
+private void OeffneBereich(Form formular)
+{
+    formular.StartPosition = FormStartPosition.Manual;
+    formular.Location = Location;
 
-            // App-Icon vom Hauptmenü übernehmen
-            formular.Icon = Icon;
+    // App-Icon vom Hauptmenü übernehmen
+    formular.Icon = Icon;
 
-            Hide();
-            formular.ShowDialog();
-            Show();
-            Activate();
-        }
+    Hide();
+    formular.ShowDialog();
+    Show();
+    Activate();
+}
 
         private void schuelerPage_Click(object sender, EventArgs e)
         {
@@ -136,11 +135,6 @@ namespace SchulApp
 
         private void einstellungPage_Click(object sender, EventArgs e)
         {
-            if (!IstAdmin)
-            {
-                return;
-            }
-
             OeffneBereich(new Einstellungen());
         }
     }
