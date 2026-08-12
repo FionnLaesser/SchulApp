@@ -71,7 +71,7 @@ namespace SchulApp
 
             btnClose.Click += (_, _) =>
             {
-                Close();
+                Environment.Exit(0); // beendet die ganze App (z.B bei register funktioniert normal nicht)
             };
 
             btnMinimize.Click += async (_, _) =>
