@@ -4,13 +4,14 @@ SchulApp ist eine vollständige Schulverwaltungsanwendung, die mit **C#**, **.NE
 
 Die Anwendung dient dazu, wichtige Schuldaten wie **Schüler, Lehrer, Klassen, Kurse und Stundenpläne** zentral und übersichtlich zu verwalten. Die Daten werden in einer lokalen **Microsoft SQL Server 2022** Datenbank gespeichert. Für den Datenbankzugriff wird **Entity Framework Core** verwendet.
 
-Zusätzlich enthält die Anwendung unter anderem ein eigenes Login- und Registrierungssystem, einen LoadingScreen mit automatischer Datenbankprüfung, persistente Design-Einstellungen sowie eine Service- und Repository-Struktur für Schülerdaten.
+Zusätzlich enthält die Anwendung unter anderem ein eigenes Login- und Registrierungssystem mit Rollen und Berechtigungen, einen LoadingScreen mit automatischer Datenbankprüfung, benutzerspezifische persistente Design-Einstellungen, eine Abmeldefunktion sowie eine Service- und Repository-Struktur für Schülerdaten.
 
 ## Inhaltsverzeichnis
 
 - [Funktionen](#funktionen)
 - [Programmstart](#programmstart)
 - [Login und Registrierung](#login-und-registrierung)
+- [Rollen und Berechtigungen](#rollen-und-berechtigungen)
 - [Zusätzliche Erweiterungen](#zusätzliche-erweiterungen)
 - [Verwaltete Daten](#verwaltete-daten)
 - [Datenbank und Entity Framework Core](#datenbank-und-entity-framework-core)
@@ -53,10 +54,13 @@ Zu den wichtigsten Funktionen der Anwendung gehören:
 - Löschen von Datensätzen vor dem Ausführen bestätigen
 - Verknüpfte Daten wie Lehrer, Klassen, Schüler und Kurse gemeinsam darstellen
 - Abhängige Datensätze vor ungültigem Löschen schützen
-- Einstellungen für Hintergrund- und Textfarbe speichern
+- Einstellungen für Hintergrund- und Textfarbe benutzerspezifisch speichern
 - Eigenes App-Icon für die Windows-Forms-Fenster verwenden
 - Benutzer über Login anmelden
 - Neue Benutzer über eine Registrierungsseite erstellen
+- Bei der Registrierung zwischen Admin, Lehrer und Schüler wählen
+- Rollenabhängige Zugriffsrechte anwenden
+- Benutzer über einen Abmelde-Button abmelden und zum Login zurückkehren
 - Passwörter mit BCrypt hashen und sicher prüfen
 
 ## Programmstart
@@ -71,8 +75,9 @@ Der Startvorgang läuft vereinfacht folgendermassen ab:
 4. Bei erfolgreicher Datenbankverbindung wird der Startvorgang fortgesetzt.
 5. Anschliessend wird das Login angezeigt.
 6. Erst nach erfolgreichem Login wird die eigentliche Anwendung geöffnet.
-7. Die gespeicherten Design-Einstellungen werden geladen und auf die Anwendung angewendet.
-8. Das App-Icon wird zentral für geöffnete Windows-Forms-Fenster gesetzt.
+7. Die zum angemeldeten Benutzer gehörenden Design-Einstellungen werden geladen und auf die Anwendung angewendet.
+8. Die Berechtigungen werden anhand der Benutzerrolle angewendet.
+9. Das App-Icon wird zentral für geöffnete Windows-Forms-Fenster gesetzt.
 
 Kann keine Verbindung zur Datenbank hergestellt werden, wird eine Fehlermeldung angezeigt und der Startvorgang beendet.
 
@@ -90,7 +95,7 @@ Vor beziehungsweise während der Anmeldung wird ausserdem sichergestellt, dass d
 
 ### Registrierung
 
-Neue Benutzer können über eine eigene Registrierungsseite angelegt werden.
+Neue Benutzer können über eine eigene Registrierungsseite angelegt werden. Bei der Registrierung wird zusätzlich die Rolle **Admin**, **Lehrer** oder **Schüler** ausgewählt. Für die Rollenauswahl ist keine zusätzliche Bestätigung erforderlich.
 
 Für die Registrierung gelten unter anderem folgende Validierungen:
 
@@ -98,8 +103,9 @@ Für die Registrierung gelten unter anderem folgende Validierungen:
 - Passwort muss mindestens 8 Zeichen lang sein
 - Benutzername muss eindeutig sein
 - Erforderliche Felder dürfen nicht leer sein
+- Eine gültige Benutzerrolle muss ausgewählt sein
 
-Der Benutzername und der BCrypt-Passwort-Hash werden anschliessend in der Datenbank gespeichert.
+Der Benutzername, der BCrypt-Passwort-Hash und die ausgewählte Rolle werden anschliessend in der Datenbank gespeichert.
 
 Beim Wechsel zwischen Login und Registrierung wird die Formularposition beibehalten, damit sich die Fenster für den Benutzer nicht unnötig verschieben.
 
@@ -113,6 +119,46 @@ Im Repository kann die `.env.example` Datei als Vorlage verwendet werden.
 
 Die vollständige Einrichtung ist in [SETUP.md](SETUP.md) beschrieben.
 
+## Rollen und Berechtigungen
+
+Die Anwendung unterscheidet zwischen den drei Benutzerrollen **Admin**, **Lehrer** und **Schüler**.
+
+### Admin
+
+Ein Admin besitzt vollständige Verwaltungsrechte und kann:
+
+- Schüler anzeigen, erstellen, bearbeiten und löschen
+- Lehrer anzeigen, erstellen, bearbeiten und löschen
+- Klassen anzeigen, erstellen, bearbeiten und löschen
+- Kurse anzeigen, erstellen, bearbeiten und löschen
+- Stundenplaneinträge anzeigen, erstellen, bearbeiten und löschen
+- Einstellungen verwenden und ändern
+
+### Lehrer
+
+Ein Lehrer kann:
+
+- Schüler anzeigen, erstellen, bearbeiten und löschen
+- Stundenplaneinträge anzeigen, erstellen, bearbeiten und löschen
+- Einstellungen verwenden und ändern
+
+Ein Lehrer kann keine Lehrer, Klassen oder Kurse erstellen, bearbeiten oder löschen.
+
+### Schüler
+
+Ein Schüler besitzt nur Leserechte für den Stundenplan.
+
+Ein Schüler kann:
+
+- den Stundenplan anzeigen
+- seine eigenen Design-Einstellungen verwenden und ändern
+
+Ein Schüler kann keine Schuldaten erstellen, bearbeiten oder löschen.
+
+### Abmelden
+
+Über den **Abmelden**-Button im Hauptmenü kann der aktuell angemeldete Benutzer die Sitzung beenden. Anschliessend wird wieder das Login angezeigt, sodass sich ein anderer Benutzer anmelden kann.
+
 ## Zusätzliche Erweiterungen
 
 Die ursprünglich geplanten Anforderungen des Projekts konnten frühzeitig fertiggestellt werden. Deshalb wurde die Anwendung anschliessend freiwillig um zusätzliche Funktionen erweitert, die über den ursprünglich geplanten Umfang hinausgehen.
@@ -121,6 +167,9 @@ Zu diesen Erweiterungen gehören:
 
 - Eigenes Login-System
 - Eigene Registrierungsseite
+- Rollenwahl bei der Registrierung zwischen Admin, Lehrer und Schüler
+- Rollenabhängige Benutzeroberfläche und Berechtigungen
+- Abmeldefunktion mit Rückkehr zum Login
 - Speicherung von Benutzerkonten in der SQL-Datenbank
 - Sichere Passwort-Hashes mit BCrypt
 - Validierung von Benutzername und Passwort bei der Registrierung
@@ -134,8 +183,8 @@ Zu diesen Erweiterungen gehören:
 - Frei wählbare Textfarbe über einen `ColorDialog`
 - Prüfung, dass Hintergrundfarbe und Textfarbe nicht identisch sein können
 - Zentraler `ThemeManager` für die Darstellung der Anwendung
-- Speicherung der gewählten Hintergrund- und Textfarbe in der SQL-Datenbank
-- Automatisches Laden des zuletzt verwendeten Designs
+- Benutzerspezifische Speicherung der gewählten Hintergrund- und Textfarbe in der SQL-Datenbank
+- Automatisches Laden des Designs des aktuell angemeldeten Benutzers
 - Sofortige Aktualisierung des Designs bei bereits geöffneten Fenstern
 - Möglichkeit, das Design auf die Standardfarben zurückzusetzen
 - Anzeige von aktuellem Datum und aktueller Uhrzeit im Stundenplan
@@ -222,16 +271,20 @@ Für Benutzerkonten werden unter anderem folgende Daten verwaltet:
 - ID
 - Benutzername
 - Passwort-Hash
+- Rolle
 - Erstellungszeitpunkt
 
-Passwörter werden nicht im Klartext gespeichert.
+Passwörter werden nicht im Klartext gespeichert. Die Rolle bestimmt, welche Bereiche und Bearbeitungsfunktionen ein Benutzer verwenden darf.
 
 ### Einstellungen
 
-Für die Darstellung der Anwendung können unter anderem folgende Einstellungen gespeichert werden:
+Für die Darstellung der Anwendung können für jeden Benutzer separat unter anderem folgende Einstellungen gespeichert werden:
 
+- Benutzer-ID
 - Hintergrundfarbe
 - Textfarbe
+
+Dadurch kann jeder Benutzer ein eigenes Design verwenden, ohne die Einstellungen anderer Benutzer zu überschreiben.
 
 ## Entity-Relationship-Diagramm
 
@@ -288,7 +341,14 @@ erDiagram
         int Id PK
         string Benutzername
         string PasswortHash
+        string Rolle
         datetime ErstelltAm
+    }
+
+    EINSTELLUNG {
+        int Id PK, FK
+        int HintergrundFarbe
+        int TextFarbe
     }
 
     KLASSE ||--o{ SCHUELER : "hat"
@@ -299,6 +359,7 @@ erDiagram
     KURS ||--o{ STUNDENPLAN : "kommt vor in"
     LEHRER ||--o{ STUNDENPLAN : "unterrichtet"
     KLASSE ||--o{ STUNDENPLAN : "hat"
+    BENUTZER ||--o| EINSTELLUNG : "hat Einstellungen"
 ```
 
 ### Beziehungen kurz erklärt
@@ -312,6 +373,8 @@ erDiagram
 - Ein **Kurs** kann mehrere Stundenplaneinträge besitzen.
 - Ein **Stundenplaneintrag** gehört zu einem Kurs, einem Lehrer und einer Klasse.
 - **Benutzerkonten** werden unabhängig von den Schuldaten für die Anmeldung verwaltet.
+- Ein **Benutzer** kann eigene Design-Einstellungen besitzen.
+- Die Benutzerrolle bestimmt die verfügbaren Verwaltungsfunktionen.
 
 ## Datenbank und Entity Framework Core
 
@@ -419,12 +482,12 @@ Dieser verwaltet:
 
 - Hintergrundfarbe
 - Textfarbe
-- Laden der gespeicherten Farben
-- Speichern geänderter Farben
+- Laden der gespeicherten Farben des angemeldeten Benutzers
+- Speichern geänderter Farben für den angemeldeten Benutzer
 - Anwenden des Designs auf geöffnete Forms
 - Zurücksetzen auf Standardfarben
 
-Die Theme-Einstellungen werden in der SQL-Datenbank gespeichert und beim Start geladen.
+Die Theme-Einstellungen werden in der SQL-Datenbank pro Benutzer gespeichert. Nach erfolgreichem Login werden die Einstellungen des aktuell angemeldeten Benutzers geladen.
 
 Hintergrundfarbe und Textfarbe dürfen nicht identisch sein. Falls der Benutzer versucht, dieselbe Farbe zu wählen, wird die Änderung verhindert, damit die Oberfläche lesbar bleibt.
 
@@ -458,6 +521,8 @@ Die Anwendung ist in mehrere eigene Ansichten aufgeteilt:
 - Kurse
 - Stundenplan
 - Einstellungen
+
+Das Hauptmenü passt die verfügbaren Bereiche an die Rolle des angemeldeten Benutzers an. Zusätzlich steht dort eine Abmeldefunktion zur Verfügung.
 
 In Tabellen werden möglichst nur relevante Spalten dargestellt. IDs und verknüpfte Daten werden so aufbereitet, dass die Übersichten verständlich bleiben.
 
@@ -500,7 +565,8 @@ Unter anderem gelten folgende Regeln:
 - Eine Klasse kann nicht gelöscht werden, solange ihr noch Kurse zugeordnet sind.
 - Benötigte Referenzdaten werden in Auswahlfeldern geladen, bevor abhängige Datensätze erstellt werden.
 - Die Schüler-Service-Schicht validiert Name, Klasse und Schüler-ID.
-- Die Registrierung validiert Benutzername und Passwort.
+- Die Registrierung validiert Benutzername, Passwort und Benutzerrolle.
+- Rollenabhängige Berechtigungen verhindern nicht erlaubte Verwaltungsaktionen.
 
 ## Technologien
 
@@ -594,9 +660,10 @@ Die wichtigsten Bereiche haben folgende Aufgaben:
 - `Repositories` kapselt den Datenzugriff für die dafür vorgesehenen Bereiche.
 - `Services` enthält zusätzliche Programmlogik und Validierungen.
 - Die Windows Forms Dateien enthalten die grafische Benutzeroberfläche und deren Ereignisse.
-- `ThemeManager` verwaltet die Darstellung der Anwendung zentral.
-- `Login` übernimmt die Anmeldung vorhandener Benutzer.
-- `Register` erstellt neue Benutzerkonten.
+- `ThemeManager` verwaltet die Darstellung der Anwendung zentral und speichert Einstellungen pro Benutzer.
+- `Login` übernimmt die Anmeldung vorhandener Benutzer und stellt die aktuelle Benutzerrolle bereit.
+- `Register` erstellt neue Benutzerkonten inklusive Rollenauswahl.
+- `Hauptmenue` steuert die rollenabhängige Navigation und die Abmeldefunktion.
 - `LoadingScreen` zeigt den Startvorgang an und prüft die Datenbankverbindung.
 - `images` enthält Bilder und Icons der Anwendung.
 - `Screenshots` enthält Bilder für die Dokumentation.
@@ -613,7 +680,7 @@ Die wichtigsten Schritte sind:
 3. Falls lokale Umgebungswerte benötigt werden, `.env.example` kopieren und als `.env` speichern.
 4. NuGet-Abhängigkeiten wiederherstellen.
 5. Anwendung über Visual Studio starten.
-6. Einen Benutzer über die Registrierungsseite erstellen und sich anschliessend anmelden.
+6. Einen Benutzer über die Registrierungsseite erstellen, eine Rolle auswählen und sich anschliessend anmelden.
 
 Beispiel zum optionalen Erstellen der `.env` Datei mit PowerShell:
 
@@ -664,8 +731,14 @@ Das Projekt gilt als abgeschlossen, wenn:
 - die Datenbankverbindung beim Start geprüft wird
 - das Login funktioniert
 - neue Benutzer registriert werden können
+- bei der Registrierung eine Rolle ausgewählt werden kann
 - Passwörter mit BCrypt gehasht in der Datenbank gespeichert werden
 - die Anwendung erst nach erfolgreicher Anmeldung geöffnet wird
+- Admins vollständige Verwaltungsrechte besitzen
+- Lehrer Schüler und Stundenpläne verwalten können
+- Lehrer keine Lehrer, Klassen oder Kurse verwalten können
+- Schüler den Stundenplan nur anzeigen können
+- Benutzer sich über das Hauptmenü abmelden können
 - Lehrer verwaltet werden können
 - zusätzliche Lehrerinformationen verwaltet werden können
 - Schüler verwaltet werden können
@@ -681,7 +754,7 @@ Das Projekt gilt als abgeschlossen, wenn:
 - die Daten korrekt in Microsoft SQL Server gespeichert werden
 - Entity Framework Core für die vorgesehenen Datenbankzugriffe funktioniert
 - `AsNoTracking()` für geeignete Lesezugriffe verwendet wird
-- die Einstellungen gespeichert und beim Start geladen werden
+- die Einstellungen pro Benutzer gespeichert und nach dem Login geladen werden
 - Hintergrund- und Textfarbe nicht identisch gewählt werden können
 - die Anwendung ohne Fehler startet
 - die Schülerlogik über Repository und Service getrennt ist
