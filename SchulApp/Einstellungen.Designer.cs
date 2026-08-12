@@ -26,6 +26,7 @@ namespace SchulApp
             colorDialogTextFarbe = new ColorDialog();
             resetSettingsBtn = new Button();
             label1 = new Label();
+            userNameLabel = new Label();
             SuspendLayout();
             // 
             // titleLabel
@@ -115,12 +116,22 @@ namespace SchulApp
             label1.TabIndex = 8;
             label1.Text = "Einstellungen Zurücksetzen? \r\nDrück hier auf den Knopf";
             // 
+            // userNameLabel
+            // 
+            userNameLabel.AutoSize = true;
+            userNameLabel.Location = new Point(646, 9);
+            userNameLabel.Name = "userNameLabel";
+            userNameLabel.Size = new Size(33, 15);
+            userNameLabel.TabIndex = 9;
+            userNameLabel.Text = "User:";
+            // 
             // Einstellungen
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = SystemColors.ActiveCaption;
             ClientSize = new Size(984, 561);
+            Controls.Add(userNameLabel);
             Controls.Add(label1);
             Controls.Add(resetSettingsBtn);
             Controls.Add(textfarbeBtn);
@@ -150,5 +161,6 @@ namespace SchulApp
         private ColorDialog colorDialogTextFarbe;
         private Button resetSettingsBtn;
         private Label label1;
+        private Label userNameLabel;
     }
 }

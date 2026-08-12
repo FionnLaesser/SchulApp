@@ -78,7 +78,9 @@ namespace SchulApp
                     LoginBenutzer.RolleSchueler => LoginBenutzer.RolleSchueler,
                     _ => LoginBenutzer.RolleSchueler
                 };
-
+                BenutzerSession.BenutzerId = benutzer.Id;
+                BenutzerSession.Benutzername = benutzer.Benutzername;
+                BenutzerSession.Rolle = benutzer.Rolle;
                 DialogResult = DialogResult.OK;
                 Close();
             }

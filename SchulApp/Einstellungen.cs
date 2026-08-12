@@ -7,6 +7,7 @@ namespace SchulApp
             InitializeComponent();
 
             ThemeManager.Anwenden(this);
+            userNameLabel.Text = $"Angemeldet als: {BenutzerSession.Benutzername}";
         }
 
         private void backgroundColorBtn_Click(object sender, EventArgs e)
