@@ -45,6 +45,7 @@ namespace SchulApp
                 ThemeManager.Laden(login.AngemeldeteBenutzerId);
 
                 using Hauptmenue hauptmenue = new Hauptmenue(
+                    login.AngemeldeteBenutzerId,
                     login.AngemeldeteRolle
                 )
                 {

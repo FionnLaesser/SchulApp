@@ -14,6 +14,12 @@
 
         public string Rolle { get; set; } = RolleSchueler;
 
+        public string? Vorname { get; set; }
+
+        public string? Nachname { get; set; }
+
+        public string? Email { get; set; }
+
         public DateTime ErstelltAm { get; set; }
     }
 }

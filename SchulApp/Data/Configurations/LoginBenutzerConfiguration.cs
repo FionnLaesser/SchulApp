@@ -29,6 +29,15 @@ namespace SchulApp.Data.Configurations
                 .HasMaxLength(20)
                 .IsRequired();
 
+            entity.Property(x => x.Vorname)
+                .HasMaxLength(100);
+
+            entity.Property(x => x.Nachname)
+                .HasMaxLength(100);
+
+            entity.Property(x => x.Email)
+                .HasMaxLength(255);
+
             entity.Property(x => x.ErstelltAm)
                 .IsRequired();
 

@@ -4,12 +4,15 @@ namespace SchulApp
 {
     public partial class Hauptmenue : CustomForm
     {
+        private readonly int benutzerId;
         private readonly string rolle;
 
         public bool AbmeldenAngefordert { get; private set; }
 
-        public Hauptmenue(string rolle)
+        public Hauptmenue(int benutzerId, string rolle)
         {
+            this.benutzerId = benutzerId;
+
             this.rolle = rolle switch
             {
                 LoginBenutzer.RolleAdmin => LoginBenutzer.RolleAdmin,
@@ -22,6 +25,7 @@ namespace SchulApp
             ThemeManager.Anwenden(this);
             RechteAnwenden();
             hauptbildLaden();
+            profilBildLaden();
         }
 
         private bool IstAdmin =>
@@ -63,19 +67,19 @@ namespace SchulApp
             stundenplanPage.Location = new Point(338, 260);
         }
 
-private void OeffneBereich(Form formular)
-{
-    formular.StartPosition = FormStartPosition.Manual;
-    formular.Location = Location;
+        private void OeffneBereich(Form formular)
+        {
+            formular.StartPosition = FormStartPosition.Manual;
+            formular.Location = Location;
 
-    // App-Icon vom Hauptmenü übernehmen
-    formular.Icon = Icon;
+            // App-Icon vom Hauptmenü übernehmen
+            formular.Icon = Icon;
 
-    Hide();
-    formular.ShowDialog();
-    Show();
-    Activate();
-}
+            Hide();
+            formular.ShowDialog();
+            Show();
+            Activate();
+        }
 
         private void schuelerPage_Click(object sender, EventArgs e)
         {
@@ -127,6 +131,26 @@ private void OeffneBereich(Form formular)
             hauptbild.Image = Image.FromFile("images/Hauptbild.png");
         }
 
+        private void profilBildLaden()
+        {
+            string pfad = Path.Combine(
+                AppContext.BaseDirectory,
+                "images",
+                "profilePicture.png"
+            );
+
+            if (!File.Exists(pfad))
+            {
+                profileBtn.Text = "Profil";
+                return;
+            }
+
+            using Image original = Image.FromFile(pfad);
+            profileBtn.Image = new Bitmap(original, new Size(30, 30));
+            profileBtn.ImageAlign = ContentAlignment.MiddleCenter;
+            profileBtn.Text = string.Empty;
+        }
+
         private void abmeldenBtn_Click(object sender, EventArgs e)
         {
             AbmeldenAngefordert = true;
@@ -136,6 +160,11 @@ private void OeffneBereich(Form formular)
         private void einstellungPage_Click(object sender, EventArgs e)
         {
             OeffneBereich(new Einstellungen());
+        }
+
+        private void profileBtn_Click(object sender, EventArgs e)
+        {
+            OeffneBereich(new Profil(benutzerId));
         }
     }
 }

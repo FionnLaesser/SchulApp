@@ -25,6 +25,7 @@ namespace SchulApp
             hauptbild = new PictureBox();
             einstellungPage = new Button();
             abmeldenBtn = new Button();
+            profileBtn = new Button();
             ((System.ComponentModel.ISupportInitialize)hauptbild).BeginInit();
             SuspendLayout();
             // 
@@ -126,20 +127,31 @@ namespace SchulApp
             // abmeldenBtn
             // 
             abmeldenBtn.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
-            abmeldenBtn.Location = new Point(824, 18);
+            abmeldenBtn.Location = new Point(842, 128);
             abmeldenBtn.Name = "abmeldenBtn";
             abmeldenBtn.Size = new Size(130, 38);
             abmeldenBtn.TabIndex = 9;
             abmeldenBtn.Text = "Abmelden";
             abmeldenBtn.UseVisualStyleBackColor = true;
             abmeldenBtn.Click += abmeldenBtn_Click;
-            //
+            // 
+            // profileBtn
+            // 
+            profileBtn.Location = new Point(912, 72);
+            profileBtn.Name = "profileBtn";
+            profileBtn.Size = new Size(60, 50);
+            profileBtn.TabIndex = 10;
+            profileBtn.Text = string.Empty;
+            profileBtn.UseVisualStyleBackColor = true;
+            profileBtn.Click += profileBtn_Click;
+            // 
             // Hauptmenue
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = SystemColors.ActiveCaption;
             ClientSize = new Size(984, 561);
+            Controls.Add(profileBtn);
             Controls.Add(abmeldenBtn);
             Controls.Add(einstellungPage);
             Controls.Add(stundenplanPage);
@@ -155,6 +167,17 @@ namespace SchulApp
             Name = "Hauptmenue";
             StartPosition = FormStartPosition.CenterScreen;
             Text = "SchulApp - Hauptmenü";
+            Controls.SetChildIndex(hauptbild, 0);
+            Controls.SetChildIndex(titleLabel, 0);
+            Controls.SetChildIndex(subtitleLabel, 0);
+            Controls.SetChildIndex(schuelerPage, 0);
+            Controls.SetChildIndex(lehrerPage, 0);
+            Controls.SetChildIndex(klassenPage, 0);
+            Controls.SetChildIndex(kursePage, 0);
+            Controls.SetChildIndex(stundenplanPage, 0);
+            Controls.SetChildIndex(einstellungPage, 0);
+            Controls.SetChildIndex(abmeldenBtn, 0);
+            Controls.SetChildIndex(profileBtn, 0);
             ((System.ComponentModel.ISupportInitialize)hauptbild).EndInit();
             ResumeLayout(false);
             PerformLayout();
@@ -170,5 +193,6 @@ namespace SchulApp
         private PictureBox hauptbild;
         private Button einstellungPage;
         private Button abmeldenBtn;
+        private Button profileBtn;
     }
 }
