@@ -69,6 +69,9 @@ namespace SchulApp
             formular.StartPosition = FormStartPosition.Manual;
             formular.Location = Location;
 
+            // App-Icon vom Hauptmenü übernehmen
+            formular.Icon = Icon;
+
             Hide();
             formular.ShowDialog();
             Show();
