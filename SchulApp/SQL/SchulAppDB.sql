@@ -1,4 +1,4 @@
-/* =========================================================
+﻿/* =========================================================
    SchulAppDB
    Mehrfach ausführbares Setup für die SchulApp
 
@@ -214,12 +214,23 @@ BEGIN
         [Id] INT IDENTITY(1,1) NOT NULL,
         [Benutzername] NVARCHAR(50) NOT NULL,
         [PasswortHash] NVARCHAR(255) NOT NULL,
+        [Rolle] NVARCHAR(20) NOT NULL
+            CONSTRAINT [DF_Benutzer_Rolle] DEFAULT N'Admin',
         [ErstelltAm] DATETIME2 NOT NULL,
 
         CONSTRAINT [PK_Benutzer]
             PRIMARY KEY ([Id])
     );
 END;
+GO
+
+IF COL_LENGTH(N'dbo.Benutzer', N'Rolle') IS NULL
+BEGIN
+    ALTER TABLE dbo.Benutzer
+    ADD [Rolle] NVARCHAR(20) NOT NULL
+        CONSTRAINT [DF_Benutzer_Rolle] DEFAULT N'Admin';
+END;
+GO
 
 IF NOT EXISTS
 (

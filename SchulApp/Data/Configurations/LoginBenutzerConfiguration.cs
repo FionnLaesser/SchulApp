@@ -25,6 +25,10 @@ namespace SchulApp.Data.Configurations
                 .HasMaxLength(255)
                 .IsRequired();
 
+            entity.Property(x => x.Rolle)
+                .HasMaxLength(20)
+                .IsRequired();
+
             entity.Property(x => x.ErstelltAm)
                 .IsRequired();
 

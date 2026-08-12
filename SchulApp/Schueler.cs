@@ -7,10 +7,13 @@ namespace SchulApp
     public partial class Schueler : Form
     {
         private readonly SchuelerService schuelerService;
+        private readonly bool nurHinzufuegen;
         private int? ausgewaehlteSchuelerId;
 
-        public Schueler()
+        public Schueler(bool nurHinzufuegen = false)
         {
+            this.nurHinzufuegen = nurHinzufuegen;
+
             InitializeComponent();
 
             // Das Repository verwendet jetzt intern Entity Framework
@@ -19,6 +22,7 @@ namespace SchulApp
             );
 
             ThemeManager.Anwenden(this);
+            RechteAnwenden();
 
             KlassenLaden();
             SchuelerListeAktualisieren();
@@ -60,7 +64,7 @@ namespace SchulApp
                 bool vorhanden = klassen.Count > 0;
 
                 OKnewStudent.Enabled = vorhanden;
-                OKchangeName.Enabled = vorhanden;
+                OKchangeName.Enabled = vorhanden && !nurHinzufuegen;
             }
             catch (Exception ex)
             {
@@ -231,6 +235,11 @@ namespace SchulApp
             object sender,
             EventArgs e)
         {
+            if (nurHinzufuegen)
+            {
+                return;
+            }
+
             if (ausgewaehlteSchuelerId == null)
             {
                 MessageBox.Show(
@@ -304,6 +313,11 @@ namespace SchulApp
             object sender,
             EventArgs e)
         {
+            if (nurHinzufuegen)
+            {
+                return;
+            }
+
             if (ausgewaehlteSchuelerId == null)
             {
                 MessageBox.Show(
@@ -365,6 +379,29 @@ namespace SchulApp
                     ex.Message
                 );
             }
+        }
+
+
+        private void RechteAnwenden()
+        {
+            if (!nurHinzufuegen)
+            {
+                return;
+            }
+
+            label4.Visible = false;
+            label2.Visible = false;
+            oldName.Visible = false;
+            label3.Visible = false;
+            newName.Visible = false;
+            labelKlasseBearbeiten.Visible = false;
+            editKlasse.Visible = false;
+            OKchangeName.Visible = false;
+
+            label6.Visible = false;
+            label7.Visible = false;
+            deleteNameBox.Visible = false;
+            OKdeleteBtn.Visible = false;
         }
 
         private void AuswahlZuruecksetzen()

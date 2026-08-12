@@ -6,6 +6,7 @@ namespace SchulApp
 {
     public partial class Stundenplan : Form
     {
+        private readonly bool darfBearbeiten;
         private int? ausgewaehlteStundenplanId;
 
         // Hilfsklasse für die Wochentag-ComboBoxen
@@ -16,14 +17,17 @@ namespace SchulApp
             public string Text { get; set; } = "";
         }
 
-        public Stundenplan()
+        public Stundenplan(bool darfBearbeiten = true)
         {
+            this.darfBearbeiten = darfBearbeiten;
+
             InitializeComponent();
 
             WochentageEinrichten();
             KurseLaden();
 
             ThemeManager.Anwenden(this);
+            RechteAnwenden();
 
             StundenplanLaden();
             DatumUndUhrzeitLabel();
@@ -129,8 +133,8 @@ namespace SchulApp
 
                 bool vorhanden = kurse.Count > 0;
 
-                createEintragBtn.Enabled = vorhanden;
-                updateEintragBtn.Enabled = vorhanden;
+                createEintragBtn.Enabled = vorhanden && darfBearbeiten;
+                updateEintragBtn.Enabled = vorhanden && darfBearbeiten;
             }
             catch (Exception ex)
             {
@@ -341,6 +345,11 @@ namespace SchulApp
             object sender,
             EventArgs e)
         {
+            if (!darfBearbeiten)
+            {
+                return;
+            }
+
             if (!EingabePruefen(
                 newKurs,
                 newWochentag,
@@ -465,6 +474,11 @@ namespace SchulApp
             object sender,
             EventArgs e)
         {
+            if (!darfBearbeiten)
+            {
+                return;
+            }
+
             if (ausgewaehlteStundenplanId == null)
             {
                 MessageBox.Show(
@@ -544,6 +558,11 @@ namespace SchulApp
             object sender,
             EventArgs e)
         {
+            if (!darfBearbeiten)
+            {
+                return;
+            }
+
             if (ausgewaehlteStundenplanId == null)
             {
                 MessageBox.Show(
@@ -613,6 +632,24 @@ namespace SchulApp
         {
             KurseLaden();
             StundenplanLaden();
+        }
+
+
+        private void RechteAnwenden()
+        {
+            if (darfBearbeiten)
+            {
+                return;
+            }
+
+            newGroup.Visible = false;
+            editGroup.Visible = false;
+            deleteGroup.Visible = false;
+
+            stundenplanGrid.Location = new Point(12, 70);
+            stundenplanGrid.Size = new Size(960, 420);
+            reloadBtn.Location = new Point(12, 496);
+            reloadBtn.Size = new Size(960, 29);
         }
 
         private void AuswahlZuruecksetzen()

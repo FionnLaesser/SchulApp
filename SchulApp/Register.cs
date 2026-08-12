@@ -14,6 +14,15 @@ namespace SchulApp
 
             passwordText.UseSystemPasswordChar = true;
             repeatPasswordText.UseSystemPasswordChar = true;
+
+            roleBox.Items.AddRange(new object[]
+            {
+                "Admin",
+                "Lehrer",
+                "Schüler"
+            });
+
+            roleBox.SelectedIndex = -1;
         }
 
         public Register(Point position) : this()
@@ -28,11 +37,29 @@ namespace SchulApp
             string passwort = passwordText.Text;
             string passwortWiederholung = repeatPasswordText.Text;
 
+            string rolle = roleBox.SelectedItem?.ToString() switch
+            {
+                "Admin" => LoginBenutzer.RolleAdmin,
+                "Lehrer" => LoginBenutzer.RolleLehrer,
+                "Schüler" => LoginBenutzer.RolleSchueler,
+                _ => string.Empty
+            };
+
             if (benutzername.Length < 3)
             {
                 ShowValidation(
                     "Der Benutzername muss mindestens 3 Zeichen lang sein.",
                     userText
+                );
+
+                return;
+            }
+
+            if (string.IsNullOrEmpty(rolle))
+            {
+                ShowValidation(
+                    "Bitte eine Rolle auswählen.",
+                    roleBox
                 );
 
                 return;
@@ -83,6 +110,8 @@ namespace SchulApp
 
                     // Es wird nur der Passwort-Hash gespeichert.
                     PasswortHash = BCrypt.Net.BCrypt.HashPassword(passwort),
+
+                    Rolle = rolle,
 
                     ErstelltAm = DateTime.UtcNow
                 };
@@ -155,6 +184,7 @@ namespace SchulApp
             registerBtn.Enabled = !busy;
             backToLoginBtn.Enabled = !busy;
             userText.Enabled = !busy;
+            roleBox.Enabled = !busy;
             passwordText.Enabled = !busy;
             repeatPasswordText.Enabled = !busy;
 

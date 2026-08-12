@@ -29,6 +29,8 @@ namespace SchulApp
             passwordLabel = new Label();
             userText = new TextBox();
             userLabel = new Label();
+            roleBox = new ComboBox();
+            roleLabel = new Label();
             subtitleLabel = new Label();
             titleLabel = new Label();
             leftPanel.SuspendLayout();
@@ -43,14 +45,14 @@ namespace SchulApp
             leftPanel.Dock = DockStyle.Left;
             leftPanel.Location = new Point(0, 0);
             leftPanel.Name = "leftPanel";
-            leftPanel.Size = new Size(340, 560);
+            leftPanel.Size = new Size(340, 620);
             leftPanel.TabIndex = 0;
             // 
             // brandSubtitleLabel
             // 
             brandSubtitleLabel.Font = new Font("Segoe UI", 11F);
             brandSubtitleLabel.ForeColor = Color.FromArgb(218, 228, 243);
-            brandSubtitleLabel.Location = new Point(48, 273);
+            brandSubtitleLabel.Location = new Point(48, 303);
             brandSubtitleLabel.Name = "brandSubtitleLabel";
             brandSubtitleLabel.Size = new Size(244, 58);
             brandSubtitleLabel.TabIndex = 1;
@@ -61,7 +63,7 @@ namespace SchulApp
             brandLabel.AutoSize = true;
             brandLabel.Font = new Font("Segoe UI Semibold", 28F, FontStyle.Bold);
             brandLabel.ForeColor = Color.White;
-            brandLabel.Location = new Point(46, 207);
+            brandLabel.Location = new Point(46, 237);
             brandLabel.Name = "brandLabel";
             brandLabel.Size = new Size(184, 51);
             brandLabel.TabIndex = 0;
@@ -76,14 +78,16 @@ namespace SchulApp
             cardPanel.Controls.Add(repeatPasswordLabel);
             cardPanel.Controls.Add(passwordText);
             cardPanel.Controls.Add(passwordLabel);
+            cardPanel.Controls.Add(roleBox);
+            cardPanel.Controls.Add(roleLabel);
             cardPanel.Controls.Add(userText);
             cardPanel.Controls.Add(userLabel);
             cardPanel.Controls.Add(subtitleLabel);
             cardPanel.Controls.Add(titleLabel);
-            cardPanel.Location = new Point(404, 38);
+            cardPanel.Location = new Point(404, 30);
             cardPanel.Name = "cardPanel";
             cardPanel.Padding = new Padding(36);
-            cardPanel.Size = new Size(430, 485);
+            cardPanel.Size = new Size(430, 560);
             cardPanel.TabIndex = 1;
             // 
             // backToLoginBtn
@@ -95,10 +99,10 @@ namespace SchulApp
             backToLoginBtn.FlatStyle = FlatStyle.Flat;
             backToLoginBtn.Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold);
             backToLoginBtn.ForeColor = Color.FromArgb(31, 65, 114);
-            backToLoginBtn.Location = new Point(43, 402);
+            backToLoginBtn.Location = new Point(43, 477);
             backToLoginBtn.Name = "backToLoginBtn";
             backToLoginBtn.Size = new Size(344, 42);
-            backToLoginBtn.TabIndex = 5;
+            backToLoginBtn.TabIndex = 6;
             backToLoginBtn.Text = "Zurück zum Login";
             backToLoginBtn.UseVisualStyleBackColor = false;
             backToLoginBtn.Click += backToLoginBtn_Click;
@@ -111,10 +115,10 @@ namespace SchulApp
             registerBtn.FlatStyle = FlatStyle.Flat;
             registerBtn.Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold);
             registerBtn.ForeColor = Color.White;
-            registerBtn.Location = new Point(43, 348);
+            registerBtn.Location = new Point(43, 423);
             registerBtn.Name = "registerBtn";
             registerBtn.Size = new Size(344, 42);
-            registerBtn.TabIndex = 4;
+            registerBtn.TabIndex = 5;
             registerBtn.Text = "Konto erstellen";
             registerBtn.UseVisualStyleBackColor = false;
             registerBtn.Click += registerBtn_Click;
@@ -124,18 +128,18 @@ namespace SchulApp
             repeatPasswordText.BackColor = Color.FromArgb(247, 249, 252);
             repeatPasswordText.BorderStyle = BorderStyle.FixedSingle;
             repeatPasswordText.Font = new Font("Segoe UI", 11F);
-            repeatPasswordText.Location = new Point(43, 300);
+            repeatPasswordText.Location = new Point(43, 365);
             repeatPasswordText.Name = "repeatPasswordText";
             repeatPasswordText.PlaceholderText = "Passwort wiederholen";
             repeatPasswordText.Size = new Size(344, 27);
-            repeatPasswordText.TabIndex = 3;
+            repeatPasswordText.TabIndex = 4;
             // 
             // repeatPasswordLabel
             // 
             repeatPasswordLabel.AutoSize = true;
             repeatPasswordLabel.Font = new Font("Segoe UI Semibold", 9.5F, FontStyle.Bold);
             repeatPasswordLabel.ForeColor = Color.FromArgb(45, 55, 72);
-            repeatPasswordLabel.Location = new Point(43, 276);
+            repeatPasswordLabel.Location = new Point(43, 341);
             repeatPasswordLabel.Name = "repeatPasswordLabel";
             repeatPasswordLabel.Size = new Size(136, 17);
             repeatPasswordLabel.TabIndex = 7;
@@ -146,18 +150,18 @@ namespace SchulApp
             passwordText.BackColor = Color.FromArgb(247, 249, 252);
             passwordText.BorderStyle = BorderStyle.FixedSingle;
             passwordText.Font = new Font("Segoe UI", 11F);
-            passwordText.Location = new Point(43, 230);
+            passwordText.Location = new Point(43, 295);
             passwordText.Name = "passwordText";
             passwordText.PlaceholderText = "Mindestens 8 Zeichen";
             passwordText.Size = new Size(344, 27);
-            passwordText.TabIndex = 2;
+            passwordText.TabIndex = 3;
             // 
             // passwordLabel
             // 
             passwordLabel.AutoSize = true;
             passwordLabel.Font = new Font("Segoe UI Semibold", 9.5F, FontStyle.Bold);
             passwordLabel.ForeColor = Color.FromArgb(45, 55, 72);
-            passwordLabel.Location = new Point(43, 206);
+            passwordLabel.Location = new Point(43, 271);
             passwordLabel.Name = "passwordLabel";
             passwordLabel.Size = new Size(64, 17);
             passwordLabel.TabIndex = 5;
@@ -185,6 +189,28 @@ namespace SchulApp
             userLabel.Size = new Size(94, 17);
             userLabel.TabIndex = 4;
             userLabel.Text = "Benutzername";
+            // 
+            // roleBox
+            // 
+            roleBox.BackColor = Color.FromArgb(247, 249, 252);
+            roleBox.DropDownStyle = ComboBoxStyle.DropDownList;
+            roleBox.Font = new Font("Segoe UI", 11F);
+            roleBox.FormattingEnabled = true;
+            roleBox.Location = new Point(43, 225);
+            roleBox.Name = "roleBox";
+            roleBox.Size = new Size(344, 28);
+            roleBox.TabIndex = 2;
+            // 
+            // roleLabel
+            // 
+            roleLabel.AutoSize = true;
+            roleLabel.Font = new Font("Segoe UI Semibold", 9.5F, FontStyle.Bold);
+            roleLabel.ForeColor = Color.FromArgb(45, 55, 72);
+            roleLabel.Location = new Point(43, 201);
+            roleLabel.Name = "roleLabel";
+            roleLabel.Size = new Size(34, 17);
+            roleLabel.TabIndex = 10;
+            roleLabel.Text = "Rolle";
             // 
             // subtitleLabel
             // 
@@ -214,7 +240,7 @@ namespace SchulApp
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.FromArgb(238, 243, 250);
-            ClientSize = new Size(900, 560);
+            ClientSize = new Size(900, 620);
             Controls.Add(cardPanel);
             Controls.Add(leftPanel);
             FormBorderStyle = FormBorderStyle.FixedSingle;
@@ -239,6 +265,8 @@ namespace SchulApp
         private Label subtitleLabel;
         private Label userLabel;
         private TextBox userText;
+        private Label roleLabel;
+        private ComboBox roleBox;
         private Label passwordLabel;
         private TextBox passwordText;
         private Label repeatPasswordLabel;

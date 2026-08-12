@@ -6,6 +6,8 @@ namespace SchulApp
 {
     public partial class Login : Form
     {
+        public string AngemeldeteRolle { get; private set; } =
+            LoginBenutzer.RolleSchueler;
         public Login()
         {
             InitializeComponent();
@@ -64,6 +66,14 @@ namespace SchulApp
 
                     return;
                 }
+
+                AngemeldeteRolle = benutzer!.Rolle switch
+                {
+                    LoginBenutzer.RolleAdmin => LoginBenutzer.RolleAdmin,
+                    LoginBenutzer.RolleLehrer => LoginBenutzer.RolleLehrer,
+                    LoginBenutzer.RolleSchueler => LoginBenutzer.RolleSchueler,
+                    _ => LoginBenutzer.RolleSchueler
+                };
 
                 DialogResult = DialogResult.OK;
                 Close();
