@@ -468,7 +468,10 @@ namespace SchulApp
             {
                 using MemoryStream stream = new MemoryStream(bildDaten);
                 using Image original = Image.FromStream(stream);
+
                 SetProfilbild(new Bitmap(original));
+
+                pictureBoxForUpload.Visible = false;
             }
             catch (ArgumentException)
             {
@@ -478,20 +481,13 @@ namespace SchulApp
 
         private void StandardProfilbildAnzeigen()
         {
-            string pfad = Path.Combine(
-                AppContext.BaseDirectory,
-                "images",
-                "profilePicture.png"
-            );
+            SetProfilbild(null);
 
-            if (!File.Exists(pfad))
-            {
-                SetProfilbild(null);
-                return;
-            }
-
-            using Image original = Image.FromFile(pfad);
-            SetProfilbild(new Bitmap(original));
+            pictureBoxForUpload.BackColor = Color.Transparent;
+            pictureBoxForUpload.Image = Image.FromFile("images/upload.png");
+            pictureBoxForUpload.SizeMode = PictureBoxSizeMode.Zoom;
+            pictureBoxForUpload.Visible = true;
+            pictureBoxForUpload.BringToFront();
         }
 
         private void SetProfilbild(Image? neuesBild)
@@ -586,6 +582,11 @@ namespace SchulApp
             );
 
             control.Focus();
+        }
+
+        private void pictureBoxForUpload_Click(object sender, EventArgs e)
+        {
+            profilbildAendernBtn_Click(sender, e);
         }
     }
 }

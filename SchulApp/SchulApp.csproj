@@ -55,7 +55,12 @@
     <None Update="images\maximize.png">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-        <None Update="images\profilePicture.png">
+
+    <None Update="images\profilePicture.png">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    
+    <None Update="images\upload.png">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

@@ -43,7 +43,9 @@ namespace SchulApp
             passwortWiederholenText = new TextBox();
             passwortAendernBtn = new Button();
             zurueckBtn = new Button();
+            pictureBoxForUpload = new PictureBox();
             ((System.ComponentModel.ISupportInitialize)profilPicture).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)pictureBoxForUpload).BeginInit();
             SuspendLayout();
             // 
             // titleLabel
@@ -89,9 +91,9 @@ namespace SchulApp
             // profilbildAendernBtn
             // 
             profilbildAendernBtn.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
-            profilbildAendernBtn.Location = new Point(54, 360);
+            profilbildAendernBtn.Location = new Point(54, 361);
             profilbildAendernBtn.Name = "profilbildAendernBtn";
-            profilbildAendernBtn.Size = new Size(176, 34);
+            profilbildAendernBtn.Size = new Size(176, 35);
             profilbildAendernBtn.TabIndex = 0;
             profilbildAendernBtn.Text = "Profilbild ändern";
             profilbildAendernBtn.UseVisualStyleBackColor = true;
@@ -324,12 +326,22 @@ namespace SchulApp
             zurueckBtn.UseVisualStyleBackColor = true;
             zurueckBtn.Click += zurueckBtn_Click;
             // 
+            // pictureBoxForUpload
+            // 
+            pictureBoxForUpload.Location = new Point(103, 221);
+            pictureBoxForUpload.Name = "pictureBoxForUpload";
+            pictureBoxForUpload.Size = new Size(82, 65);
+            pictureBoxForUpload.TabIndex = 25;
+            pictureBoxForUpload.TabStop = false;
+            pictureBoxForUpload.Click += pictureBoxForUpload_Click;
+            // 
             // Profil
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = SystemColors.ActiveCaption;
             ClientSize = new Size(984, 561);
+            Controls.Add(pictureBoxForUpload);
             Controls.Add(zurueckBtn);
             Controls.Add(passwortAendernBtn);
             Controls.Add(passwortWiederholenText);
@@ -392,7 +404,9 @@ namespace SchulApp
             Controls.SetChildIndex(passwortWiederholenText, 0);
             Controls.SetChildIndex(passwortAendernBtn, 0);
             Controls.SetChildIndex(zurueckBtn, 0);
+            Controls.SetChildIndex(pictureBoxForUpload, 0);
             ((System.ComponentModel.ISupportInitialize)profilPicture).EndInit();
+            ((System.ComponentModel.ISupportInitialize)pictureBoxForUpload).EndInit();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -425,5 +439,6 @@ namespace SchulApp
         private TextBox passwortWiederholenText;
         private Button passwortAendernBtn;
         private Button zurueckBtn;
+        private PictureBox pictureBoxForUpload;
     }
 }
