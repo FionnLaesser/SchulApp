@@ -75,19 +75,6 @@ namespace SchulApp
             stundenplanPage.Location = new Point(338, 260);
         }
 
-        private void OeffneBereich(Form formular)
-        {
-            formular.StartPosition = FormStartPosition.Manual;
-            formular.Location = Location;
-
-            formular.Icon = Icon;
-
-            Hide();
-            formular.ShowDialog();
-            Show();
-            Activate();
-        }
-
         private void schuelerPage_Click(object sender, EventArgs e)
         {
             if (!IstAdmin && !IstLehrer)

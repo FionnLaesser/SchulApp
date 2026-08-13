@@ -299,5 +299,25 @@ namespace SchulApp
 
             return bitmap;
         }
+        protected void OeffneBereich(Form formular)
+        {
+            formular.StartPosition = FormStartPosition.Manual;
+
+            // Neue Form genau dort öffnen, wo die aktuelle Form ist
+            formular.Location = Location;
+
+            formular.Icon = Icon;
+
+            Hide();
+
+            formular.ShowDialog();
+
+            // Falls die neue Form verschoben wurde,
+            // übernimmt die alte Form danach deren Position
+            Location = formular.Location;
+
+            Show();
+            Activate();
+        }
     }
 }
