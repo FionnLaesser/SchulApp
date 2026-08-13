@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using SchulApp.Models;
 
@@ -37,6 +37,9 @@ namespace SchulApp.Data.Configurations
 
             entity.Property(x => x.Email)
                 .HasMaxLength(255);
+
+            entity.Property(x => x.Profilbild)
+                .HasColumnType("varbinary(max)");
 
             entity.Property(x => x.ErstelltAm)
                 .IsRequired();

@@ -2,11 +2,13 @@ using Microsoft.EntityFrameworkCore;
 using SchulApp.Data;
 using SchulApp.Models;
 using System.Net.Mail;
+using System.IO;
 
 namespace SchulApp
 {
     public partial class Profil : CustomForm
     {
+        private const long MaxProfilbildGroesse = 5L * 1024L * 1024L;
         private readonly int benutzerId;
 
         public Profil(int benutzerId)
@@ -15,7 +17,7 @@ namespace SchulApp
 
             InitializeComponent();
             ThemeManager.Anwenden(this);
-            ProfilBildLaden();
+            StandardProfilbildAnzeigen();
         }
 
         private async void Profil_Load(object sender, EventArgs e)
@@ -53,9 +55,12 @@ namespace SchulApp
                 nachnameText.Text = benutzer.Nachname ?? string.Empty;
                 emailText.Text = benutzer.Email ?? string.Empty;
                 rolleText.Text = RolleAnzeigen(benutzer.Rolle);
-                erstelltAmValueLabel.Text = benutzer.ErstelltAm.ToLocalTime()
+                erstelltAmValueLabel.Text = benutzer.ErstelltAm
+                    .ToLocalTime()
                     .ToString("dd.MM.yyyy HH:mm");
                 profilNameLabel.Text = benutzer.Benutzername;
+
+                ProfilbildAnzeigen(benutzer.Profilbild);
             }
             catch (Exception)
             {
@@ -195,6 +200,154 @@ namespace SchulApp
             }
         }
 
+        private async void profilbildAendernBtn_Click(object sender, EventArgs e)
+        {
+            using OpenFileDialog dialog = new OpenFileDialog
+            {
+                Title = "Profilbild auswählen",
+                Filter = "Bilddateien (*.png;*.jpg;*.jpeg)|*.png;*.jpg;*.jpeg",
+                CheckFileExists = true,
+                Multiselect = false
+            };
+
+            if (dialog.ShowDialog(this) != DialogResult.OK)
+            {
+                return;
+            }
+
+            FileInfo datei = new FileInfo(dialog.FileName);
+
+            if (datei.Length > MaxProfilbildGroesse)
+            {
+                MessageBox.Show(
+                    "Das Profilbild darf maximal 5 MB gross sein.",
+                    "Profilbild",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning
+                );
+                return;
+            }
+
+            SetBusy(true);
+
+            try
+            {
+                byte[] bildDaten = await File.ReadAllBytesAsync(dialog.FileName);
+
+                if (!IstGueltigesBild(bildDaten))
+                {
+                    MessageBox.Show(
+                        "Die ausgewählte Datei ist kein gültiges Bild.",
+                        "Profilbild",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning
+                    );
+                    return;
+                }
+
+                await using SchulAppContext db = new SchulAppContext();
+
+                LoginBenutzer? benutzer = await db.Benutzer
+                    .SingleOrDefaultAsync(x => x.Id == benutzerId);
+
+                if (benutzer == null)
+                {
+                    MessageBox.Show(
+                        "Das Benutzerprofil konnte nicht gefunden werden.",
+                        "Profil",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning
+                    );
+                    return;
+                }
+
+                benutzer.Profilbild = bildDaten;
+                await db.SaveChangesAsync();
+
+                ProfilbildAnzeigen(bildDaten);
+
+                MessageBox.Show(
+                    "Dein Profilbild wurde gespeichert.",
+                    "Profilbild",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information
+                );
+            }
+            catch (Exception)
+            {
+                MessageBox.Show(
+                    "Das Profilbild konnte nicht gespeichert werden.",
+                    "Profilbild",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error
+                );
+            }
+            finally
+            {
+                if (!IsDisposed)
+                {
+                    SetBusy(false);
+                }
+            }
+        }
+
+        private async void profilbildEntfernenBtn_Click(object sender, EventArgs e)
+        {
+            DialogResult bestaetigung = MessageBox.Show(
+                "Möchtest du dein Profilbild wirklich entfernen?",
+                "Profilbild entfernen",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question
+            );
+
+            if (bestaetigung != DialogResult.Yes)
+            {
+                return;
+            }
+
+            SetBusy(true);
+
+            try
+            {
+                await using SchulAppContext db = new SchulAppContext();
+
+                LoginBenutzer? benutzer = await db.Benutzer
+                    .SingleOrDefaultAsync(x => x.Id == benutzerId);
+
+                if (benutzer == null)
+                {
+                    MessageBox.Show(
+                        "Das Benutzerprofil konnte nicht gefunden werden.",
+                        "Profil",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning
+                    );
+                    return;
+                }
+
+                benutzer.Profilbild = null;
+                await db.SaveChangesAsync();
+
+                StandardProfilbildAnzeigen();
+            }
+            catch (Exception)
+            {
+                MessageBox.Show(
+                    "Das Profilbild konnte nicht entfernt werden.",
+                    "Profilbild",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error
+                );
+            }
+            finally
+            {
+                if (!IsDisposed)
+                {
+                    SetBusy(false);
+                }
+            }
+        }
+
         private async void passwortAendernBtn_Click(object sender, EventArgs e)
         {
             string aktuellesPasswort = aktuellesPasswortText.Text;
@@ -303,7 +456,27 @@ namespace SchulApp
             Close();
         }
 
-        private void ProfilBildLaden()
+        private void ProfilbildAnzeigen(byte[]? bildDaten)
+        {
+            if (bildDaten == null || bildDaten.Length == 0)
+            {
+                StandardProfilbildAnzeigen();
+                return;
+            }
+
+            try
+            {
+                using MemoryStream stream = new MemoryStream(bildDaten);
+                using Image original = Image.FromStream(stream);
+                SetProfilbild(new Bitmap(original));
+            }
+            catch (ArgumentException)
+            {
+                StandardProfilbildAnzeigen();
+            }
+        }
+
+        private void StandardProfilbildAnzeigen()
         {
             string pfad = Path.Combine(
                 AppContext.BaseDirectory,
@@ -313,16 +486,45 @@ namespace SchulApp
 
             if (!File.Exists(pfad))
             {
+                SetProfilbild(null);
                 return;
             }
 
             using Image original = Image.FromFile(pfad);
-            profilPicture.Image = new Bitmap(original);
+            SetProfilbild(new Bitmap(original));
+        }
+
+        private void SetProfilbild(Image? neuesBild)
+        {
+            Image? altesBild = profilPicture.Image;
+            profilPicture.Image = neuesBild;
+            altesBild?.Dispose();
+        }
+
+        private static bool IstGueltigesBild(byte[] bildDaten)
+        {
+            try
+            {
+                using MemoryStream stream = new MemoryStream(bildDaten);
+                using Image image = Image.FromStream(
+                    stream,
+                    useEmbeddedColorManagement: false,
+                    validateImageData: true
+                );
+
+                return image.Width > 0 && image.Height > 0;
+            }
+            catch (ArgumentException)
+            {
+                return false;
+            }
         }
 
         private void SetBusy(bool busy)
         {
             speichernBtn.Enabled = !busy;
+            profilbildAendernBtn.Enabled = !busy;
+            profilbildEntfernenBtn.Enabled = !busy;
             passwortAendernBtn.Enabled = !busy;
             userText.Enabled = !busy;
             vornameText.Enabled = !busy;

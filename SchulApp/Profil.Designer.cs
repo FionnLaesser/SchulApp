@@ -19,6 +19,8 @@ namespace SchulApp
             subtitleLabel = new Label();
             profilPicture = new PictureBox();
             profilNameLabel = new Label();
+            profilbildAendernBtn = new Button();
+            profilbildEntfernenBtn = new Button();
             userLabel = new Label();
             userText = new TextBox();
             rolleLabel = new Label();
@@ -66,7 +68,8 @@ namespace SchulApp
             // 
             // profilPicture
             // 
-            profilPicture.Location = new Point(72, 188);
+            profilPicture.BorderStyle = BorderStyle.FixedSingle;
+            profilPicture.Location = new Point(72, 178);
             profilPicture.Name = "profilPicture";
             profilPicture.Size = new Size(140, 140);
             profilPicture.SizeMode = PictureBoxSizeMode.Zoom;
@@ -76,12 +79,34 @@ namespace SchulApp
             // profilNameLabel
             // 
             profilNameLabel.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
-            profilNameLabel.Location = new Point(54, 340);
+            profilNameLabel.Location = new Point(54, 325);
             profilNameLabel.Name = "profilNameLabel";
             profilNameLabel.Size = new Size(176, 28);
             profilNameLabel.TabIndex = 3;
             profilNameLabel.Text = "Benutzer";
             profilNameLabel.TextAlign = ContentAlignment.MiddleCenter;
+            // 
+            // profilbildAendernBtn
+            // 
+            profilbildAendernBtn.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
+            profilbildAendernBtn.Location = new Point(54, 360);
+            profilbildAendernBtn.Name = "profilbildAendernBtn";
+            profilbildAendernBtn.Size = new Size(176, 34);
+            profilbildAendernBtn.TabIndex = 0;
+            profilbildAendernBtn.Text = "Profilbild ändern";
+            profilbildAendernBtn.UseVisualStyleBackColor = true;
+            profilbildAendernBtn.Click += profilbildAendernBtn_Click;
+            // 
+            // profilbildEntfernenBtn
+            // 
+            profilbildEntfernenBtn.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
+            profilbildEntfernenBtn.Location = new Point(54, 400);
+            profilbildEntfernenBtn.Name = "profilbildEntfernenBtn";
+            profilbildEntfernenBtn.Size = new Size(176, 34);
+            profilbildEntfernenBtn.TabIndex = 1;
+            profilbildEntfernenBtn.Text = "Profilbild entfernen";
+            profilbildEntfernenBtn.UseVisualStyleBackColor = true;
+            profilbildEntfernenBtn.Click += profilbildEntfernenBtn_Click;
             // 
             // userLabel
             // 
@@ -90,7 +115,7 @@ namespace SchulApp
             userLabel.Location = new Point(280, 170);
             userLabel.Name = "userLabel";
             userLabel.Size = new Size(105, 19);
-            userLabel.TabIndex = 4;
+            userLabel.TabIndex = 6;
             userLabel.Text = "Benutzername";
             // 
             // userText
@@ -100,7 +125,7 @@ namespace SchulApp
             userText.MaxLength = 50;
             userText.Name = "userText";
             userText.Size = new Size(280, 27);
-            userText.TabIndex = 0;
+            userText.TabIndex = 2;
             // 
             // rolleLabel
             // 
@@ -109,7 +134,7 @@ namespace SchulApp
             rolleLabel.Location = new Point(590, 170);
             rolleLabel.Name = "rolleLabel";
             rolleLabel.Size = new Size(43, 19);
-            rolleLabel.TabIndex = 6;
+            rolleLabel.TabIndex = 8;
             rolleLabel.Text = "Rolle";
             // 
             // rolleText
@@ -119,7 +144,7 @@ namespace SchulApp
             rolleText.Name = "rolleText";
             rolleText.ReadOnly = true;
             rolleText.Size = new Size(280, 27);
-            rolleText.TabIndex = 7;
+            rolleText.TabIndex = 9;
             rolleText.TabStop = false;
             // 
             // vornameLabel
@@ -129,7 +154,7 @@ namespace SchulApp
             vornameLabel.Location = new Point(280, 235);
             vornameLabel.Name = "vornameLabel";
             vornameLabel.Size = new Size(69, 19);
-            vornameLabel.TabIndex = 8;
+            vornameLabel.TabIndex = 10;
             vornameLabel.Text = "Vorname";
             // 
             // vornameText
@@ -139,7 +164,7 @@ namespace SchulApp
             vornameText.MaxLength = 100;
             vornameText.Name = "vornameText";
             vornameText.Size = new Size(280, 27);
-            vornameText.TabIndex = 1;
+            vornameText.TabIndex = 3;
             // 
             // nachnameLabel
             // 
@@ -148,7 +173,7 @@ namespace SchulApp
             nachnameLabel.Location = new Point(590, 235);
             nachnameLabel.Name = "nachnameLabel";
             nachnameLabel.Size = new Size(80, 19);
-            nachnameLabel.TabIndex = 10;
+            nachnameLabel.TabIndex = 12;
             nachnameLabel.Text = "Nachname";
             // 
             // nachnameText
@@ -158,7 +183,7 @@ namespace SchulApp
             nachnameText.MaxLength = 100;
             nachnameText.Name = "nachnameText";
             nachnameText.Size = new Size(280, 27);
-            nachnameText.TabIndex = 2;
+            nachnameText.TabIndex = 4;
             // 
             // emailLabel
             // 
@@ -167,7 +192,7 @@ namespace SchulApp
             emailLabel.Location = new Point(280, 300);
             emailLabel.Name = "emailLabel";
             emailLabel.Size = new Size(51, 19);
-            emailLabel.TabIndex = 12;
+            emailLabel.TabIndex = 14;
             emailLabel.Text = "E-Mail";
             // 
             // emailText
@@ -177,7 +202,7 @@ namespace SchulApp
             emailText.MaxLength = 255;
             emailText.Name = "emailText";
             emailText.Size = new Size(590, 27);
-            emailText.TabIndex = 3;
+            emailText.TabIndex = 5;
             // 
             // erstelltAmLabel
             // 
@@ -186,7 +211,7 @@ namespace SchulApp
             erstelltAmLabel.Location = new Point(280, 372);
             erstelltAmLabel.Name = "erstelltAmLabel";
             erstelltAmLabel.Size = new Size(79, 19);
-            erstelltAmLabel.TabIndex = 14;
+            erstelltAmLabel.TabIndex = 16;
             erstelltAmLabel.Text = "Erstellt am";
             // 
             // erstelltAmValueLabel
@@ -196,7 +221,7 @@ namespace SchulApp
             erstelltAmValueLabel.Location = new Point(365, 372);
             erstelltAmValueLabel.Name = "erstelltAmValueLabel";
             erstelltAmValueLabel.Size = new Size(15, 19);
-            erstelltAmValueLabel.TabIndex = 15;
+            erstelltAmValueLabel.TabIndex = 17;
             erstelltAmValueLabel.Text = "-";
             // 
             // speichernBtn
@@ -205,7 +230,7 @@ namespace SchulApp
             speichernBtn.Location = new Point(720, 362);
             speichernBtn.Name = "speichernBtn";
             speichernBtn.Size = new Size(150, 40);
-            speichernBtn.TabIndex = 4;
+            speichernBtn.TabIndex = 6;
             speichernBtn.Text = "Profil speichern";
             speichernBtn.UseVisualStyleBackColor = true;
             speichernBtn.Click += speichernBtn_Click;
@@ -217,7 +242,7 @@ namespace SchulApp
             sicherheitLabel.Location = new Point(280, 418);
             sicherheitLabel.Name = "sicherheitLabel";
             sicherheitLabel.Size = new Size(162, 25);
-            sicherheitLabel.TabIndex = 17;
+            sicherheitLabel.TabIndex = 19;
             sicherheitLabel.Text = "Passwort ändern";
             // 
             // aktuellesPasswortLabel
@@ -227,7 +252,7 @@ namespace SchulApp
             aktuellesPasswortLabel.Location = new Point(280, 449);
             aktuellesPasswortLabel.Name = "aktuellesPasswortLabel";
             aktuellesPasswortLabel.Size = new Size(112, 15);
-            aktuellesPasswortLabel.TabIndex = 18;
+            aktuellesPasswortLabel.TabIndex = 20;
             aktuellesPasswortLabel.Text = "Aktuelles Passwort";
             // 
             // aktuellesPasswortText
@@ -236,7 +261,7 @@ namespace SchulApp
             aktuellesPasswortText.Location = new Point(280, 468);
             aktuellesPasswortText.Name = "aktuellesPasswortText";
             aktuellesPasswortText.Size = new Size(165, 25);
-            aktuellesPasswortText.TabIndex = 5;
+            aktuellesPasswortText.TabIndex = 7;
             aktuellesPasswortText.UseSystemPasswordChar = true;
             // 
             // neuesPasswortLabel
@@ -246,7 +271,7 @@ namespace SchulApp
             neuesPasswortLabel.Location = new Point(460, 449);
             neuesPasswortLabel.Name = "neuesPasswortLabel";
             neuesPasswortLabel.Size = new Size(95, 15);
-            neuesPasswortLabel.TabIndex = 20;
+            neuesPasswortLabel.TabIndex = 22;
             neuesPasswortLabel.Text = "Neues Passwort";
             // 
             // neuesPasswortText
@@ -255,7 +280,7 @@ namespace SchulApp
             neuesPasswortText.Location = new Point(460, 468);
             neuesPasswortText.Name = "neuesPasswortText";
             neuesPasswortText.Size = new Size(165, 25);
-            neuesPasswortText.TabIndex = 6;
+            neuesPasswortText.TabIndex = 8;
             neuesPasswortText.UseSystemPasswordChar = true;
             // 
             // passwortWiederholenLabel
@@ -265,7 +290,7 @@ namespace SchulApp
             passwortWiederholenLabel.Location = new Point(640, 449);
             passwortWiederholenLabel.Name = "passwortWiederholenLabel";
             passwortWiederholenLabel.Size = new Size(130, 15);
-            passwortWiederholenLabel.TabIndex = 22;
+            passwortWiederholenLabel.TabIndex = 24;
             passwortWiederholenLabel.Text = "Passwort wiederholen";
             // 
             // passwortWiederholenText
@@ -274,7 +299,7 @@ namespace SchulApp
             passwortWiederholenText.Location = new Point(640, 468);
             passwortWiederholenText.Name = "passwortWiederholenText";
             passwortWiederholenText.Size = new Size(165, 25);
-            passwortWiederholenText.TabIndex = 7;
+            passwortWiederholenText.TabIndex = 9;
             passwortWiederholenText.UseSystemPasswordChar = true;
             // 
             // passwortAendernBtn
@@ -283,7 +308,7 @@ namespace SchulApp
             passwortAendernBtn.Location = new Point(820, 463);
             passwortAendernBtn.Name = "passwortAendernBtn";
             passwortAendernBtn.Size = new Size(120, 34);
-            passwortAendernBtn.TabIndex = 8;
+            passwortAendernBtn.TabIndex = 10;
             passwortAendernBtn.Text = "Ändern";
             passwortAendernBtn.UseVisualStyleBackColor = true;
             passwortAendernBtn.Click += passwortAendernBtn_Click;
@@ -291,10 +316,10 @@ namespace SchulApp
             // zurueckBtn
             // 
             zurueckBtn.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
-            zurueckBtn.Location = new Point(806, 86);
+            zurueckBtn.Location = new Point(806, 72);
             zurueckBtn.Name = "zurueckBtn";
             zurueckBtn.Size = new Size(166, 40);
-            zurueckBtn.TabIndex = 9;
+            zurueckBtn.TabIndex = 11;
             zurueckBtn.Text = "Zurück";
             zurueckBtn.UseVisualStyleBackColor = true;
             zurueckBtn.Click += zurueckBtn_Click;
@@ -327,6 +352,8 @@ namespace SchulApp
             Controls.Add(rolleLabel);
             Controls.Add(userText);
             Controls.Add(userLabel);
+            Controls.Add(profilbildEntfernenBtn);
+            Controls.Add(profilbildAendernBtn);
             Controls.Add(profilNameLabel);
             Controls.Add(profilPicture);
             Controls.Add(subtitleLabel);
@@ -341,6 +368,8 @@ namespace SchulApp
             Controls.SetChildIndex(subtitleLabel, 0);
             Controls.SetChildIndex(profilPicture, 0);
             Controls.SetChildIndex(profilNameLabel, 0);
+            Controls.SetChildIndex(profilbildAendernBtn, 0);
+            Controls.SetChildIndex(profilbildEntfernenBtn, 0);
             Controls.SetChildIndex(userLabel, 0);
             Controls.SetChildIndex(userText, 0);
             Controls.SetChildIndex(rolleLabel, 0);
@@ -372,6 +401,8 @@ namespace SchulApp
         private Label subtitleLabel;
         private PictureBox profilPicture;
         private Label profilNameLabel;
+        private Button profilbildAendernBtn;
+        private Button profilbildEntfernenBtn;
         private Label userLabel;
         private TextBox userText;
         private Label rolleLabel;

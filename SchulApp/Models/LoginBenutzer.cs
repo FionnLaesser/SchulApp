@@ -1,4 +1,4 @@
-﻿namespace SchulApp.Models
+namespace SchulApp.Models
 {
     public class LoginBenutzer
     {
@@ -19,6 +19,8 @@
         public string? Nachname { get; set; }
 
         public string? Email { get; set; }
+
+        public byte[]? Profilbild { get; set; }
 
         public DateTime ErstelltAm { get; set; }
     }

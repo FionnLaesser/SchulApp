@@ -263,6 +263,34 @@ BEGIN
     ADD [Email] NVARCHAR(255) NULL;
 END;
 GO
+IF COL_LENGTH(N'dbo.Benutzer', N'Vorname') IS NULL
+BEGIN
+    ALTER TABLE dbo.Benutzer
+    ADD [Vorname] NVARCHAR(100) NULL;
+END;
+GO
+
+IF COL_LENGTH(N'dbo.Benutzer', N'Nachname') IS NULL
+BEGIN
+    ALTER TABLE dbo.Benutzer
+    ADD [Nachname] NVARCHAR(100) NULL;
+END;
+GO
+
+IF COL_LENGTH(N'dbo.Benutzer', N'Email') IS NULL
+BEGIN
+    ALTER TABLE dbo.Benutzer
+    ADD [Email] NVARCHAR(255) NULL;
+END;
+GO
+
+IF COL_LENGTH(N'dbo.Benutzer', N'Profilbild') IS NULL
+BEGIN
+    ALTER TABLE dbo.Benutzer
+    ADD [Profilbild] VARBINARY(MAX) NULL;
+END;
+GO
+
 /* =========================================================
    INDEXE FÜR FOREIGN KEYS
 

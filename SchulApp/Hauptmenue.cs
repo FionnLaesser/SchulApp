@@ -1,4 +1,7 @@
+using Microsoft.EntityFrameworkCore;
+using SchulApp.Data;
 using SchulApp.Models;
+using System.IO;
 
 namespace SchulApp
 {
@@ -25,7 +28,7 @@ namespace SchulApp
             ThemeManager.Anwenden(this);
             RechteAnwenden();
             hauptbildLaden();
-            profilBildLaden();
+            StandardProfilButtonBildLaden();
         }
 
         private bool IstAdmin =>
@@ -33,6 +36,11 @@ namespace SchulApp
 
         private bool IstLehrer =>
             rolle == LoginBenutzer.RolleLehrer;
+
+        private async void Hauptmenue_Shown(object sender, EventArgs e)
+        {
+            await ProfilButtonBildLadenAsync();
+        }
 
         private void RechteAnwenden()
         {
@@ -72,7 +80,6 @@ namespace SchulApp
             formular.StartPosition = FormStartPosition.Manual;
             formular.Location = Location;
 
-            // App-Icon vom Hauptmenü übernehmen
             formular.Icon = Icon;
 
             Hide();
@@ -131,7 +138,38 @@ namespace SchulApp
             hauptbild.Image = Image.FromFile("images/Hauptbild.png");
         }
 
-        private void profilBildLaden()
+        private async Task ProfilButtonBildLadenAsync()
+        {
+            try
+            {
+                await using SchulAppContext db = new SchulAppContext();
+
+                byte[]? profilbild = await db.Benutzer
+                    .AsNoTracking()
+                    .Where(x => x.Id == benutzerId)
+                    .Select(x => x.Profilbild)
+                    .SingleOrDefaultAsync();
+
+                if (profilbild == null || profilbild.Length == 0)
+                {
+                    StandardProfilButtonBildLaden();
+                    return;
+                }
+
+                using MemoryStream stream = new MemoryStream(profilbild);
+                using Image original = Image.FromStream(stream);
+
+                SetProfilButtonBild(
+                    new Bitmap(original, new Size(34, 34))
+                );
+            }
+            catch (Exception)
+            {
+                StandardProfilButtonBildLaden();
+            }
+        }
+
+        private void StandardProfilButtonBildLaden()
         {
             string pfad = Path.Combine(
                 AppContext.BaseDirectory,
@@ -141,14 +179,27 @@ namespace SchulApp
 
             if (!File.Exists(pfad))
             {
+                SetProfilButtonBild(null);
                 profileBtn.Text = "Profil";
                 return;
             }
 
             using Image original = Image.FromFile(pfad);
-            profileBtn.Image = new Bitmap(original, new Size(30, 30));
+
+            SetProfilButtonBild(
+                new Bitmap(original, new Size(30, 30))
+            );
+        }
+
+        private void SetProfilButtonBild(Image? neuesBild)
+        {
+            Image? altesBild = profileBtn.Image;
+
+            profileBtn.Image = neuesBild;
             profileBtn.ImageAlign = ContentAlignment.MiddleCenter;
-            profileBtn.Text = string.Empty;
+            profileBtn.Text = neuesBild == null ? "Profil" : string.Empty;
+
+            altesBild?.Dispose();
         }
 
         private void abmeldenBtn_Click(object sender, EventArgs e)
@@ -162,9 +213,10 @@ namespace SchulApp
             OeffneBereich(new Einstellungen());
         }
 
-        private void profileBtn_Click(object sender, EventArgs e)
+        private async void profileBtn_Click(object sender, EventArgs e)
         {
             OeffneBereich(new Profil(benutzerId));
+            await ProfilButtonBildLadenAsync();
         }
     }
 }

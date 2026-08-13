@@ -167,6 +167,7 @@ namespace SchulApp
             Name = "Hauptmenue";
             StartPosition = FormStartPosition.CenterScreen;
             Text = "SchulApp - Hauptmenü";
+            Shown += Hauptmenue_Shown;
             Controls.SetChildIndex(hauptbild, 0);
             Controls.SetChildIndex(titleLabel, 0);
             Controls.SetChildIndex(subtitleLabel, 0);
