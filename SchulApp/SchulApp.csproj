@@ -21,6 +21,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Update="PingPong.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Update="Einstellungen.cs">
       <SubType>Form</SubType>
     </Compile>

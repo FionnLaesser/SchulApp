@@ -118,9 +118,10 @@ namespace SchulApp
                 control is Panel ||
                 control is GroupBox ||
                 control is TabPage)
-            {
-                control.BackColor = HintergrundFarbe;
-            }
+                { 
+                    control.BackColor = HintergrundFarbe;
+
+                }
 
             if (control.ForeColor == SystemColors.ControlText ||
                 (alteTextFarbe.HasValue && control.ForeColor == alteTextFarbe.Value))

@@ -26,6 +26,7 @@ namespace SchulApp
             einstellungPage = new Button();
             abmeldenBtn = new Button();
             profileBtn = new Button();
+            pingPong = new Button();
             ((System.ComponentModel.ISupportInitialize)hauptbild).BeginInit();
             SuspendLayout();
             // 
@@ -141,9 +142,19 @@ namespace SchulApp
             profileBtn.Name = "profileBtn";
             profileBtn.Size = new Size(60, 50);
             profileBtn.TabIndex = 10;
-            profileBtn.Text = string.Empty;
             profileBtn.UseVisualStyleBackColor = true;
             profileBtn.Click += profileBtn_Click;
+            // 
+            // pingPong
+            // 
+            pingPong.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+            pingPong.Location = new Point(12, 194);
+            pingPong.Name = "pingPong";
+            pingPong.Size = new Size(163, 50);
+            pingPong.TabIndex = 11;
+            pingPong.Text = "Ping Pong";
+            pingPong.UseVisualStyleBackColor = true;
+            pingPong.Click += pingPong_Click;
             // 
             // Hauptmenue
             // 
@@ -151,6 +162,7 @@ namespace SchulApp
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = SystemColors.ActiveCaption;
             ClientSize = new Size(984, 561);
+            Controls.Add(pingPong);
             Controls.Add(profileBtn);
             Controls.Add(abmeldenBtn);
             Controls.Add(einstellungPage);
@@ -179,6 +191,7 @@ namespace SchulApp
             Controls.SetChildIndex(einstellungPage, 0);
             Controls.SetChildIndex(abmeldenBtn, 0);
             Controls.SetChildIndex(profileBtn, 0);
+            Controls.SetChildIndex(pingPong, 0);
             ((System.ComponentModel.ISupportInitialize)hauptbild).EndInit();
             ResumeLayout(false);
             PerformLayout();
@@ -195,5 +208,6 @@ namespace SchulApp
         private Button einstellungPage;
         private Button abmeldenBtn;
         private Button profileBtn;
+        private Button pingPong;
     }
 }

@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace SchulApp.RestModels
+namespace SchulApp.Models
 {
     // Verknüpft das Model mit dbo.Lehrer
     [Table("Lehrer", Schema = "dbo")]

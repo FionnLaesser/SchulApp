@@ -205,5 +205,10 @@ namespace SchulApp
             OeffneBereich(new Profil(benutzerId));
             await ProfilButtonBildLadenAsync();
         }
+
+        private void pingPong_Click(object sender, EventArgs e)
+        {
+            OeffneBereich(new PingPong());
+        }
     }
 }

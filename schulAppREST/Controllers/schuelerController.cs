@@ -39,7 +39,6 @@ namespace schulAppREST.Controllers
 
             return Ok(schueler);
         }
-
         // AddStudent
         [HttpPost]
         public async Task<IActionResult> AddSchueler([FromBody] SchuelerModel schueler)
