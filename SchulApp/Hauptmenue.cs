@@ -210,5 +210,10 @@ namespace SchulApp
         {
             OeffneBereich(new PingPong());
         }
+
+        private void bestenlistePage_Click(object sender, EventArgs e)
+        {
+            OeffneBereich(new Bestenliste());
+        }
     }
 }

@@ -27,6 +27,7 @@ namespace SchulApp
             abmeldenBtn = new Button();
             profileBtn = new Button();
             pingPong = new Button();
+            bestenlistePage = new Button();
             ((System.ComponentModel.ISupportInitialize)hauptbild).BeginInit();
             SuspendLayout();
             // 
@@ -156,12 +157,24 @@ namespace SchulApp
             pingPong.UseVisualStyleBackColor = true;
             pingPong.Click += pingPong_Click;
             // 
+            // bestenlistePage
+            // 
+            bestenlistePage.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+            bestenlistePage.Location = new Point(12, 253);
+            bestenlistePage.Name = "bestenlistePage";
+            bestenlistePage.Size = new Size(163, 50);
+            bestenlistePage.TabIndex = 12;
+            bestenlistePage.Text = "Bestenliste";
+            bestenlistePage.UseVisualStyleBackColor = true;
+            bestenlistePage.Click += bestenlistePage_Click;
+            // 
             // Hauptmenue
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = SystemColors.ActiveCaption;
             ClientSize = new Size(984, 561);
+            Controls.Add(bestenlistePage);
             Controls.Add(pingPong);
             Controls.Add(profileBtn);
             Controls.Add(abmeldenBtn);
@@ -192,6 +205,7 @@ namespace SchulApp
             Controls.SetChildIndex(abmeldenBtn, 0);
             Controls.SetChildIndex(profileBtn, 0);
             Controls.SetChildIndex(pingPong, 0);
+            Controls.SetChildIndex(bestenlistePage, 0);
             ((System.ComponentModel.ISupportInitialize)hauptbild).EndInit();
             ResumeLayout(false);
             PerformLayout();
@@ -209,5 +223,6 @@ namespace SchulApp
         private Button abmeldenBtn;
         private Button profileBtn;
         private Button pingPong;
+        private Button bestenlistePage;
     }
 }

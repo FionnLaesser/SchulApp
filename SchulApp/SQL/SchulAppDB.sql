@@ -290,7 +290,91 @@ BEGIN
     ADD [Profilbild] VARBINARY(MAX) NULL;
 END;
 GO
+IF COL_LENGTH(N'dbo.Benutzer', N'PingPongSiege') IS NULL
+BEGIN
+    ALTER TABLE dbo.Benutzer
+    ADD PingPongSiege INT NOT NULL
+        CONSTRAINT DF_Benutzer_PingPongSiege DEFAULT (0) WITH VALUES;
+END;
+GO
 
+IF COL_LENGTH(N'dbo.Benutzer', N'PingPongPunkte') IS NULL
+BEGIN
+    ALTER TABLE dbo.Benutzer
+    ADD PingPongPunkte INT NOT NULL
+        CONSTRAINT DF_Benutzer_PingPongPunkte DEFAULT (0) WITH VALUES;
+END;
+GO
+
+IF COL_LENGTH(N'dbo.Benutzer', N'PingPongToreErzielt') IS NULL
+BEGIN
+    ALTER TABLE dbo.Benutzer
+    ADD PingPongToreErzielt INT NOT NULL
+        CONSTRAINT DF_Benutzer_PingPongToreErzielt DEFAULT (0) WITH VALUES;
+END;
+GO
+
+IF COL_LENGTH(N'dbo.Benutzer', N'PingPongToreKassiert') IS NULL
+BEGIN
+    ALTER TABLE dbo.Benutzer
+    ADD PingPongToreKassiert INT NOT NULL
+        CONSTRAINT DF_Benutzer_PingPongToreKassiert DEFAULT (0) WITH VALUES;
+END;
+GO
+
+IF OBJECT_ID(N'dbo.PingPongSpiel', N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.PingPongSpiel
+    (
+        Id INT IDENTITY(1,1) NOT NULL,
+        SpielerLinksId INT NOT NULL,
+        SpielerRechtsId INT NOT NULL,
+        ToreLinks INT NOT NULL,
+        ToreRechts INT NOT NULL,
+        GewinnerId INT NOT NULL,
+        GespieltAm DATETIME2 NOT NULL
+            CONSTRAINT DF_PingPongSpiel_GespieltAm
+            DEFAULT SYSUTCDATETIME(),
+
+        CONSTRAINT PK_PingPongSpiel
+            PRIMARY KEY (Id),
+
+        CONSTRAINT FK_PingPongSpiel_SpielerLinks
+            FOREIGN KEY (SpielerLinksId)
+            REFERENCES dbo.Benutzer(Id),
+
+        CONSTRAINT FK_PingPongSpiel_SpielerRechts
+            FOREIGN KEY (SpielerRechtsId)
+            REFERENCES dbo.Benutzer(Id),
+
+        CONSTRAINT FK_PingPongSpiel_Gewinner
+            FOREIGN KEY (GewinnerId)
+            REFERENCES dbo.Benutzer(Id),
+
+        CONSTRAINT CK_PingPongSpiel_Ergebnis
+            CHECK
+            (
+                ToreLinks BETWEEN 0 AND 5
+                AND ToreRechts BETWEEN 0 AND 5
+                AND ToreLinks <> ToreRechts
+                AND (ToreLinks = 5 OR ToreRechts = 5)
+            )
+    );
+END;
+GO
+
+IF NOT EXISTS
+(
+    SELECT 1
+    FROM sys.indexes
+    WHERE object_id = OBJECT_ID(N'dbo.PingPongSpiel')
+      AND name = N'IX_PingPongSpiel_GespieltAm'
+)
+BEGIN
+    CREATE INDEX IX_PingPongSpiel_GespieltAm
+        ON dbo.PingPongSpiel(GespieltAm DESC);
+END;
+GO
 /* =========================================================
    INDEXE FÜR FOREIGN KEYS
 
