@@ -110,18 +110,17 @@ namespace SchulApp
 
                 GegnerAnzeigeAktualisieren();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                statusLabel.Text = "REST API nicht erreichbar.";
-
                 MessageBox.Show(
-                    "Die Benutzer konnten nicht über die REST API geladen werden. Bitte prüfe, ob schulAppREST gestartet ist.(Im schulAppREST Ordner: dotnet run)",
-                    "Ping Pong",
+                    ex.GetType().Name + "\n\n" + ex.Message,
+                    "REST API Fehler",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error
                 );
             }
         }
+        
 
         private void gegnerComboBox_SelectedIndexChanged(
             object sender,

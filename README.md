@@ -66,9 +66,25 @@ Zu den wichtigsten Funktionen der Anwendung gehören:
 
 ## Programmstart
 
-Beim Start der Anwendung wird zuerst ein eigener **LoadingScreen** angezeigt.
+Für den normalen Start müssen **SQL Server** und die Datenbank `SchulAppDB` verfügbar sein.
 
-Der Startvorgang läuft vereinfacht so ab:
+Beim ersten Einrichten des Projekts muss nur dieses eine SQL-Skript ausgeführt werden:
+
+```text
+SchulApp/SQL/SchulAppDB.sql
+```
+
+Das Skript richtet die benötigte Datenbankstruktur inklusive der PingPong- und Bestenlisten-Daten ein.
+
+Danach wird die komplette Anwendung aus dem **Hauptordner `Schulapp`** mit einem einzigen Befehl gestartet:
+
+```powershell
+./start.ps1
+```
+
+`start.ps1` startet zuerst die **schulAppREST** API, wartet bis sie erreichbar ist und startet danach die **WinForms-Anwendung**.
+
+Der Startvorgang der WinForms-Anwendung läuft vereinfacht so ab:
 
 1. Die Anwendung wird initialisiert.
 2. Eine vorhandene lokale `.env` Datei kann eingelesen werden.
@@ -82,8 +98,7 @@ Der Startvorgang läuft vereinfacht so ab:
 
 Kann keine Verbindung zur Datenbank hergestellt werden, wird eine Fehlermeldung angezeigt und der normale Startvorgang beendet.
 
-Die PingPong- und Bestenlisten-Funktionen benötigen zusätzlich die laufende **schulAppREST** API.
-
+Für PingPong und die Bestenliste muss die REST API laufen. Beim Start über `./start.ps1` wird sie automatisch gestartet.
 ## Login und Registrierung
 
 Die Anwendung verfügt über ein eigenes Login mit Benutzername und Passwort.
@@ -706,6 +721,8 @@ Eine vereinfachte Struktur sieht folgendermassen aus:
 ```text
 Schulapp
 │
+├── start.ps1
+│
 ├── SchulApp
 │   ├── Data
 │   ├── Models
@@ -745,19 +762,22 @@ Schulapp
 
 ## Setup
 
-Vor dem ersten Start müssen SQL Server, die Datenbank, die REST API und die benötigten NuGet-Pakete eingerichtet sein.
+Für den normalen lokalen Start sind nur wenige Schritte nötig:
 
-Die wichtigsten Schritte:
+1. Microsoft SQL Server starten.
+2. Beim ersten Einrichten einmal `SchulApp/SQL/SchulAppDB.sql` ausführen.
+3. Im Hauptordner `Schulapp` PowerShell öffnen.
+4. Die Anwendung starten:
 
-1. SQL Server starten.
-2. `SchulAppDB.sql` ausführen.
-3. NuGet-Pakete wiederherstellen.
-4. `schulAppREST` starten.
-5. Die WinForms-Anwendung starten.
-6. Mindestens zwei Benutzer registrieren, wenn PingPong getestet werden soll.
+```powershell
+./start.ps1
+```
+
+Das Startskript startet die REST API und danach automatisch die WinForms-Anwendung. Ein separates `dotnet run` für `schulAppREST` oder `SchulApp` ist im normalen Ablauf nicht nötig.
+
+Für PingPong müssen mindestens zwei Benutzerkonten vorhanden sein.
 
 Die vollständige Anleitung befindet sich in [SETUP.md](SETUP.md).
-
 ## Unit-Tests
 
 Für Teile der Service-Schicht werden Unit-Tests mit **xUnit** verwendet.
