@@ -40,8 +40,13 @@ namespace SchulApp
             ergebnisLabel = new Label();
             gewinnerLabel = new Label();
             spielEndeTitelLabel = new Label();
+            pausePanel = new Panel();
+            pauseTextLabel = new Label();
+            fortsetzenBtn = new Button();
+            pauseTitelLabel = new Label();
             ((System.ComponentModel.ISupportInitialize)ball).BeginInit();
             spielEndePanel.SuspendLayout();
+            pausePanel.SuspendLayout();
             SuspendLayout();
 
             // 
@@ -266,12 +271,61 @@ namespace SchulApp
             spielEndeTitelLabel.Text = "Spiel beendet!";
             spielEndeTitelLabel.TextAlign = ContentAlignment.MiddleCenter;
 
+
+            // 
+            // pausePanel
+            // 
+            pausePanel.Anchor = AnchorStyles.None;
+            pausePanel.BorderStyle = BorderStyle.FixedSingle;
+            pausePanel.Controls.Add(pauseTextLabel);
+            pausePanel.Controls.Add(fortsetzenBtn);
+            pausePanel.Controls.Add(pauseTitelLabel);
+            pausePanel.Location = new Point(425, 285);
+            pausePanel.Name = "pausePanel";
+            pausePanel.Size = new Size(350, 180);
+            pausePanel.TabIndex = 15;
+            pausePanel.Visible = false;
+
+            // 
+            // pauseTextLabel
+            // 
+            pauseTextLabel.Location = new Point(25, 65);
+            pauseTextLabel.Name = "pauseTextLabel";
+            pauseTextLabel.Size = new Size(300, 40);
+            pauseTextLabel.TabIndex = 1;
+            pauseTextLabel.Text = "Das Spiel wurde durch das Minimieren pausiert.";
+            pauseTextLabel.TextAlign = ContentAlignment.MiddleCenter;
+
+            // 
+            // fortsetzenBtn
+            // 
+            fortsetzenBtn.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            fortsetzenBtn.Location = new Point(95, 120);
+            fortsetzenBtn.Name = "fortsetzenBtn";
+            fortsetzenBtn.Size = new Size(160, 40);
+            fortsetzenBtn.TabIndex = 2;
+            fortsetzenBtn.Text = "Fortsetzen";
+            fortsetzenBtn.UseVisualStyleBackColor = true;
+            fortsetzenBtn.Click += fortsetzenBtn_Click;
+
+            // 
+            // pauseTitelLabel
+            // 
+            pauseTitelLabel.Font = new Font("Segoe UI", 18F, FontStyle.Bold);
+            pauseTitelLabel.Location = new Point(25, 15);
+            pauseTitelLabel.Name = "pauseTitelLabel";
+            pauseTitelLabel.Size = new Size(300, 40);
+            pauseTitelLabel.TabIndex = 0;
+            pauseTitelLabel.Text = "Spiel pausiert";
+            pauseTitelLabel.TextAlign = ContentAlignment.MiddleCenter;
+
             // 
             // PingPong
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1200, 750);
+            Controls.Add(pausePanel);
             Controls.Add(spielEndePanel);
             Controls.Add(statusLabel);
             Controls.Add(spielStartBtn);
@@ -303,8 +357,10 @@ namespace SchulApp
             Controls.SetChildIndex(spielStartBtn, 0);
             Controls.SetChildIndex(statusLabel, 0);
             Controls.SetChildIndex(spielEndePanel, 0);
+            Controls.SetChildIndex(pausePanel, 0);
             ((System.ComponentModel.ISupportInitialize)ball).EndInit();
             spielEndePanel.ResumeLayout(false);
+            pausePanel.ResumeLayout(false);
             ResumeLayout(false);
             PerformLayout();
         }
@@ -331,5 +387,9 @@ namespace SchulApp
         private Label ergebnisLabel;
         private Label gewinnerLabel;
         private Label spielEndeTitelLabel;
+        private Panel pausePanel;
+        private Label pauseTextLabel;
+        private Button fortsetzenBtn;
+        private Label pauseTitelLabel;
     }
 }
