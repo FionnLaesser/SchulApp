@@ -27,6 +27,12 @@ namespace SchulApp
             resetSettingsBtn = new Button();
             label1 = new Label();
             userNameLabel = new Label();
+            ballSpeedTitelLabel = new Label();
+            ballSpeedInfoLabel = new Label();
+            ballSpeedNumericUpDown = new NumericUpDown();
+            ballSpeedSpeichernBtn = new Button();
+            ballSpeedStatusLabel = new Label();
+            ((System.ComponentModel.ISupportInitialize)ballSpeedNumericUpDown).BeginInit();
             SuspendLayout();
             // 
             // titleLabel
@@ -125,12 +131,64 @@ namespace SchulApp
             userNameLabel.TabIndex = 9;
             userNameLabel.Text = "User:";
             // 
+            // ballSpeedTitelLabel
+            // 
+            ballSpeedTitelLabel.AutoSize = true;
+            ballSpeedTitelLabel.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
+            ballSpeedTitelLabel.Location = new Point(12, 320);
+            ballSpeedTitelLabel.Name = "ballSpeedTitelLabel";
+            ballSpeedTitelLabel.Size = new Size(220, 20);
+            ballSpeedTitelLabel.TabIndex = 10;
+            ballSpeedTitelLabel.Text = "PingPong Ballgeschwindigkeit";
+            // 
+            // ballSpeedInfoLabel
+            // 
+            ballSpeedInfoLabel.AutoSize = true;
+            ballSpeedInfoLabel.Location = new Point(123, 354);
+            ballSpeedInfoLabel.Name = "ballSpeedInfoLabel";
+            ballSpeedInfoLabel.Size = new Size(218, 15);
+            ballSpeedInfoLabel.TabIndex = 11;
+            ballSpeedInfoLabel.Text = "< 3 = langsam | 6 = normal | 10+ = schnell";
+            // 
+            // ballSpeedNumericUpDown
+            // 
+            ballSpeedNumericUpDown.Location = new Point(12, 350);
+            ballSpeedNumericUpDown.Maximum = new decimal(new int[] { 20, 0, 0, 0 });
+            ballSpeedNumericUpDown.Minimum = new decimal(new int[] { 1, 0, 0, 0 });
+            ballSpeedNumericUpDown.Name = "ballSpeedNumericUpDown";
+            ballSpeedNumericUpDown.Size = new Size(90, 23);
+            ballSpeedNumericUpDown.TabIndex = 12;
+            ballSpeedNumericUpDown.Value = new decimal(new int[] { 6, 0, 0, 0 });
+            // 
+            // ballSpeedSpeichernBtn
+            // 
+            ballSpeedSpeichernBtn.Location = new Point(12, 388);
+            ballSpeedSpeichernBtn.Name = "ballSpeedSpeichernBtn";
+            ballSpeedSpeichernBtn.Size = new Size(145, 32);
+            ballSpeedSpeichernBtn.TabIndex = 13;
+            ballSpeedSpeichernBtn.Text = "Ball-Speed speichern";
+            ballSpeedSpeichernBtn.UseVisualStyleBackColor = true;
+            ballSpeedSpeichernBtn.Click += ballSpeedSpeichernBtn_Click;
+            // 
+            // ballSpeedStatusLabel
+            // 
+            ballSpeedStatusLabel.AutoSize = true;
+            ballSpeedStatusLabel.Location = new Point(174, 397);
+            ballSpeedStatusLabel.Name = "ballSpeedStatusLabel";
+            ballSpeedStatusLabel.Size = new Size(0, 15);
+            ballSpeedStatusLabel.TabIndex = 14;
+            // 
             // Einstellungen
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = SystemColors.ActiveCaption;
             ClientSize = new Size(984, 561);
+            Controls.Add(ballSpeedStatusLabel);
+            Controls.Add(ballSpeedSpeichernBtn);
+            Controls.Add(ballSpeedNumericUpDown);
+            Controls.Add(ballSpeedInfoLabel);
+            Controls.Add(ballSpeedTitelLabel);
             Controls.Add(userNameLabel);
             Controls.Add(label1);
             Controls.Add(resetSettingsBtn);
@@ -146,6 +204,7 @@ namespace SchulApp
             Name = "Einstellungen";
             StartPosition = FormStartPosition.CenterScreen;
             Text = "SchulApp - Hauptmenü";
+            ((System.ComponentModel.ISupportInitialize)ballSpeedNumericUpDown).EndInit();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -162,5 +221,10 @@ namespace SchulApp
         private Button resetSettingsBtn;
         private Label label1;
         private Label userNameLabel;
+        private Label ballSpeedTitelLabel;
+        private Label ballSpeedInfoLabel;
+        private NumericUpDown ballSpeedNumericUpDown;
+        private Button ballSpeedSpeichernBtn;
+        private Label ballSpeedStatusLabel;
     }
 }

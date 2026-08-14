@@ -10,8 +10,11 @@ namespace SchulApp
         private readonly PingPongApiService pingPongApiService =
             new PingPongApiService();
 
-        private int ballSpeedX = 5;
-        private int ballSpeedY = 5;
+        private readonly EinstellungApiService einstellungApiService =
+            new EinstellungApiService();
+
+        private int ballSpeedX = 6;
+        private int ballSpeedY = 6;
         private int spielerSpeed = 7;
 
         private int punkteLinks;
@@ -89,7 +92,26 @@ namespace SchulApp
 
         private async void PingPong_Shown(object sender, EventArgs e)
         {
+            await BallSpeedLadenAsync();
             await SpielerLadenAsync();
+        }
+
+        private async Task BallSpeedLadenAsync()
+        {
+            try
+            {
+                int ballSpeed = await einstellungApiService.BallSpeedLadenAsync(
+                    BenutzerSession.BenutzerId
+                );
+
+                ballSpeedX = ballSpeed;
+                ballSpeedY = ballSpeed;
+            }
+            catch (Exception)
+            {
+                ballSpeedX = 6;
+                ballSpeedY = 6;
+            }
         }
 
         private async Task SpielerLadenAsync()
