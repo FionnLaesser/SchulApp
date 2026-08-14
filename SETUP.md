@@ -7,7 +7,7 @@ Diese Anleitung beschreibt die lokale Einrichtung und den Start der aktuellen **
 Benötigt werden:
 
 - Windows
-- Visual Studio 2026
+- Visual Studio 2026 (Optional)
 - .NET 10 SDK
 - Microsoft SQL Server 2022
 - PowerShell
