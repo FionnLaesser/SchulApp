@@ -61,6 +61,7 @@ Zu den wichtigsten Funktionen der Anwendung gehören:
 - Design-Einstellungen pro Benutzer speichern
 - PingPong zwischen zwei vorhandenen Benutzern spielen
 - PingPong-Spiele bis 5 Punkte durchführen
+- Laufende PingPong-Spiele über `Q` oder beim Minimieren pausieren
 - Spielergebnisse über die REST API speichern
 - Eine REST-basierte Bestenliste anzeigen
 
@@ -79,7 +80,7 @@ Das Skript richtet die benötigte Datenbankstruktur inklusive der PingPong- und 
 Danach wird die komplette Anwendung aus dem **Hauptordner `Schulapp`** mit einem einzigen Befehl gestartet:
 
 ```powershell
-./start.ps1
+.\start.ps1
 ```
 
 `start.ps1` startet zuerst die **schulAppREST** API, wartet bis sie erreichbar ist und startet danach die **WinForms-Anwendung**.
@@ -98,7 +99,7 @@ Der Startvorgang der WinForms-Anwendung läuft vereinfacht so ab:
 
 Kann keine Verbindung zur Datenbank hergestellt werden, wird eine Fehlermeldung angezeigt und der normale Startvorgang beendet.
 
-Für PingPong und die Bestenliste muss die REST API laufen. Beim Start über `./start.ps1` wird sie automatisch gestartet.
+Für PingPong und die Bestenliste muss die REST API laufen. Beim Start über `.\start.ps1` wird sie automatisch gestartet.
 ## Login und Registrierung
 
 Die Anwendung verfügt über ein eigenes Login mit Benutzername und Passwort.
@@ -214,6 +215,16 @@ Rechter Spieler:
 Pfeiltaste hoch = hoch
 Pfeiltaste runter = runter
 ```
+
+Pausenmenü:
+
+```text
+Q = Spiel pausieren
+```
+
+Im Pausenmenü kann das Spiel mit **Fortsetzen** weitergespielt oder über **Zurück zum Hauptmenü** verlassen werden.
+
+Wird das Fenster während eines laufenden Spiels minimiert, wird das Spiel ebenfalls automatisch pausiert. Nach dem Wiederherstellen kann es über **Fortsetzen** weitergespielt werden.
 
 ### Spielfeld
 
@@ -770,7 +781,7 @@ Für den normalen lokalen Start sind nur wenige Schritte nötig:
 4. Die Anwendung starten:
 
 ```powershell
-./start.ps1
+.\start.ps1
 ```
 
 Das Startskript startet die REST API und danach automatisch die WinForms-Anwendung. Ein separates `dotnet run` für `schulAppREST` oder `SchulApp` ist im normalen Ablauf nicht nötig.

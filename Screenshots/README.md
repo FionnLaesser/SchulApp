@@ -3,6 +3,17 @@
 Die **SchulApp** ist eine mit C# und Windows Forms entwickelte Schulverwaltungsanwendung.  
 Mit der Anwendung können **Schüler, Lehrer, Klassen, Kurse und Stundenpläne** verwaltet werden. Dazu gehören Funktionen zum Anzeigen, Erstellen, Bearbeiten und Löschen von Daten.
 
+
+## Login und Registrierung
+
+![Loginseite](LoginSeite.png)
+
+![Registrierungsseite](RegisterSeite.png)
+
+## Profil
+
+![Profilseite](ProfileSeite.png)
+
 ## Hauptmenü
 
 ![Hauptmenü](Hauptmenue.png)
@@ -45,6 +56,22 @@ Mit der Anwendung können **Schüler, Lehrer, Klassen, Kurse und Stundenpläne**
 ### Beispiel Einstellungen
 
 ![Beipsiel Einstellungsseite](BeispielEinstellung.png)
+
+## PingPong
+
+![PingPong-Seite](PingPongSeite.png)
+
+### Spiel pausiert
+
+![Spiel pausiert](SpielPausiert.png)
+
+### Spiel beendet
+
+![Spiel beendet](SpielBeendet.png)
+
+## Bestenliste
+
+![Bestenliste](LeaderboardSeite.png)
 
 ## Weitere Ansichten
 
