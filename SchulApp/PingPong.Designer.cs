@@ -25,6 +25,8 @@
             panelRechts = new Panel();
             gameTimer = new System.Windows.Forms.Timer(components);
             label1 = new Label();
+            panelTop = new Panel();
+            punkteZahlLabel = new Label();
             ((System.ComponentModel.ISupportInitialize)ball).BeginInit();
             SuspendLayout();
             // 
@@ -63,27 +65,47 @@
             label1.AutoSize = true;
             label1.Location = new Point(152, 27);
             label1.Name = "label1";
-            label1.Size = new Size(195, 15);
+            label1.Size = new Size(181, 15);
             label1.TabIndex = 5;
-            label1.Text = "Zum verlassen einfachen Schliessen";
+            label1.Text = "Zum Verlassen einfach schliessen";
+            // 
+            // panelTop
+            // 
+            panelTop.Location = new Point(0, 17);
+            panelTop.Name = "panelTop";
+            panelTop.Size = new Size(1200, 10);
+            panelTop.TabIndex = 6;
+            // 
+            // punkteZahlLabel
+            // 
+            punkteZahlLabel.AutoSize = true;
+            punkteZahlLabel.Location = new Point(489, 45);
+            punkteZahlLabel.Name = "punkteZahlLabel";
+            punkteZahlLabel.Size = new Size(22, 15);
+            punkteZahlLabel.TabIndex = 7;
+            punkteZahlLabel.Text = "1:3";
             // 
             // PingPong
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1200, 750);
+            Controls.Add(punkteZahlLabel);
             Controls.Add(label1);
             Controls.Add(panelRechts);
             Controls.Add(panelLinks);
             Controls.Add(ball);
+            Controls.Add(panelTop);
             MinimumSize = new Size(900, 600);
             Name = "PingPong";
             StartPosition = FormStartPosition.Manual;
             Text = "SchulApp";
+            Controls.SetChildIndex(panelTop, 0);
             Controls.SetChildIndex(ball, 0);
             Controls.SetChildIndex(panelLinks, 0);
             Controls.SetChildIndex(panelRechts, 0);
             Controls.SetChildIndex(label1, 0);
+            Controls.SetChildIndex(punkteZahlLabel, 0);
             ((System.ComponentModel.ISupportInitialize)ball).EndInit();
             ResumeLayout(false);
             PerformLayout();
@@ -96,5 +118,7 @@
         private Panel panelRechts;
         private System.Windows.Forms.Timer gameTimer;
         private Label label1;
+        private Panel panelTop;
+        private Label punkteZahlLabel;
     }
 }
