@@ -1,10 +1,10 @@
 # SchulApp
 
-SchulApp ist eine vollständige Schulverwaltungsanwendung, die mit **C#**, **.NET** und **Windows Forms** entwickelt wurde.
+SchulApp ist eine Schulverwaltungsanwendung mit **C#**, **.NET 10** und **Windows Forms**.
 
-Die Anwendung dient dazu, wichtige Schuldaten wie **Schüler, Lehrer, Klassen, Kurse und Stundenpläne** zentral und übersichtlich zu verwalten. Die Daten werden in einer lokalen **Microsoft SQL Server 2022** Datenbank gespeichert. Für den Datenbankzugriff wird **Entity Framework Core** verwendet.
+Die Anwendung verwaltet zentrale Schuldaten wie **Schüler, Lehrer, Klassen, Kurse und Stundenpläne**. Die Daten werden in einer lokalen **Microsoft SQL Server 2022** Datenbank gespeichert und über **Entity Framework Core** verarbeitet.
 
-Zusätzlich enthält die Anwendung unter anderem ein eigenes Login- und Registrierungssystem mit Rollen und Berechtigungen, einen LoadingScreen mit automatischer Datenbankprüfung, benutzerspezifische persistente Design-Einstellungen, eine Abmeldefunktion sowie eine Service- und Repository-Struktur für Schülerdaten.
+Zusätzlich enthält das Projekt ein eigenes Login- und Registrierungssystem mit Rollen und Berechtigungen, benutzerspezifische Design-Einstellungen, Profilbilder, eine REST API sowie ein integriertes PingPong-Spiel mit Bestenliste.
 
 ## Inhaltsverzeichnis
 
@@ -12,7 +12,9 @@ Zusätzlich enthält die Anwendung unter anderem ein eigenes Login- und Registri
 - [Programmstart](#programmstart)
 - [Login und Registrierung](#login-und-registrierung)
 - [Rollen und Berechtigungen](#rollen-und-berechtigungen)
-- [Zusätzliche Erweiterungen](#zusätzliche-erweiterungen)
+- [PingPong](#pingpong)
+- [Bestenliste](#bestenliste)
+- [REST API](#rest-api)
 - [Verwaltete Daten](#verwaltete-daten)
 - [Datenbank und Entity Framework Core](#datenbank-und-entity-framework-core)
 - [Architektur und Service-Schicht](#architektur-und-service-schicht)
@@ -23,7 +25,6 @@ Zusätzlich enthält die Anwendung unter anderem ein eigenes Login- und Registri
 - [Technologien](#technologien)
 - [Projektstruktur](#projektstruktur)
 - [Setup](#setup)
-- [App-Demo](#app-demo)
 - [Unit-Tests](#unit-tests)
 - [Definition of Done](#definition-of-done)
 
@@ -33,7 +34,7 @@ Zu den wichtigsten Funktionen der Anwendung gehören:
 
 - Schüler anzeigen, erstellen, bearbeiten und löschen
 - Schüler einer Klasse zuweisen
-- Schüler übersichtlich in einer `DataGridView` Tabelle anzeigen
+- Schüler in einer `DataGridView` Tabelle anzeigen
 - Lehrer anzeigen, erstellen, bearbeiten und löschen
 - Informationen, Fach, E-Mail und Telefonnummer zu Lehrern speichern
 - Zusätzliche Lehrerinformationen separat speichern und verwalten
@@ -44,58 +45,62 @@ Zu den wichtigsten Funktionen der Anwendung gehören:
 - Kurse anzeigen, erstellen, bearbeiten und löschen
 - Lehrer einem Kurs zuordnen
 - Klassen einem Kurs zuordnen
-- Zugehörige Klasse und Lehrer in der Kursübersicht anzeigen
 - Stundenplaneinträge anzeigen, erstellen, bearbeiten und löschen
 - Wochentag, Startzeit und Endzeit eines Stundenplaneintrags verwalten
-- Kurs, Klasse, Lehrer und Raum eines Stundenplaneintrags anzeigen
-- Stundenplaneinträge nach Wochentag und Uhrzeit sortiert darstellen
-- Prüfen, dass die Endzeit eines Stundenplaneintrags nach der Startzeit liegt
+- Kurs, Klasse, Lehrer, Raum und Zeit im Stundenplan darstellen
+- Stundenplaneinträge nach Wochentag und Uhrzeit sortieren
+- Prüfen, dass die Endzeit nach der Startzeit liegt
 - Aktuelles Datum und aktuelle Uhrzeit anzeigen
 - Löschen von Datensätzen vor dem Ausführen bestätigen
-- Verknüpfte Daten wie Lehrer, Klassen, Schüler und Kurse gemeinsam darstellen
 - Abhängige Datensätze vor ungültigem Löschen schützen
-- Einstellungen für Hintergrund- und Textfarbe benutzerspezifisch speichern
-- Eigenes App-Icon für die Windows-Forms-Fenster verwenden
 - Benutzer über Login anmelden
 - Neue Benutzer über eine Registrierungsseite erstellen
-- Bei der Registrierung zwischen Admin, Lehrer und Schüler wählen
 - Rollenabhängige Zugriffsrechte anwenden
-- Benutzer über einen Abmelde-Button abmelden und zum Login zurückkehren
-- Passwörter mit BCrypt hashen und sicher prüfen
+- Passwörter mit BCrypt hashen und prüfen
+- Profilbilder pro Benutzer anzeigen
+- Design-Einstellungen pro Benutzer speichern
+- PingPong zwischen zwei vorhandenen Benutzern spielen
+- PingPong-Spiele bis 5 Punkte durchführen
+- Spielergebnisse über die REST API speichern
+- Eine REST-basierte Bestenliste anzeigen
 
 ## Programmstart
 
 Beim Start der Anwendung wird zuerst ein eigener **LoadingScreen** angezeigt.
 
-Der Startvorgang läuft vereinfacht folgendermassen ab:
+Der Startvorgang läuft vereinfacht so ab:
 
 1. Die Anwendung wird initialisiert.
-2. Der LoadingScreen wird angezeigt.
-3. Die Verbindung zur SQL-Datenbank wird über Entity Framework Core geprüft.
-4. Bei erfolgreicher Datenbankverbindung wird der Startvorgang fortgesetzt.
-5. Anschliessend wird das Login angezeigt.
-6. Erst nach erfolgreichem Login wird die eigentliche Anwendung geöffnet.
-7. Die zum angemeldeten Benutzer gehörenden Design-Einstellungen werden geladen und auf die Anwendung angewendet.
+2. Eine vorhandene lokale `.env` Datei kann eingelesen werden.
+3. Der LoadingScreen wird angezeigt.
+4. Die Verbindung zur SQL-Datenbank wird geprüft.
+5. Bei erfolgreicher Datenbankverbindung wird das Login geöffnet.
+6. Nach erfolgreichem Login wird die eigentliche Anwendung geöffnet.
+7. Die zum angemeldeten Benutzer gehörenden Design-Einstellungen werden geladen.
 8. Die Berechtigungen werden anhand der Benutzerrolle angewendet.
-9. Das App-Icon wird zentral für geöffnete Windows-Forms-Fenster gesetzt.
+9. Das App-Icon wird zentral auf die geöffneten Forms angewendet.
 
-Kann keine Verbindung zur Datenbank hergestellt werden, wird eine Fehlermeldung angezeigt und der Startvorgang beendet.
+Kann keine Verbindung zur Datenbank hergestellt werden, wird eine Fehlermeldung angezeigt und der normale Startvorgang beendet.
 
-Für das App-Icon wird zentral ein `Application.Idle` Handler verwendet, der das Icon auf die geöffneten Forms anwendet.
+Die PingPong- und Bestenlisten-Funktionen benötigen zusätzlich die laufende **schulAppREST** API.
 
 ## Login und Registrierung
 
-Die Anwendung verfügt über ein eigenes **Login mit Benutzername und Passwort**.
+Die Anwendung verfügt über ein eigenes Login mit Benutzername und Passwort.
 
-Die Benutzerkonten werden in der SQL-Datenbank gespeichert. Passwörter werden nicht im Klartext abgelegt, sondern vor dem Speichern mit **BCrypt** gehasht.
+Die Benutzerkonten werden in der SQL-Datenbank gespeichert. Passwörter werden nicht im Klartext abgelegt, sondern mit **BCrypt** gehasht.
 
-Beim Login wird der eingegebene Benutzername in der Datenbank gesucht. Das eingegebene Passwort wird anschliessend mit BCrypt gegen den gespeicherten Passwort-Hash geprüft.
-
-Vor beziehungsweise während der Anmeldung wird ausserdem sichergestellt, dass die benötigte Datenbankverbindung verfügbar ist.
+Beim Login wird der eingegebene Benutzername in der Datenbank gesucht. Das eingegebene Passwort wird anschliessend gegen den gespeicherten BCrypt-Hash geprüft.
 
 ### Registrierung
 
-Neue Benutzer können über eine eigene Registrierungsseite angelegt werden. Bei der Registrierung wird zusätzlich die Rolle **Admin**, **Lehrer** oder **Schüler** ausgewählt. Für die Rollenauswahl ist keine zusätzliche Bestätigung erforderlich.
+Neue Benutzer können über eine eigene Registrierungsseite angelegt werden.
+
+Bei der Registrierung wird zusätzlich eine Rolle ausgewählt:
+
+- Admin
+- Lehrer
+- Schüler
 
 Für die Registrierung gelten unter anderem folgende Validierungen:
 
@@ -105,17 +110,21 @@ Für die Registrierung gelten unter anderem folgende Validierungen:
 - Erforderliche Felder dürfen nicht leer sein
 - Eine gültige Benutzerrolle muss ausgewählt sein
 
-Der Benutzername, der BCrypt-Passwort-Hash und die ausgewählte Rolle werden anschliessend in der Datenbank gespeichert.
+Der Benutzername, der Passwort-Hash und die Rolle werden anschliessend in der Datenbank gespeichert.
 
-Beim Wechsel zwischen Login und Registrierung wird die Formularposition beibehalten, damit sich die Fenster für den Benutzer nicht unnötig verschieben.
+Beim Wechsel zwischen Login und Registrierung wird die Fensterposition beibehalten.
 
 ### `.env` Datei
 
-Die Anwendung kann beim Start optional eine lokale `.env` Datei einlesen. Sie kann für lokale Umgebungswerte oder Konfigurationen verwendet werden.
+Die Anwendung kann beim Start optional eine lokale `.env` Datei einlesen.
 
-Benutzerkonten und Passwort-Hashes werden jedoch in der Datenbank verwaltet und nicht als Admin-Zugangsdaten aus der `.env` Datei gelesen.
+Benutzername und Passwort für das Login werden nicht aus der `.env` Datei geladen. Benutzerkonten werden über die Anwendung registriert und in der Datenbank gespeichert.
 
-Im Repository kann die `.env.example` Datei als Vorlage verwendet werden.
+Für die REST API kann optional die Umgebungsvariable `SCHULAPP_API_BASE_URL` gesetzt werden. Ohne diese Variable verwendet der PingPong-Service standardmässig:
+
+```text
+https://localhost:63635/
+```
 
 Die vollständige Einrichtung ist in [SETUP.md](SETUP.md) beschrieben.
 
@@ -125,89 +134,193 @@ Die Anwendung unterscheidet zwischen den drei Benutzerrollen **Admin**, **Lehrer
 
 ### Admin
 
-Ein Admin besitzt vollständige Verwaltungsrechte und kann:
+Ein Admin besitzt vollständige Verwaltungsrechte und kann unter anderem:
 
-- Schüler anzeigen, erstellen, bearbeiten und löschen
-- Lehrer anzeigen, erstellen, bearbeiten und löschen
-- Klassen anzeigen, erstellen, bearbeiten und löschen
-- Kurse anzeigen, erstellen, bearbeiten und löschen
-- Stundenplaneinträge anzeigen, erstellen, bearbeiten und löschen
+- Schüler verwalten
+- Lehrer verwalten
+- Klassen verwalten
+- Kurse verwalten
+- Stundenplaneinträge verwalten
 - Einstellungen verwenden und ändern
+- Profil verwenden
+- PingPong und Bestenliste öffnen
 
 ### Lehrer
 
 Ein Lehrer kann:
 
-- Schüler anzeigen, erstellen, bearbeiten und löschen
-- Stundenplaneinträge anzeigen, erstellen, bearbeiten und löschen
+- Schüler verwalten
+- Stundenplaneinträge verwalten
 - Einstellungen verwenden und ändern
+- Profil verwenden
+- PingPong und Bestenliste öffnen
 
-Ein Lehrer kann keine Lehrer, Klassen oder Kurse erstellen, bearbeiten oder löschen.
+Ein Lehrer kann keine Lehrer, Klassen oder Kurse verwalten.
 
 ### Schüler
 
-Ein Schüler besitzt nur Leserechte für den Stundenplan.
+Ein Schüler besitzt für die Schuldaten hauptsächlich Leserechte.
 
 Ein Schüler kann:
 
 - den Stundenplan anzeigen
-- seine eigenen Design-Einstellungen verwenden und ändern
-
-Ein Schüler kann keine Schuldaten erstellen, bearbeiten oder löschen.
+- eigene Design-Einstellungen verwenden und ändern
+- das eigene Profil verwenden
+- PingPong und Bestenliste öffnen
 
 ### Abmelden
 
-Über den **Abmelden**-Button im Hauptmenü kann der aktuell angemeldete Benutzer die Sitzung beenden. Anschliessend wird wieder das Login angezeigt, sodass sich ein anderer Benutzer anmelden kann.
+Über den **Abmelden**-Button im Hauptmenü kann die aktuelle Sitzung beendet werden. Anschliessend wird wieder das Login angezeigt.
 
-## Zusätzliche Erweiterungen
+## PingPong
 
-Die ursprünglich geplanten Anforderungen des Projekts konnten frühzeitig fertiggestellt werden. Deshalb wurde die Anwendung anschliessend freiwillig um zusätzliche Funktionen erweitert, die über den ursprünglich geplanten Umfang hinausgehen.
+Die Anwendung enthält ein einfaches Zwei-Spieler-PingPong-Spiel als zusätzliche Funktion.
 
-Zu diesen Erweiterungen gehören:
+### Spieler
 
-- Eigenes Login-System
-- Eigene Registrierungsseite
-- Rollenwahl bei der Registrierung zwischen Admin, Lehrer und Schüler
-- Rollenabhängige Benutzeroberfläche und Berechtigungen
-- Abmeldefunktion mit Rückkehr zum Login
-- Speicherung von Benutzerkonten in der SQL-Datenbank
-- Sichere Passwort-Hashes mit BCrypt
-- Validierung von Benutzername und Passwort bei der Registrierung
-- Optionales Laden lokaler Konfiguration aus einer `.env` Datei
-- Eigener Loading- beziehungsweise Splashscreen beim Programmstart
-- Automatische Prüfung der SQL-Datenbankverbindung beim Start
-- Datenbankprüfung über `Database.CanConnectAsync()` von Entity Framework Core
-- Zentrales Setzen des App-Icons für geöffnete Forms
-- Eigene Einstellungsseite für die Darstellung der Anwendung
-- Frei wählbare Hintergrundfarbe über einen `ColorDialog`
-- Frei wählbare Textfarbe über einen `ColorDialog`
-- Prüfung, dass Hintergrundfarbe und Textfarbe nicht identisch sein können
-- Zentraler `ThemeManager` für die Darstellung der Anwendung
-- Benutzerspezifische Speicherung der gewählten Hintergrund- und Textfarbe in der SQL-Datenbank
-- Automatisches Laden des Designs des aktuell angemeldeten Benutzers
-- Sofortige Aktualisierung des Designs bei bereits geöffneten Fenstern
-- Möglichkeit, das Design auf die Standardfarben zurückzusetzen
-- Anzeige von aktuellem Datum und aktueller Uhrzeit im Stundenplan
-- Validierung der Start- und Endzeit im Stundenplan
-- Schutz vor dem Löschen noch verwendeter Kurse
-- Schutz vor dem Löschen von Klassen mit zugeordneten Schülern oder Kursen
-- Anzeige von Beziehungen und zusammengehörigen Daten in Übersichten
-- Separate Verwaltung zusätzlicher Lehrerinformationen
-- Verwendung eigener Bilder aus dem `images` Ordner
-- Verwendung eines eigenen App-Icons
-- Einführung von Entity Framework Core für die Datenbankzugriffe
-- Zentraler Datenbankkontext über `SchulAppContext`
-- Abbildung der SQL-Tabellen als C# Models
-- Entity-Configuration für Benutzerkonten
-- Beziehungen zwischen Schülern, Lehrern, Klassen, Kursen und Stundenplaneinträgen
-- Reduzierung von direkt geschriebenen `SELECT`, `INSERT`, `UPDATE` und `DELETE` SQL-Abfragen
-- Verwendung von LINQ und `SaveChanges()` beziehungsweise `SaveChangesAsync()` für Datenbankoperationen
-- Verwendung von `AsNoTracking()` bei reinen Leseoperationen
-- Repository- und Service-Struktur für Schülerdaten
-- Eingabevalidierung in der Service-Schicht
-- xUnit-Tests mit einer Fake-Repository-Implementierung
+Der linke Spieler ist immer der aktuell eingeloggte Benutzer.
 
-Diese Funktionen waren nicht Bestandteil der ursprünglichen Anforderungen und wurden zusätzlich umgesetzt, da die geplanten Aufgaben bereits früher abgeschlossen waren.
+Der rechte Spieler wird vor dem Spiel aus den vorhandenen Benutzern ausgewählt. Die Benutzer werden über die REST API geladen. Der aktuell angemeldete Benutzer wird nicht als eigener Gegner angeboten.
+
+Für ein Spiel müssen deshalb mindestens zwei Benutzerkonten existieren.
+
+### Steuerung
+
+Linker Spieler:
+
+```text
+W = hoch
+S = runter
+```
+
+Rechter Spieler:
+
+```text
+Pfeiltaste hoch = hoch
+Pfeiltaste runter = runter
+```
+
+### Spielfeld
+
+Die obere Spielfeldgrenze wird durch `panelTop` definiert. Ball und Schläger können nicht oberhalb dieses Bereichs spielen.
+
+Der Ball prallt an:
+
+- `panelTop`
+- der unteren Fenstergrenze
+- `panelLinks`
+- `panelRechts`
+
+ab.
+
+### Punktesystem im Spiel
+
+Ein Spieler erhält einen Spielpunkt, wenn der Ball auf der Seite des Gegners das Spielfeld verlässt.
+
+Ein Spiel endet, sobald ein Spieler **5 Punkte** erreicht.
+
+Nach jedem normalen Punkt werden Ball und Schläger wieder auf ihre Startposition gesetzt und das Spiel wird fortgesetzt.
+
+Der aktuelle Punktestand wird über `punkteZahlLabel` angezeigt.
+
+### Spielende
+
+Sobald ein Spieler 5 Punkte erreicht:
+
+1. Der Timer wird gestoppt.
+2. Der Gewinner wird angezeigt.
+3. Das Endergebnis wird angezeigt.
+4. Das Ergebnis wird über die REST API gespeichert.
+5. Die Bestenlistenwerte werden aktualisiert.
+6. Danach kann erneut gespielt oder zum Hauptmenü zurückgekehrt werden.
+
+Bei **Erneut spielen** wird der Punktestand auf `0 : 0` zurückgesetzt und ein neues Spiel mit denselben ausgewählten Benutzern gestartet.
+
+## Bestenliste
+
+Die Anwendung enthält eine eigene `Bestenliste` Form.
+
+Die Bestenliste lädt ihre Daten beim Öffnen automatisch über die REST API und zeigt pro Benutzer:
+
+- Benutzername
+- Siege
+- Punkte
+- erzielte Tore
+- kassierte Tore
+- Torverhältnis
+
+Für jeden PingPong-Sieg erhält der Gewinner:
+
+```text
+1 Sieg
+3 Punkte
+```
+
+Zusätzlich werden für beide Spieler die erzielten und kassierten Tore aktualisiert.
+
+Das Torverhältnis wird berechnet als:
+
+```text
+erzielte Tore - kassierte Tore
+```
+
+Die Sortierung erfolgt in dieser Reihenfolge:
+
+1. Punkte absteigend
+2. Torverhältnis absteigend
+3. erzielte Tore absteigend
+4. Benutzername
+
+Die Bestenliste wird nicht lokal in der WinForms-Anwendung gespeichert.
+
+## REST API
+
+Zum Projekt gehört die bestehende **schulAppREST** ASP.NET Core REST API.
+
+Die PingPong-Funktionen verwenden `PingPongApiService` in der WinForms-Anwendung, um mit dieser API zu kommunizieren.
+
+### PingPong-Endpunkte
+
+#### Bestenliste laden
+
+```http
+GET /api/PingPong/bestenliste
+```
+
+Der Endpoint liefert die aktuellen PingPong-Werte aller Benutzer.
+
+#### Spiel speichern
+
+```http
+POST /api/PingPong/spiel
+```
+
+Ein Beispiel für den Request-Body:
+
+```json
+{
+  "spielerLinksId": 1,
+  "spielerRechtsId": 2,
+  "toreLinks": 5,
+  "toreRechts": 3
+}
+```
+
+Die API prüft unter anderem:
+
+- beide Benutzer müssen unterschiedlich sein
+- beide Benutzer müssen existieren
+- Tore müssen zwischen 0 und 5 liegen
+- das Ergebnis darf nicht unentschieden sein
+- genau ein Spieler muss 5 Punkte erreicht haben
+
+Beim Speichern werden:
+
+- das konkrete Spiel in `PingPongSpiel` gespeichert
+- Siege aktualisiert
+- Bestenlistenpunkte aktualisiert
+- erzielte Tore aktualisiert
+- kassierte Tore aktualisiert
 
 ## Verwaltete Daten
 
@@ -229,8 +342,6 @@ Für Lehrer können unter anderem folgende Daten gespeichert werden:
 - Telefonnummer
 - Fach
 - zusätzliche Informationen
-
-Zusätzliche textbasierte Lehrerinformationen werden separat gespeichert und einem Lehrer zugeordnet.
 
 ### Klassen
 
@@ -273,26 +384,38 @@ Für Benutzerkonten werden unter anderem folgende Daten verwaltet:
 - Passwort-Hash
 - Rolle
 - Erstellungszeitpunkt
+- Profilbild
+- PingPong-Siege
+- PingPong-Punkte
+- PingPong-Tore erzielt
+- PingPong-Tore kassiert
 
-Passwörter werden nicht im Klartext gespeichert. Die Rolle bestimmt, welche Bereiche und Bearbeitungsfunktionen ein Benutzer verwenden darf.
+### PingPong-Spiel
+
+Abgeschlossene PingPong-Spiele werden zusätzlich gespeichert mit:
+
+- ID
+- linker Spieler
+- rechter Spieler
+- Tore links
+- Tore rechts
+- Gewinner
+- Spielzeitpunkt
 
 ### Einstellungen
 
-Für die Darstellung der Anwendung können für jeden Benutzer separat unter anderem folgende Einstellungen gespeichert werden:
+Für jeden Benutzer können eigene Design-Einstellungen gespeichert werden:
 
 - Benutzer-ID
 - Hintergrundfarbe
 - Textfarbe
 
-Dadurch kann jeder Benutzer ein eigenes Design verwenden, ohne die Einstellungen anderer Benutzer zu überschreiben.
-
 ## Entity-Relationship-Diagramm
 
-Das folgende ERD zeigt die wichtigsten Tabellen und Beziehungen der SchulApp.
+Das folgende vereinfachte ERD zeigt die wichtigsten Tabellen und Beziehungen.
 
 ```mermaid
 erDiagram
-
     SCHUELER {
         int Id PK
         string Name
@@ -343,12 +466,26 @@ erDiagram
         string PasswortHash
         string Rolle
         datetime ErstelltAm
+        int PingPongSiege
+        int PingPongPunkte
+        int PingPongToreErzielt
+        int PingPongToreKassiert
     }
 
     EINSTELLUNG {
         int Id PK, FK
         int HintergrundFarbe
         int TextFarbe
+    }
+
+    PINGPONGSPIEL {
+        int Id PK
+        int SpielerLinksId FK
+        int SpielerRechtsId FK
+        int ToreLinks
+        int ToreRechts
+        int GewinnerId FK
+        datetime GespieltAm
     }
 
     KLASSE ||--o{ SCHUELER : "hat"
@@ -360,31 +497,19 @@ erDiagram
     LEHRER ||--o{ STUNDENPLAN : "unterrichtet"
     KLASSE ||--o{ STUNDENPLAN : "hat"
     BENUTZER ||--o| EINSTELLUNG : "hat Einstellungen"
+    BENUTZER ||--o{ PINGPONGSPIEL : "spielt"
+    BENUTZER ||--o{ PINGPONGSPIEL : "gewinnt"
 ```
-
-### Beziehungen kurz erklärt
-
-- Eine **Klasse** kann mehrere **Schüler** haben.
-- Ein **Schüler** gehört zu einer Klasse.
-- Ein **Lehrer** kann zusätzliche Lehrerinformationen besitzen.
-- Ein **Lehrer** kann Klassenlehrer von einer oder mehreren Klassen sein.
-- Ein **Lehrer** kann mehrere Kurse unterrichten.
-- Eine **Klasse** kann mehrere Kurse haben.
-- Ein **Kurs** kann mehrere Stundenplaneinträge besitzen.
-- Ein **Stundenplaneintrag** gehört zu einem Kurs, einem Lehrer und einer Klasse.
-- **Benutzerkonten** werden unabhängig von den Schuldaten für die Anmeldung verwaltet.
-- Ein **Benutzer** kann eigene Design-Einstellungen besitzen.
-- Die Benutzerrolle bestimmt die verfügbaren Verwaltungsfunktionen.
 
 ## Datenbank und Entity Framework Core
 
 Die Daten der Anwendung werden in einer lokalen **Microsoft SQL Server 2022** Datenbank gespeichert.
 
-Für den Datenbankzugriff wird **Entity Framework Core** verwendet. Dadurch können Daten direkt über C# Models und LINQ verarbeitet werden, ohne jede SQL-Abfrage vollständig von Hand schreiben zu müssen.
+Für den Datenbankzugriff wird **Entity Framework Core** verwendet. Dadurch können Daten über C# Models und LINQ verarbeitet werden.
 
-Der zentrale Datenbankkontext ist `SchulAppContext`. Dieser erbt von `DbContext` und stellt die Tabellen beziehungsweise Entitäten der Anwendung über `DbSet` bereit.
+Der zentrale Datenbankkontext ist `SchulAppContext`.
 
-Dazu gehören unter anderem:
+Zu den verwendeten Daten gehören unter anderem:
 
 - Einstellungen
 - Klassen
@@ -394,8 +519,7 @@ Dazu gehören unter anderem:
 - Kurse
 - Stundenplaneinträge
 - Benutzer
-
-Die SQL-Server-Verbindung wird im `SchulAppContext` konfiguriert. Die lokale Verbindung verwendet integrierte Windows-Sicherheit sowie die für das Projekt vorgesehenen Einstellungen für Verschlüsselung und Zertifikatvertrauen.
+- PingPong-Spiele
 
 Beispiel zum Laden von Daten:
 
@@ -407,72 +531,48 @@ var klassen = context.Klassen
     .ToList();
 ```
 
-`AsNoTracking()` wird bei vielen reinen Leseoperationen verwendet. Dadurch muss Entity Framework die geladenen Datensätze nicht für spätere Änderungen verfolgen.
-
-Beispiel zum Speichern eines neuen Datensatzes:
+Beispiel zum Speichern:
 
 ```csharp
 context.Klassen.Add(neueKlasse);
 context.SaveChanges();
 ```
 
-Änderungen können synchron mit `SaveChanges()` oder asynchron mit `SaveChangesAsync()` gespeichert werden. Entity Framework erzeugt daraus automatisch die benötigten `INSERT`-, `UPDATE`- und `DELETE`-Anweisungen.
-
-Die Datenbankverbindung wird ausserdem beim Start der Anwendung geprüft:
+Die Datenbankverbindung wird beim Start der WinForms-Anwendung geprüft:
 
 ```csharp
 bool verbunden = await context.Database.CanConnectAsync();
 ```
 
-Kann keine Verbindung hergestellt werden, wird der Benutzer über eine Fehlermeldung informiert.
-
-Die SQL-Tabellen werden durch C# Models abgebildet. Die Models verwenden unter anderem `[Table]`, `[Key]` und `[Required]` sowie Navigationseigenschaften für Beziehungen.
-
-Zu den Models gehören unter anderem:
-
-- `Einstellung`
-- `SchuelerModel`
-- `LehrerModel`
-- `KlasseModel`
-- `KursModel`
-- `StundenplanModel`
-- ein Model für Lehrerinformationen
-- ein Model für Benutzerkonten
-
-Zwischen den Models bestehen Beziehungen. Dadurch können beispielsweise bei einem Kurs direkt die zugehörige Klasse und der zugehörige Lehrer geladen werden.
-
-Für Benutzerkonten gibt es zusätzlich eine eigene Entity-Configuration. Sie stellt unter anderem sicher, dass der Benutzername eindeutig ist und erforderliche Felder sowie definierte Feldlängen korrekt in der Datenbank abgebildet werden.
-
-Die Anwendung verwendet LINQ zum Laden, Sortieren, Filtern und Zusammenfassen von Daten.
-
 ## Architektur und Service-Schicht
 
-Für die Schülerverwaltung ist der Datenzugriff zusätzlich über ein Repository und eine Service-Schicht getrennt.
+Die Anwendung verwendet mehrere klar getrennte Bereiche.
 
-### Repository
+### Models
 
-Ein Repository-Interface beschreibt die benötigten Datenoperationen für Schüler. Eine konkrete Entity-Framework-Implementierung übernimmt den tatsächlichen Zugriff auf die SQL-Datenbank.
+Models bilden die Datenstrukturen der Anwendung und der Datenbank ab.
 
-Dadurch ist die Benutzeroberfläche weniger stark an den konkreten Datenbankzugriff gekoppelt.
+### Data
 
-Zu den Aufgaben des Repositories gehören unter anderem:
+`SchulAppContext` übernimmt den Entity-Framework-Zugriff auf SQL Server.
 
-- Schüler laden
-- Schüler erstellen
-- Schüler bearbeiten
-- Schüler löschen
+### Repository und Service
 
-### Service
+Für die Schülerverwaltung ist der Datenzugriff zusätzlich über Repository und Service getrennt.
 
-Die Service-Schicht enthält zusätzliche Geschäftslogik und Validierungen, bevor Daten an das Repository weitergegeben werden.
+Die Service-Schicht enthält unter anderem Geschäftslogik und Validierungen.
 
-Dabei werden unter anderem folgende Werte geprüft:
+### PingPongApiService
 
-- Name
-- Klasse
-- Schüler-ID
+`PingPongApiService` übernimmt die Kommunikation der WinForms-Anwendung mit der REST API.
 
-Diese Trennung erleichtert Tests und hält Datenzugriff, Validierung und Benutzeroberfläche sauberer voneinander getrennt.
+Der Service:
+
+- lädt die Bestenliste
+- lädt damit die verfügbaren Benutzer für PingPong
+- sendet abgeschlossene Spielergebnisse an die REST API
+
+Die WinForms-Anwendung speichert die PingPong-Bestenlistenwerte dadurch nicht selbst direkt in SQL.
 
 ## Theme-Management
 
@@ -483,21 +583,22 @@ Dieser verwaltet:
 - Hintergrundfarbe
 - Textfarbe
 - Laden der gespeicherten Farben des angemeldeten Benutzers
-- Speichern geänderter Farben für den angemeldeten Benutzer
-- Anwenden des Designs auf geöffnete Forms
+- Speichern geänderter Farben
+- Anwenden des Designs auf Forms
+- Aktualisieren bereits geöffneter Forms
 - Zurücksetzen auf Standardfarben
 
-Die Theme-Einstellungen werden in der SQL-Datenbank pro Benutzer gespeichert. Nach erfolgreichem Login werden die Einstellungen des aktuell angemeldeten Benutzers geladen.
+Die Theme-Einstellungen werden pro Benutzer in der SQL-Datenbank gespeichert.
 
-Hintergrundfarbe und Textfarbe dürfen nicht identisch sein. Falls der Benutzer versucht, dieselbe Farbe zu wählen, wird die Änderung verhindert, damit die Oberfläche lesbar bleibt.
+Hintergrundfarbe und Textfarbe dürfen nicht identisch sein.
 
-Änderungen werden direkt auf bereits geöffnete Formulare angewendet.
+Neue Forms wie `PingPong` und `Bestenliste` verwenden ebenfalls den vorhandenen `ThemeManager`.
 
 ## Benutzeroberfläche
 
-Die grafische Benutzeroberfläche wird mit **Windows Forms** umgesetzt.
+Die grafische Benutzeroberfläche wird mit Windows Forms umgesetzt.
 
-Dabei werden unter anderem folgende Steuerelemente verwendet:
+Verwendete Controls sind unter anderem:
 
 - `Label`
 - `TextBox`
@@ -505,15 +606,17 @@ Dabei werden unter anderem folgende Steuerelemente verwendet:
 - `Button`
 - `DataGridView`
 - `PictureBox`
+- `Panel`
 - `ProgressBar`
 - `ColorDialog`
 - `DateTimePicker`
+- `Timer`
 
-Die Anwendung ist in mehrere eigene Ansichten aufgeteilt:
+Die Anwendung ist in mehrere eigene Forms aufgeteilt:
 
 - LoadingScreen
 - Login
-- Registrierung
+- Register
 - Hauptmenü
 - Schüler
 - Lehrer
@@ -521,16 +624,11 @@ Die Anwendung ist in mehrere eigene Ansichten aufgeteilt:
 - Kurse
 - Stundenplan
 - Einstellungen
+- Profil
+- PingPong
+- Bestenliste
 
-Das Hauptmenü passt die verfügbaren Bereiche an die Rolle des angemeldeten Benutzers an. Zusätzlich steht dort eine Abmeldefunktion zur Verfügung.
-
-In Tabellen werden möglichst nur relevante Spalten dargestellt. IDs und verknüpfte Daten werden so aufbereitet, dass die Übersichten verständlich bleiben.
-
-Viele Referenzdaten werden über `ComboBox`-Elemente ausgewählt. Dadurch können abhängige Datensätze nur mit bereits vorhandenen Referenzen angelegt werden.
-
-Vor dem Löschen von Datensätzen werden Bestätigungsdialoge angezeigt.
-
-Beim Wechsel zwischen Login und Registrierung wird die Fensterposition beibehalten.
+Das Hauptmenü steuert die rollenabhängige Navigation. PingPong und Bestenliste werden über die vorhandene Fensterlogik geöffnet.
 
 ## CRUD-Funktionen
 
@@ -543,224 +641,158 @@ Die Anwendung verwendet CRUD-Operationen zur Verwaltung der Schuldaten.
 | Update | Bestehende Daten bearbeiten |
 | Delete | Daten löschen |
 
-Mit Entity Framework Core können diese Operationen unter anderem über folgende Funktionen umgesetzt werden:
+Mit Entity Framework Core werden dafür unter anderem verwendet:
 
-- `Add()` zum Hinzufügen neuer Datensätze
-- LINQ zum Laden und Filtern von Daten
-- Änderungen an Model-Eigenschaften zum Bearbeiten
-- `Remove()` zum Löschen
-- `SaveChanges()` beziehungsweise `SaveChangesAsync()` zum Speichern
-- `AsNoTracking()` für Lesezugriffe, bei denen keine Änderung verfolgt werden muss
+- `Add()`
+- LINQ
+- Model-Eigenschaften
+- `Remove()`
+- `SaveChanges()`
+- `SaveChangesAsync()`
+- `AsNoTracking()`
 
 ## Datenvalidierung und Abhängigkeiten
 
-Die Anwendung enthält zusätzliche Prüfungen, damit keine ungültigen oder inkonsistenten Daten gespeichert werden.
+Die Anwendung enthält Prüfungen, damit keine ungültigen oder inkonsistenten Daten gespeichert werden.
 
 Unter anderem gelten folgende Regeln:
 
 - Die Endzeit eines Stundenplaneintrags muss nach der Startzeit liegen.
-- Ein Kurs kann nicht gelöscht werden, wenn er noch in einem Stundenplaneintrag verwendet wird.
-- Beim Versuch, einen verwendeten Kurs zu löschen, wird eine gezielte Fehlermeldung angezeigt.
+- Ein Kurs kann nicht gelöscht werden, wenn er noch verwendet wird.
 - Eine Klasse kann nicht gelöscht werden, solange ihr noch Schüler zugeordnet sind.
 - Eine Klasse kann nicht gelöscht werden, solange ihr noch Kurse zugeordnet sind.
-- Benötigte Referenzdaten werden in Auswahlfeldern geladen, bevor abhängige Datensätze erstellt werden.
-- Die Schüler-Service-Schicht validiert Name, Klasse und Schüler-ID.
-- Die Registrierung validiert Benutzername, Passwort und Benutzerrolle.
-- Rollenabhängige Berechtigungen verhindern nicht erlaubte Verwaltungsaktionen.
+- Benötigte Referenzdaten werden vor abhängigen Datensätzen geladen.
+- Die Registrierung validiert Benutzername, Passwort und Rolle.
+- Rollenabhängige Berechtigungen verhindern nicht erlaubte Aktionen.
+- Ein PingPong-Spiel benötigt zwei unterschiedliche Benutzer.
+- Ein gültiges PingPong-Ergebnis endet mit genau einem Spieler bei 5 Punkten.
 
 ## Technologien
 
-Für die Entwicklung werden folgende Technologien und Werkzeuge verwendet:
+Für die Entwicklung werden unter anderem folgende Technologien verwendet:
 
 - C#
-- .NET
+- .NET 10
 - Windows Forms
-- Visual Studio 2022
+- ASP.NET Core Web API
+- Visual Studio 2026
 - Microsoft SQL Server 2022
 - Entity Framework Core
-- Microsoft Entity Framework Core SQL Server Provider
 - Microsoft.Data.SqlClient
 - BCrypt
 - DotNetEnv
+- HttpClient
 - xUnit
 - Git
 - GitHub
-- GitLab
 
 ### NuGet-Pakete
 
-Unter anderem werden folgende NuGet-Pakete beziehungsweise Bibliotheken verwendet:
+Unter anderem werden folgende Pakete beziehungsweise Bibliotheken verwendet:
 
 ```text
+Microsoft.EntityFrameworkCore
 Microsoft.EntityFrameworkCore.SqlServer
-Microsoft.EntityFrameworkCore.Tools
 Microsoft.Data.SqlClient
 DotNetEnv
-BCrypt.Net
+BCrypt.Net-Next
 xunit
 ```
 
 ## Projektstruktur
 
-Eine vereinfachte Projektstruktur sieht folgendermassen aus:
+Eine vereinfachte Struktur sieht folgendermassen aus:
 
 ```text
-SchulApp
+Schulapp
 │
-├── Data
-│   ├── SchulAppContext.cs
-│   └── Configurations
+├── SchulApp
+│   ├── Data
+│   ├── Models
+│   │   └── BestenlisteEintragModel.cs
+│   ├── Repositories
+│   ├── Services
+│   │   └── PingPongApiService.cs
+│   ├── images
+│   ├── Screenshots
+│   ├── SQL
+│   │   ├── SchulAppDB.sql
+│   │   └── 20260814_PingPongBestenliste.sql
+│   ├── Login.cs
+│   ├── Register.cs
+│   ├── LoadingScreen.cs
+│   ├── Hauptmenue.cs
+│   ├── Schueler.cs
+│   ├── Lehrer.cs
+│   ├── Klassen.cs
+│   ├── Kurse.cs
+│   ├── Stundenplan.cs
+│   ├── Einstellungen.cs
+│   ├── Profil.cs
+│   ├── PingPong.cs
+│   ├── Bestenliste.cs
+│   ├── ThemeManager.cs
+│   └── Program.cs
 │
-├── Models
-│   ├── Einstellung.cs
-│   ├── SchuelerModel.cs
-│   ├── LehrerModel.cs
-│   ├── KlasseModel.cs
-│   ├── KursModel.cs
-│   ├── StundenplanModel.cs
-│   ├── Lehrerinformation
-│   └── Benutzer
-│
-├── Repositories
-│   └── Schüler-Repository
-│
-├── Services
-│   └── Schüler-Service
-│
-├── images
-│
-├── Screenshots
-│   └── README.md
-│
-├── SQL
-│   └── SchulAppDB.sql
-│
-├── .env.example
-├── SETUP.md
-├── Login.cs
-├── Register.cs
-├── LoadingScreen.cs
-├── Hauptmenue.cs
-├── Schueler.cs
-├── Lehrer.cs
-├── Klassen.cs
-├── Kurse.cs
-├── Stundenplan.cs
-├── Einstellungen.cs
-├── ThemeManager.cs
-└── Program.cs
+└── schulAppREST
+    ├── Controllers
+    │   └── PingPongController.cs
+    ├── Data
+    │   └── SchulAppContext.cs
+    ├── Models
+    │   └── PingPongSpiel.cs
+    └── Program.cs
 ```
-
-Zusätzlich existiert ein Testprojekt beziehungsweise ein Testbereich mit xUnit und einer Fake-Repository-Implementierung für die Schüler-Service-Tests.
-
-Die wichtigsten Bereiche haben folgende Aufgaben:
-
-- `Data` enthält den Entity Framework Datenbankkontext und die Entity-Konfigurationen.
-- `Models` enthalten die C# Abbildungen der Datenbanktabellen und deren Beziehungen.
-- `Repositories` kapselt den Datenzugriff für die dafür vorgesehenen Bereiche.
-- `Services` enthält zusätzliche Programmlogik und Validierungen.
-- Die Windows Forms Dateien enthalten die grafische Benutzeroberfläche und deren Ereignisse.
-- `ThemeManager` verwaltet die Darstellung der Anwendung zentral und speichert Einstellungen pro Benutzer.
-- `Login` übernimmt die Anmeldung vorhandener Benutzer und stellt die aktuelle Benutzerrolle bereit.
-- `Register` erstellt neue Benutzerkonten inklusive Rollenauswahl.
-- `Hauptmenue` steuert die rollenabhängige Navigation und die Abmeldefunktion.
-- `LoadingScreen` zeigt den Startvorgang an und prüft die Datenbankverbindung.
-- `images` enthält Bilder und Icons der Anwendung.
-- `Screenshots` enthält Bilder für die Dokumentation.
-- `SQL` enthält das Skript zum Einrichten der benötigten Datenbankstruktur.
 
 ## Setup
 
-Vor dem ersten Start muss die lokale SQL-Datenbank eingerichtet sein.
+Vor dem ersten Start müssen SQL Server, die Datenbank, die REST API und die benötigten NuGet-Pakete eingerichtet sein.
 
-Die wichtigsten Schritte sind:
+Die wichtigsten Schritte:
 
-1. Microsoft SQL Server starten beziehungsweise sicherstellen, dass der verwendete lokale SQL Server verfügbar ist.
-2. Die Datenbank mit dem SQL-Skript aus `SchulApp/SQL/SchulAppDB.sql` einrichten.
-3. Falls lokale Umgebungswerte benötigt werden, `.env.example` kopieren und als `.env` speichern.
-4. NuGet-Abhängigkeiten wiederherstellen.
-5. Anwendung über Visual Studio starten.
-6. Einen Benutzer über die Registrierungsseite erstellen, eine Rolle auswählen und sich anschliessend anmelden.
+1. SQL Server starten.
+2. `SchulAppDB.sql` ausführen.
+3. `20260814_PingPongBestenliste.sql` ausführen.
+4. NuGet-Pakete wiederherstellen.
+5. `schulAppREST` starten.
+6. Die WinForms-Anwendung starten.
+7. Mindestens zwei Benutzer registrieren, wenn PingPong getestet werden soll.
 
-Beispiel zum optionalen Erstellen der `.env` Datei mit PowerShell:
-
-```powershell
-copy .env.example .env
-```
-
-Benutzername und Passwort für die Anmeldung werden nicht in der `.env` Datei hinterlegt. Benutzerkonten werden über die Anwendung registriert und in der SQL-Datenbank gespeichert.
-
-Weitere Informationen befinden sich in [SETUP.md](SETUP.md).
-
-## App-Demo
-
-Im Ordner `Screenshots` befindet sich ein eigenes README, das die verschiedenen Seiten und Funktionen der Anwendung mit Bildern zeigt.
-
-[Screenshots öffnen](Screenshots/README.md)
+Die vollständige Anleitung befindet sich in [SETUP.md](SETUP.md).
 
 ## Unit-Tests
 
-Für die Schüler-Service-Schicht werden Unit-Tests mit **xUnit** verwendet.
+Für Teile der Service-Schicht werden Unit-Tests mit **xUnit** verwendet.
 
-Damit die Tests unabhängig von einer echten SQL-Datenbank ausgeführt werden können, wird eine **Fake-Repository-Implementierung** verwendet.
+Für die Schüler-Service-Schicht kann eine Fake-Repository-Implementierung verwendet werden, damit die Geschäftslogik unabhängig von einer echten Datenbank getestet werden kann.
 
-Die Tests prüfen wichtige Funktionen und Validierungen der Schülerverwaltung.
+Die Tests prüfen unter anderem:
 
-### Daten erstellen
-
-Es wird überprüft, ob ein neuer Schüler mit gültigen Daten korrekt erstellt werden kann.
-
-Zusätzlich kann geprüft werden, ob ungültige Eingaben durch die Service-Schicht abgelehnt werden.
-
-### Daten bearbeiten
-
-Es wird überprüft, ob die Daten eines bestehenden Schülers geändert und korrekt über das Repository gespeichert werden können.
-
-### Daten löschen
-
-Es wird überprüft, ob ein Schüler anhand seiner ID korrekt gelöscht werden kann und wie die Service-Schicht mit ungültigen IDs umgeht.
-
-Durch das Repository-Interface kann die Geschäftslogik getestet werden, ohne für jeden Test eine echte Datenbankverbindung aufzubauen.
+- Erstellen von Daten
+- Bearbeiten von Daten
+- Löschen von Daten
+- Validierungen der Service-Schicht
 
 ## Definition of Done
 
-Das Projekt gilt als abgeschlossen, wenn:
+Das Projekt gilt als funktionsfähig, wenn unter anderem:
 
-- die Windows Forms Anwendung funktioniert
-- der LoadingScreen beim Start angezeigt wird
-- die Datenbankverbindung beim Start geprüft wird
-- das Login funktioniert
-- neue Benutzer registriert werden können
-- bei der Registrierung eine Rolle ausgewählt werden kann
-- Passwörter mit BCrypt gehasht in der Datenbank gespeichert werden
-- die Anwendung erst nach erfolgreicher Anmeldung geöffnet wird
-- Admins vollständige Verwaltungsrechte besitzen
-- Lehrer Schüler und Stundenpläne verwalten können
-- Lehrer keine Lehrer, Klassen oder Kurse verwalten können
-- Schüler den Stundenplan nur anzeigen können
-- Benutzer sich über das Hauptmenü abmelden können
-- Lehrer verwaltet werden können
-- zusätzliche Lehrerinformationen verwaltet werden können
-- Schüler verwaltet werden können
-- Klassen verwaltet werden können
-- Kurse verwaltet werden können
-- Stundenplaneinträge verwaltet werden können
-- Daten erstellt werden können
-- Daten angezeigt werden können
-- Daten bearbeitet werden können
-- Daten gelöscht werden können
-- ungültige Löschvorgänge bei bestehenden Abhängigkeiten verhindert werden
+- die Windows-Forms-Anwendung startet
+- der LoadingScreen angezeigt wird
+- die Datenbankverbindung geprüft wird
+- Login und Registrierung funktionieren
+- Passwörter gehasht gespeichert werden
+- Rollen und Berechtigungen funktionieren
+- Schuldaten verwaltet werden können
 - Stundenplanzeiten validiert werden
-- die Daten korrekt in Microsoft SQL Server gespeichert werden
-- Entity Framework Core für die vorgesehenen Datenbankzugriffe funktioniert
-- `AsNoTracking()` für geeignete Lesezugriffe verwendet wird
-- die Einstellungen pro Benutzer gespeichert und nach dem Login geladen werden
-- Hintergrund- und Textfarbe nicht identisch gewählt werden können
-- die Anwendung ohne Fehler startet
-- die Schülerlogik über Repository und Service getrennt ist
-- mindestens drei Unit-Tests vorhanden sind
-- das Erstellen von Daten getestet wird
-- das Bearbeiten von Daten getestet wird
-- das Löschen von Daten getestet wird
-- die Service-Validierungen getestet werden können
-- alle Unit-Tests erfolgreich durchlaufen
+- Theme-Einstellungen pro Benutzer gespeichert und geladen werden
+- Profilbilder verwendet werden können
+- die REST API gestartet werden kann
+- die Bestenliste über die REST API geladen werden kann
+- mindestens zwei Benutzer für PingPong ausgewählt werden können
+- PingPong bis 5 Punkte gespielt werden kann
+- abgeschlossene Spiele über die REST API gespeichert werden
+- der Gewinner 1 Sieg und 3 Bestenlistenpunkte erhält
+- erzielte und kassierte Tore aktualisiert werden
+- die Bestenliste korrekt sortiert wird
+- Unit-Tests erfolgreich durchlaufen

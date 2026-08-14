@@ -22,6 +22,14 @@ namespace SchulApp.Models
 
         public byte[]? Profilbild { get; set; }
 
+        public int PingPongSiege { get; set; }
+
+        public int PingPongPunkte { get; set; }
+
+        public int PingPongToreErzielt { get; set; }
+
+        public int PingPongToreKassiert { get; set; }
+
         public DateTime ErstelltAm { get; set; }
     }
 }

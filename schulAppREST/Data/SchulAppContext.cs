@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using SchulApp.Models;
 
 namespace SchulApp.Data
@@ -37,6 +37,12 @@ namespace SchulApp.Data
 
         // Tabelle dbo.Stundenplan
         public DbSet<StundenplanModel> Stundenplan { get; set; }
+
+        // Tabelle dbo.Benutzer
+        public DbSet<LoginBenutzer> Benutzer { get; set; }
+
+        // Tabelle dbo.PingPongSpiel
+        public DbSet<PingPongSpiel> PingPongSpiel { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
