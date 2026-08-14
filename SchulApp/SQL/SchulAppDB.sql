@@ -1,16 +1,22 @@
-﻿/* =========================================================
-   SchulAppDB
-   Mehrfach ausführbares Setup für die SchulApp
+/*
+===============================================================================
+ SchulAppDB
+ Datenbank-Setup für die SchulApp
+===============================================================================
 
-   Ziele:
-   - Datenbank nur erstellen, wenn sie noch nicht existiert
-   - Tabellen nur erstellen, wenn sie noch nicht existieren
-   - Indexe nur erstellen, wenn sie noch nicht existieren
-   - Gleichnamige normale Statistiken entfernen, falls sie
-     einen benötigten Indexnamen blockieren
-   - Testdaten nur einfügen, wenn sie noch nicht existieren
-   - Bestehende Daten nicht löschen
-   ========================================================= */
+ Eigenschaften:
+ - Mehrfach ausführbar
+ - Bestehende Daten werden nicht gelöscht
+ - Datenbank, Tabellen, Spalten und Indexe werden nur bei Bedarf erstellt
+ - Enthält die Erweiterungen für Benutzerprofile, PingPong und BallSpeed
+ - Enthält optionale Testdaten und Kontrollabfragen
+
+===============================================================================
+*/
+
+-- ============================================================================
+-- 1. DATENBANK ERSTELLEN
+-- ============================================================================
 
 USE master;
 GO
@@ -29,9 +35,9 @@ SET XACT_ABORT ON;
 GO
 
 
-/* =========================================================
-   TABELLEN
-   ========================================================= */
+-- ============================================================================
+-- 2. BASIS-TABELLEN
+-- ============================================================================
 
 IF OBJECT_ID(N'dbo.Lehrer', N'U') IS NULL
 BEGIN
@@ -187,39 +193,66 @@ IF OBJECT_ID(N'dbo.Einstellung', N'U') IS NULL
 BEGIN
     CREATE TABLE dbo.Einstellung
     (
-        Id INT IDENTITY(1,1) PRIMARY KEY,
+        Id INT IDENTITY(1,1) NOT NULL,
         HintergrundFarbe INT NOT NULL,
-        TextFarbe INT NOT NULL
+        TextFarbe INT NOT NULL,
+        BallSpeed INT NOT NULL
+            CONSTRAINT DF_Einstellung_BallSpeed DEFAULT (6),
+
+        CONSTRAINT PK_Einstellung
+            PRIMARY KEY (Id),
+
+        CONSTRAINT CK_Einstellung_BallSpeed
+            CHECK (BallSpeed BETWEEN 1 AND 20)
     );
 
+    -- Erstellt die Standard-Einstellung. Bei einer neuen Tabelle erhält sie Id 1.
     INSERT INTO dbo.Einstellung
     (
-        Id,
         HintergrundFarbe,
-        TextFarbe
+        TextFarbe,
+        BallSpeed
     )
     VALUES
     (
-        1,
         -1250856,
-        -16777216
+        -16777216,
+        6
     );
 END;
 GO
 
-IF OBJECT_ID(N'[dbo].[Benutzer]', N'U') IS NULL
-BEGIN
-    CREATE TABLE [dbo].[Benutzer]
-    (
-        [Id] INT IDENTITY(1,1) NOT NULL,
-        [Benutzername] NVARCHAR(50) NOT NULL,
-        [PasswortHash] NVARCHAR(255) NOT NULL,
-        [Rolle] NVARCHAR(20) NOT NULL
-            CONSTRAINT [DF_Benutzer_Rolle] DEFAULT N'Admin',
-        [ErstelltAm] DATETIME2 NOT NULL,
+-- ============================================================================
+-- 3. BENUTZER UND PROFIL
+-- ============================================================================
 
-        CONSTRAINT [PK_Benutzer]
-            PRIMARY KEY ([Id])
+IF OBJECT_ID(N'dbo.Benutzer', N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.Benutzer
+    (
+        Id INT IDENTITY(1,1) NOT NULL,
+        Benutzername NVARCHAR(50) NOT NULL,
+        PasswortHash NVARCHAR(255) NOT NULL,
+        Rolle NVARCHAR(20) NOT NULL
+            CONSTRAINT DF_Benutzer_Rolle DEFAULT N'Admin',
+        ErstelltAm DATETIME2 NOT NULL,
+
+        Vorname NVARCHAR(100) NULL,
+        Nachname NVARCHAR(100) NULL,
+        Email NVARCHAR(255) NULL,
+        Profilbild VARBINARY(MAX) NULL,
+
+        PingPongSiege INT NOT NULL
+            CONSTRAINT DF_Benutzer_PingPongSiege DEFAULT (0),
+        PingPongPunkte INT NOT NULL
+            CONSTRAINT DF_Benutzer_PingPongPunkte DEFAULT (0),
+        PingPongToreErzielt INT NOT NULL
+            CONSTRAINT DF_Benutzer_PingPongToreErzielt DEFAULT (0),
+        PingPongToreKassiert INT NOT NULL
+            CONSTRAINT DF_Benutzer_PingPongToreKassiert DEFAULT (0),
+
+        CONSTRAINT PK_Benutzer
+            PRIMARY KEY (Id)
     );
 END;
 GO
@@ -227,8 +260,8 @@ GO
 IF COL_LENGTH(N'dbo.Benutzer', N'Rolle') IS NULL
 BEGIN
     ALTER TABLE dbo.Benutzer
-    ADD [Rolle] NVARCHAR(20) NOT NULL
-        CONSTRAINT [DF_Benutzer_Rolle] DEFAULT N'Admin';
+    ADD Rolle NVARCHAR(20) NOT NULL
+        CONSTRAINT DF_Benutzer_Rolle DEFAULT N'Admin';
 END;
 GO
 
@@ -240,56 +273,44 @@ IF NOT EXISTS
       AND object_id = OBJECT_ID(N'[dbo].[Benutzer]')
 )
 BEGIN
-    CREATE UNIQUE INDEX [IX_Benutzer_Benutzername]
-    ON [dbo].[Benutzer] ([Benutzername]);
+    CREATE UNIQUE INDEX IX_Benutzer_Benutzername
+        ON dbo.Benutzer(Benutzername);
 END;
+GO
+
+-- Kompatibilität mit bereits vorhandenen Datenbanken
 IF COL_LENGTH(N'dbo.Benutzer', N'Vorname') IS NULL
 BEGIN
     ALTER TABLE dbo.Benutzer
-    ADD [Vorname] NVARCHAR(100) NULL;
+    ADD Vorname NVARCHAR(100) NULL;
 END;
 GO
 
 IF COL_LENGTH(N'dbo.Benutzer', N'Nachname') IS NULL
 BEGIN
     ALTER TABLE dbo.Benutzer
-    ADD [Nachname] NVARCHAR(100) NULL;
+    ADD Nachname NVARCHAR(100) NULL;
 END;
 GO
 
 IF COL_LENGTH(N'dbo.Benutzer', N'Email') IS NULL
 BEGIN
     ALTER TABLE dbo.Benutzer
-    ADD [Email] NVARCHAR(255) NULL;
-END;
-GO
-IF COL_LENGTH(N'dbo.Benutzer', N'Vorname') IS NULL
-BEGIN
-    ALTER TABLE dbo.Benutzer
-    ADD [Vorname] NVARCHAR(100) NULL;
+    ADD Email NVARCHAR(255) NULL;
 END;
 GO
 
-IF COL_LENGTH(N'dbo.Benutzer', N'Nachname') IS NULL
-BEGIN
-    ALTER TABLE dbo.Benutzer
-    ADD [Nachname] NVARCHAR(100) NULL;
-END;
-GO
-
-IF COL_LENGTH(N'dbo.Benutzer', N'Email') IS NULL
-BEGIN
-    ALTER TABLE dbo.Benutzer
-    ADD [Email] NVARCHAR(255) NULL;
-END;
-GO
 
 IF COL_LENGTH(N'dbo.Benutzer', N'Profilbild') IS NULL
 BEGIN
     ALTER TABLE dbo.Benutzer
-    ADD [Profilbild] VARBINARY(MAX) NULL;
+    ADD Profilbild VARBINARY(MAX) NULL;
 END;
 GO
+-- ============================================================================
+-- 4. PINGPONG UND BESTENLISTE
+-- ============================================================================
+
 IF COL_LENGTH(N'dbo.Benutzer', N'PingPongSiege') IS NULL
 BEGIN
     ALTER TABLE dbo.Benutzer
@@ -375,14 +396,41 @@ BEGIN
         ON dbo.PingPongSpiel(GespieltAm DESC);
 END;
 GO
-/* =========================================================
-   INDEXE FÜR FOREIGN KEYS
 
-   SQL Server kann ausser Indexen auch Statistiken mit Namen
-   speichern. Falls eine normale Statistik bereits denselben
-   Namen wie ein gewünschter Index hat, wird sie zuerst
-   entfernt. Ein bestehender Index wird niemals gelöscht.
-   ========================================================= */
+-- ============================================================================
+-- 5. PINGPONG-BALLGESCHWINDIGKEIT
+-- ============================================================================
+-- Standard: 6
+-- Gültiger Bereich: 1 bis 20
+-- X- und Y-Geschwindigkeit verwenden in der Anwendung denselben Wert.
+
+IF COL_LENGTH(N'dbo.Einstellung', N'BallSpeed') IS NULL
+BEGIN
+    ALTER TABLE dbo.Einstellung
+    ADD BallSpeed INT NOT NULL
+        CONSTRAINT DF_Einstellung_BallSpeed DEFAULT (6);
+END;
+GO
+
+IF NOT EXISTS
+(
+    SELECT 1
+    FROM sys.check_constraints
+    WHERE name = N'CK_Einstellung_BallSpeed'
+      AND parent_object_id = OBJECT_ID(N'dbo.Einstellung')
+)
+BEGIN
+    ALTER TABLE dbo.Einstellung
+    ADD CONSTRAINT CK_Einstellung_BallSpeed
+        CHECK (BallSpeed BETWEEN 1 AND 20);
+END;
+GO
+-- ============================================================================
+-- 6. INDEXE
+-- ============================================================================
+-- Fremdschlüssel erhalten passende Indexe.
+-- Falls eine normale Statistik denselben Namen wie der gewünschte Index hat,
+-- wird nur diese Statistik entfernt. Bestehende Indexe werden nicht gelöscht.
 
 IF NOT EXISTS
 (
@@ -559,10 +607,10 @@ END;
 GO
 
 
-/* =========================================================
-   TESTDATEN
-   Nur einfügen, wenn sie noch nicht vorhanden sind.
-   ========================================================= */
+-- ============================================================================
+-- 7. TESTDATEN
+-- ============================================================================
+-- Die Testdaten werden nur eingefügt, wenn sie noch nicht vorhanden sind.
 
 IF NOT EXISTS
 (
@@ -824,10 +872,29 @@ BEGIN
 END;
 GO
 
+IF NOT EXISTS (
+    SELECT 1
+    FROM dbo.Benutzer
+    WHERE Benutzername = N'PingPongTest'
+)
+BEGIN
+    INSERT INTO dbo.Benutzer (
+        Benutzername,
+        PasswortHash,
+        Rolle,
+        ErstelltAm
+    )
+    VALUES (
+        N'PingPongTest',
+        N'TESTUSER_NICHT_ZUM_LOGIN',
+        N'Benutzer',
+        SYSDATETIME()
+    );
+END;
 
-/* =========================================================
-   KONTROLLE
-   ========================================================= */
+-- ============================================================================
+-- 8. KONTROLLABFRAGEN
+-- ============================================================================
 
 SELECT
     LehrerId,
@@ -869,3 +936,7 @@ SELECT
 FROM dbo.Stundenplan
 ORDER BY Wochentag, Startzeit;
 GO
+
+-- ============================================================================
+-- SETUP ABGESCHLOSSEN
+-- ============================================================================
