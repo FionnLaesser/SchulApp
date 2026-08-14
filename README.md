@@ -717,7 +717,6 @@ Schulapp
 │   ├── Screenshots
 │   ├── SQL
 │   │   ├── SchulAppDB.sql
-│   │   └── 20260814_PingPongBestenliste.sql
 │   ├── Login.cs
 │   ├── Register.cs
 │   ├── LoadingScreen.cs
@@ -752,11 +751,10 @@ Die wichtigsten Schritte:
 
 1. SQL Server starten.
 2. `SchulAppDB.sql` ausführen.
-3. `20260814_PingPongBestenliste.sql` ausführen.
-4. NuGet-Pakete wiederherstellen.
-5. `schulAppREST` starten.
-6. Die WinForms-Anwendung starten.
-7. Mindestens zwei Benutzer registrieren, wenn PingPong getestet werden soll.
+3. NuGet-Pakete wiederherstellen.
+4. `schulAppREST` starten.
+5. Die WinForms-Anwendung starten.
+6. Mindestens zwei Benutzer registrieren, wenn PingPong getestet werden soll.
 
 Die vollständige Anleitung befindet sich in [SETUP.md](SETUP.md).
 
