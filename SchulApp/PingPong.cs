@@ -453,6 +453,7 @@ namespace SchulApp
                 }
 
                 e.SuppressKeyPress = true;
+                e.Handled = true;
                 return;
             }
 
@@ -465,21 +466,25 @@ namespace SchulApp
             {
                 hochGedruecktLinks = true;
             }
-
-            if (e.KeyCode == Keys.S)
+            else if (e.KeyCode == Keys.S)
             {
                 runterGedruecktLinks = true;
             }
-
-            if (e.KeyCode == Keys.Up)
+            else if (e.KeyCode == Keys.Up)
             {
                 hochGedruecktRechts = true;
             }
-
-            if (e.KeyCode == Keys.Down)
+            else if (e.KeyCode == Keys.Down)
             {
                 runterGedruecktRechts = true;
             }
+            else
+            {
+                return;
+            }
+
+            e.SuppressKeyPress = true;
+            e.Handled = true;
         }
 
         private void PingPong_KeyUp(object? sender, KeyEventArgs e)
