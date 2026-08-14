@@ -187,7 +187,7 @@ IF OBJECT_ID(N'dbo.Einstellung', N'U') IS NULL
 BEGIN
     CREATE TABLE dbo.Einstellung
     (
-        Id INT PRIMARY KEY,
+        Id INT IDENTITY(1,1) PRIMARY KEY,
         HintergrundFarbe INT NOT NULL,
         TextFarbe INT NOT NULL
     );

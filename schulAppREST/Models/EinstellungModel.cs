@@ -9,7 +9,7 @@ namespace SchulApp.Models
     public class EinstellungModel
     {
         [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.None)]
+      //  [DatabaseGenerated(DatabaseGeneratedOption.None)]
         public int Id { get; set; }
 
         public int HintergrundFarbe { get; set; }

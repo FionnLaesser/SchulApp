@@ -1,8 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using SchulApp.Models;
 using SchulApp.Data;
-using Microsoft.Identity.Client.NativeInterop;
+using SchulApp.Models;
 
 namespace schulAppREST.Controllers
 {
@@ -17,16 +16,16 @@ namespace schulAppREST.Controllers
             _context = context;
         }
 
-        //GetStudents
+        // GET: api/Einstellung
         [HttpGet]
-        public async Task<IActionResult> GetEinstellung()
+        public async Task<IActionResult> GetEinstellungen()
         {
-            var einstellung = await _context.Einstellung.ToListAsync();
+            var einstellungen = await _context.Einstellung.ToListAsync();
 
-            return Ok(einstellung);
+            return Ok(einstellungen);
         }
 
-        //GetStudentsWithID
+        // GET: api/Einstellung/1
         [HttpGet("{id}")]
         public async Task<IActionResult> GetEinstellungById(int id)
         {
@@ -40,9 +39,10 @@ namespace schulAppREST.Controllers
             return Ok(einstellung);
         }
 
-        // AddStudent
+        // POST: api/Einstellung
         [HttpPost]
-        public async Task<IActionResult> AddEinstellung([FromBody] EinstellungModel einstellung)
+        public async Task<IActionResult> AddEinstellung(
+            [FromBody] EinstellungModel einstellung)
         {
             _context.Einstellung.Add(einstellung);
 
@@ -50,34 +50,35 @@ namespace schulAppREST.Controllers
 
             return Ok(einstellung);
         }
-        // UpdateStudent
-        // UpdateStudent
+
+        // PUT: api/Einstellung/1
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateStudent(
+        public async Task<IActionResult> UpdateEinstellung(
             int id,
             [FromBody] EinstellungModel einstellung)
         {
-            var einstellung1 = await _context.Einstellung.FindAsync(id);
+            var vorhandeneEinstellung =
+                await _context.Einstellung.FindAsync(id);
 
-            if (einstellung1 == null)
+            if (vorhandeneEinstellung == null)
             {
                 return NotFound();
             }
 
-            // Primary Key darf nicht geändert werden
-            einstellung.Id = einstellung1.Id;
+            vorhandeneEinstellung.HintergrundFarbe =
+                einstellung.HintergrundFarbe;
 
-            // Restliche Werte überschreiben
-            _context.Entry(einstellung1).CurrentValues.SetValues(einstellung);
+            vorhandeneEinstellung.TextFarbe =
+                einstellung.TextFarbe;
 
             await _context.SaveChangesAsync();
 
-            return Ok(einstellung1);
+            return Ok(vorhandeneEinstellung);
         }
 
-        //DeleteStudent
+        // DELETE: api/Einstellung/1
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DelStudent(int id)
+        public async Task<IActionResult> DeleteEinstellung(int id)
         {
             var einstellung = await _context.Einstellung.FindAsync(id);
 
@@ -87,9 +88,10 @@ namespace schulAppREST.Controllers
             }
 
             _context.Einstellung.Remove(einstellung);
+
             await _context.SaveChangesAsync();
 
             return Ok(einstellung);
         }
     }
- }
+}
