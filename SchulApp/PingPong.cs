@@ -56,6 +56,13 @@ namespace SchulApp
                 return;
             }
 
+            SpielPausieren(
+                "Das Spiel wurde durch das Minimieren pausiert."
+            );
+        }
+
+        private void SpielPausieren(string text)
+        {
             gameTimer.Stop();
 
             hochGedruecktLinks = false;
@@ -63,6 +70,7 @@ namespace SchulApp
             hochGedruecktRechts = false;
             runterGedruecktRechts = false;
 
+            pauseTextLabel.Text = text;
             pausePanel.Visible = true;
             pausePanel.BringToFront();
         }
@@ -428,8 +436,26 @@ namespace SchulApp
             Close();
         }
 
+        private void pauseHauptmenueBtn_Click(object sender, EventArgs e)
+        {
+            Close();
+        }
+
         private void PingPong_KeyDown(object? sender, KeyEventArgs e)
         {
+            if (e.KeyCode == Keys.Q && spielLaeuft)
+            {
+                if (!pausePanel.Visible)
+                {
+                    SpielPausieren(
+                        "Spiel pausiert. Fortsetzen oder zum Hauptmenü zurückkehren."
+                    );
+                }
+
+                e.SuppressKeyPress = true;
+                return;
+            }
+
             if (!spielLaeuft || pausePanel.Visible)
             {
                 return;

@@ -42,6 +42,7 @@ namespace SchulApp
             spielEndeTitelLabel = new Label();
             pausePanel = new Panel();
             pauseTextLabel = new Label();
+            pauseHauptmenueBtn = new Button();
             fortsetzenBtn = new Button();
             pauseTitelLabel = new Label();
             ((System.ComponentModel.ISupportInitialize)ball).BeginInit();
@@ -90,9 +91,9 @@ namespace SchulApp
             label1.AutoSize = true;
             label1.Location = new Point(20, 18);
             label1.Name = "label1";
-            label1.Size = new Size(196, 15);
+            label1.Size = new Size(257, 15);
             label1.TabIndex = 5;
-            label1.Text = "Links: W/S | Rechts: Pfeiltasten";
+            label1.Text = "Links: W/S | Rechts: Pfeiltasten | Q: Pause";
 
             // 
             // panelTop
@@ -278,11 +279,12 @@ namespace SchulApp
             pausePanel.Anchor = AnchorStyles.None;
             pausePanel.BorderStyle = BorderStyle.FixedSingle;
             pausePanel.Controls.Add(pauseTextLabel);
+            pausePanel.Controls.Add(pauseHauptmenueBtn);
             pausePanel.Controls.Add(fortsetzenBtn);
             pausePanel.Controls.Add(pauseTitelLabel);
-            pausePanel.Location = new Point(425, 285);
+            pausePanel.Location = new Point(400, 265);
             pausePanel.Name = "pausePanel";
-            pausePanel.Size = new Size(350, 180);
+            pausePanel.Size = new Size(400, 220);
             pausePanel.TabIndex = 15;
             pausePanel.Visible = false;
 
@@ -291,16 +293,28 @@ namespace SchulApp
             // 
             pauseTextLabel.Location = new Point(25, 65);
             pauseTextLabel.Name = "pauseTextLabel";
-            pauseTextLabel.Size = new Size(300, 40);
+            pauseTextLabel.Size = new Size(350, 50);
             pauseTextLabel.TabIndex = 1;
-            pauseTextLabel.Text = "Das Spiel wurde durch das Minimieren pausiert.";
+            pauseTextLabel.Text = "Das Spiel ist pausiert.";
             pauseTextLabel.TextAlign = ContentAlignment.MiddleCenter;
+
+            // 
+            // pauseHauptmenueBtn
+            // 
+            pauseHauptmenueBtn.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            pauseHauptmenueBtn.Location = new Point(205, 145);
+            pauseHauptmenueBtn.Name = "pauseHauptmenueBtn";
+            pauseHauptmenueBtn.Size = new Size(170, 40);
+            pauseHauptmenueBtn.TabIndex = 3;
+            pauseHauptmenueBtn.Text = "Zurück zum Hauptmenü";
+            pauseHauptmenueBtn.UseVisualStyleBackColor = true;
+            pauseHauptmenueBtn.Click += pauseHauptmenueBtn_Click;
 
             // 
             // fortsetzenBtn
             // 
             fortsetzenBtn.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
-            fortsetzenBtn.Location = new Point(95, 120);
+            fortsetzenBtn.Location = new Point(25, 145);
             fortsetzenBtn.Name = "fortsetzenBtn";
             fortsetzenBtn.Size = new Size(160, 40);
             fortsetzenBtn.TabIndex = 2;
@@ -314,7 +328,7 @@ namespace SchulApp
             pauseTitelLabel.Font = new Font("Segoe UI", 18F, FontStyle.Bold);
             pauseTitelLabel.Location = new Point(25, 15);
             pauseTitelLabel.Name = "pauseTitelLabel";
-            pauseTitelLabel.Size = new Size(300, 40);
+            pauseTitelLabel.Size = new Size(350, 40);
             pauseTitelLabel.TabIndex = 0;
             pauseTitelLabel.Text = "Spiel pausiert";
             pauseTitelLabel.TextAlign = ContentAlignment.MiddleCenter;
@@ -389,6 +403,7 @@ namespace SchulApp
         private Label spielEndeTitelLabel;
         private Panel pausePanel;
         private Label pauseTextLabel;
+        private Button pauseHauptmenueBtn;
         private Button fortsetzenBtn;
         private Label pauseTitelLabel;
     }
