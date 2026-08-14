@@ -1,0 +1,2275 @@
+{
+  "info": {
+    "_postman_id": "dde68f0a-5845-4196-8f13-03c98d4e78a2",
+    "name": "SchulApp REST API - Sicher und vollständig",
+    "description": "Importierbare Postman-Collection für die aktuelle SchulApp. Sie deckt die CRUD-Endpunkte für Lehrer, Klassen, Schüler, Kurse, Stundenplan und Einstellungen sowie die PingPong-Endpunkte ab.\n\nSicherheitsprinzip: Schreibende CRUD-Tests arbeiten nur mit Datensätzen, die in demselben Testlauf mit dem Präfix POSTMAN_TEST_ erstellt wurden. IDs werden aus den POST-Antworten übernommen. Es werden keine fest eingetragenen IDs bestehender Schuldaten für PUT oder DELETE verwendet. Die Testdaten werden in abhängigkeitssicherer Reihenfolge erstellt und danach wieder gelöscht.\n\nPingPong ist eine Ausnahme: Ein erfolgreich gespeichertes Spiel verändert Benutzerstatistiken und legt einen Spiel-Datensatz an, für den die aktuelle API keinen Delete-Endpunkt besitzt. Der erfolgreiche PingPong-Schreibrequest ist deshalb standardmässig deaktiviert und wird nur ausgeführt, wenn allow_pingpong_write auf true gesetzt und zwei echte Benutzer-IDs eingetragen werden.\n\nStandard-Base-URL: https://localhost:63635/. Bei lokalem HTTPS muss das ASP.NET-Entwicklungszertifikat vertraut sein oder die SSL-Zertifikatsprüfung in Postman für die lokale Entwicklung passend konfiguriert werden.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "46349118",
+    "_collection_link": "https://go.postman.co/collection/46349118-dde68f0a-5845-4196-8f13-03c98d4e78a2?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "00 - Verbindung und Initialisierung",
+      "item": [
+        {
+          "name": "API prüfen und Testlauf initialisieren",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const idKeys = ['test_lehrer_id','test_klasse_id','test_schueler_id','test_kurs_id','test_stundenplan_id','test_einstellung_id'];",
+                  "const leftovers = idKeys.filter((key) => {",
+                  "    const value = pm.collectionVariables.get(key);",
+                  "    return value !== undefined && value !== null && String(value).trim() !== '';",
+                  "});",
+                  "if (leftovers.length > 0) {",
+                  "    throw new Error('Sicherheitsstopp: Es existieren noch Test-IDs aus einem früheren oder unterbrochenen Lauf. Zuerst 01 / E - Aufräumen ausführen.');",
+                  "}",
+                  "const runId = Date.now().toString() + Math.floor(Math.random() * 10000).toString().padStart(4, '0');",
+                  "pm.collectionVariables.set('run_id', runId);",
+                  "pm.collectionVariables.set('test_run_active', 'true');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('API antwortet mit HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Antwort ist eine JSON-Liste', function () { pm.expect(pm.response.json()).to.be.an('array'); });",
+                  "pm.test('Testlauf wurde initialisiert', function () {",
+                  "    pm.expect(pm.collectionVariables.get('test_run_active')).to.eql('true');",
+                  "    pm.expect(pm.collectionVariables.get('run_id')).to.be.a('string').and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}api/Lehrer",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "Lehrer"
+              ]
+            },
+            "description": "Prüft die REST API und startet einen neuen Testlauf. Dabei werden nur Postman-Collection-Variablen geändert, keine Datenbankdaten."
+          },
+          "response": []
+        },
+        {
+          "name": "OpenAPI-Dokument laden",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('OpenAPI ist erreichbar oder im aktuellen Profil deaktiviert', function () { pm.expect([200, 404]).to.include(pm.response.code); });",
+                  "if (pm.response.code === 200) { const data = pm.response.json(); pm.test('OpenAPI-Version vorhanden', function () { pm.expect(data.openapi).to.exist; }); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}openapi/v1.json",
+              "host": [
+                "{{base_url}}openapi"
+              ],
+              "path": [
+                "v1.json"
+              ]
+            },
+            "description": "Optionaler Read-only-Test für die von ASP.NET Core im Development-Modus bereitgestellte OpenAPI-Beschreibung."
+          },
+          "response": []
+        }
+      ],
+      "description": "Diesen Ordner zuerst ausführen. Er prüft die API und erzeugt eine neue Kennung für einen sicheren Testlauf."
+    },
+    {
+      "name": "01 - Sicherer kompletter CRUD-Test",
+      "item": [
+        {
+          "name": "A - Erstellen",
+          "item": [
+            {
+              "name": "1. Lehrer anlegen",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (pm.collectionVariables.get('test_run_active') !== 'true') {",
+                      "    throw new Error('Sicherheitsstopp: Zuerst 00 - Verbindung und Initialisierung ausführen.');",
+                      "}"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                      "if (pm.response.code === 200) {",
+                      "    const data = pm.response.json();",
+                      "    pm.test('Neue ID wurde zurückgegeben', function () { pm.expect(data.lehrerId).to.be.a('number').and.above(0); });",
+                      "    pm.collectionVariables.set('test_lehrer_id', String(data.lehrerId));",
+                      "    pm.test('Test-Markierung vorhanden', function () { pm.expect(data.name).to.include('POSTMAN_TEST_'); });",
+                      "}"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"POSTMAN_TEST_Lehrer_{{run_id}}\",\n  \"email\": \"postman.{{run_id}}@example.test\",\n  \"telefon\": \"+41000000000\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}api/Lehrer",
+                  "host": [
+                    "{{base_url}}api"
+                  ],
+                  "path": [
+                    "Lehrer"
+                  ]
+                },
+                "description": "Legt ausschliesslich einen eindeutig markierten Test-Lehrer an. Die erzeugte LehrerId wird gespeichert."
+              },
+              "response": []
+            },
+            {
+              "name": "2. Klasse anlegen",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (pm.collectionVariables.get('test_run_active') !== 'true') {",
+                      "    throw new Error('Sicherheitsstopp: Zuerst 00 - Verbindung und Initialisierung ausführen.');",
+                      "}",
+                      "const id = Number(pm.collectionVariables.get('test_lehrer_id'));",
+                      "if (!Number.isInteger(id) || id <= 0) { throw new Error('Sicherheitsstopp: Keine gültige Test-ID für Lehrer vorhanden.'); }"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                      "if (pm.response.code === 200) {",
+                      "    const data = pm.response.json();",
+                      "    pm.test('Neue ID wurde zurückgegeben', function () { pm.expect(data.klassenId).to.be.a('number').and.above(0); });",
+                      "    pm.collectionVariables.set('test_klasse_id', String(data.klassenId));",
+                      "    pm.test('Klasse verweist auf Test-Lehrer', function () { pm.expect(String(data.klassenlehrerId)).to.eql(String(pm.collectionVariables.get('test_lehrer_id'))); });",
+                      "}"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"bezeichnung\": \"PM_{{run_id}}\",\n  \"klassenlehrerId\": {{test_lehrer_id}}\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}api/Klasse",
+                  "host": [
+                    "{{base_url}}api"
+                  ],
+                  "path": [
+                    "Klasse"
+                  ]
+                },
+                "description": "Legt eine Test-Klasse an und verknüpft sie nur mit dem im selben Lauf erstellten Test-Lehrer."
+              },
+              "response": []
+            },
+            {
+              "name": "3. Schüler anlegen",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (pm.collectionVariables.get('test_run_active') !== 'true') {",
+                      "    throw new Error('Sicherheitsstopp: Zuerst 00 - Verbindung und Initialisierung ausführen.');",
+                      "}",
+                      "const id = Number(pm.collectionVariables.get('test_klasse_id'));",
+                      "if (!Number.isInteger(id) || id <= 0) { throw new Error('Sicherheitsstopp: Keine gültige Test-ID für Klasse vorhanden.'); }"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                      "if (pm.response.code === 200) {",
+                      "    const data = pm.response.json();",
+                      "    pm.test('Neue ID wurde zurückgegeben', function () { pm.expect(data.schuelerId).to.be.a('number').and.above(0); });",
+                      "    pm.collectionVariables.set('test_schueler_id', String(data.schuelerId));",
+                      "    pm.test('Schüler verweist auf Test-Klasse', function () { pm.expect(String(data.klasseId)).to.eql(String(pm.collectionVariables.get('test_klasse_id'))); });",
+                      "}"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"POSTMAN_TEST_Schueler_{{run_id}}\",\n  \"klasseId\": {{test_klasse_id}}\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}api/Schueler",
+                  "host": [
+                    "{{base_url}}api"
+                  ],
+                  "path": [
+                    "Schueler"
+                  ]
+                },
+                "description": "Legt einen Test-Schüler in der zuvor angelegten Test-Klasse an."
+              },
+              "response": []
+            },
+            {
+              "name": "4. Kurs anlegen",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (pm.collectionVariables.get('test_run_active') !== 'true') {",
+                      "    throw new Error('Sicherheitsstopp: Zuerst 00 - Verbindung und Initialisierung ausführen.');",
+                      "}",
+                      "const klasseId = Number(pm.collectionVariables.get('test_klasse_id'));",
+                      "const lehrerId = Number(pm.collectionVariables.get('test_lehrer_id'));",
+                      "if (!Number.isInteger(klasseId) || klasseId <= 0 || !Number.isInteger(lehrerId) || lehrerId <= 0) {",
+                      "    throw new Error('Sicherheitsstopp: Test-Klasse oder Test-Lehrer fehlt.');",
+                      "}"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                      "if (pm.response.code === 200) {",
+                      "    const data = pm.response.json();",
+                      "    pm.test('Neue ID wurde zurückgegeben', function () { pm.expect(data.kursId).to.be.a('number').and.above(0); });",
+                      "    pm.collectionVariables.set('test_kurs_id', String(data.kursId));",
+                      "    pm.test('Kurs nutzt nur Test-Referenzen', function () {",
+                      "        pm.expect(String(data.klasseId)).to.eql(String(pm.collectionVariables.get('test_klasse_id')));",
+                      "        pm.expect(String(data.lehrerId)).to.eql(String(pm.collectionVariables.get('test_lehrer_id')));",
+                      "    });",
+                      "}"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"POSTMAN_TEST_Kurs_{{run_id}}\",\n  \"klasseId\": {{test_klasse_id}},\n  \"lehrerId\": {{test_lehrer_id}}\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}api/Kurs",
+                  "host": [
+                    "{{base_url}}api"
+                  ],
+                  "path": [
+                    "Kurs"
+                  ]
+                },
+                "description": "Legt einen Test-Kurs an, der ausschliesslich die im selben Lauf erstellte Test-Klasse und den Test-Lehrer verwendet."
+              },
+              "response": []
+            },
+            {
+              "name": "5. Stundenplaneintrag anlegen",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (pm.collectionVariables.get('test_run_active') !== 'true') {",
+                      "    throw new Error('Sicherheitsstopp: Zuerst 00 - Verbindung und Initialisierung ausführen.');",
+                      "}",
+                      "const id = Number(pm.collectionVariables.get('test_kurs_id'));",
+                      "if (!Number.isInteger(id) || id <= 0) { throw new Error('Sicherheitsstopp: Keine gültige Test-ID für Kurs vorhanden.'); }"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                      "if (pm.response.code === 200) {",
+                      "    const data = pm.response.json();",
+                      "    pm.test('Neue ID wurde zurückgegeben', function () { pm.expect(data.stundenplanId).to.be.a('number').and.above(0); });",
+                      "    pm.collectionVariables.set('test_stundenplan_id', String(data.stundenplanId));",
+                      "    pm.test('Stundenplan verweist auf Test-Kurs', function () { pm.expect(String(data.kursId)).to.eql(String(pm.collectionVariables.get('test_kurs_id'))); });",
+                      "}"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"kursId\": {{test_kurs_id}},\n  \"wochentag\": 1,\n  \"startzeit\": \"08:00:00\",\n  \"endzeit\": \"08:45:00\",\n  \"raum\": \"PM_{{run_id}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}api/Stundenplan",
+                  "host": [
+                    "{{base_url}}api"
+                  ],
+                  "path": [
+                    "Stundenplan"
+                  ]
+                },
+                "description": "Legt einen gültigen Test-Stundenplaneintrag für den zuvor erstellten Test-Kurs an."
+              },
+              "response": []
+            },
+            {
+              "name": "6. Einstellung anlegen",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (pm.collectionVariables.get('test_run_active') !== 'true') {",
+                      "    throw new Error('Sicherheitsstopp: Zuerst 00 - Verbindung und Initialisierung ausführen.');",
+                      "}"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                      "if (pm.response.code === 200) {",
+                      "    const data = pm.response.json();",
+                      "    pm.test('Neue ID wurde zurückgegeben', function () { pm.expect(data.id).to.be.a('number').and.above(0); });",
+                      "    pm.collectionVariables.set('test_einstellung_id', String(data.id));",
+                      "}"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"hintergrundFarbe\": -1,\n  \"textFarbe\": -16777216\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}api/Einstellung",
+                  "host": [
+                    "{{base_url}}api"
+                  ],
+                  "path": [
+                    "Einstellung"
+                  ]
+                },
+                "description": "Legt einen separaten temporären Einstellung-Datensatz an. Es wird keine bestehende Einstellungs-ID verwendet."
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "B - Lesen nach Erstellung",
+          "item": [
+            {
+              "name": "Lehrer nach Test-ID lesen",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (pm.collectionVariables.get('test_run_active') !== 'true') {",
+                      "    throw new Error('Sicherheitsstopp: Zuerst 00 - Verbindung und Initialisierung ausführen.');",
+                      "}",
+                      "const id = Number(pm.collectionVariables.get('test_lehrer_id'));",
+                      "if (!Number.isInteger(id) || id <= 0) { throw new Error('Sicherheitsstopp: Keine gültige Test-ID für Lehrer vorhanden.'); }"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                      "if (pm.response.code === 200) {",
+                      "    const data = pm.response.json();",
+                      "    pm.test('Antwort gehört zum Testdatensatz', function () { pm.expect(String(data.lehrerId)).to.eql(String(pm.collectionVariables.get('test_lehrer_id'))); });",
+                      "}"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}api/Lehrer/{{test_lehrer_id}}",
+                  "host": [
+                    "{{base_url}}api"
+                  ],
+                  "path": [
+                    "Lehrer",
+                    "{{test_lehrer_id}}"
+                  ]
+                },
+                "description": "Liest nur den im Testlauf erstellten Lehrer."
+              },
+              "response": []
+            },
+            {
+              "name": "Klasse nach Test-ID lesen",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (pm.collectionVariables.get('test_run_active') !== 'true') {",
+                      "    throw new Error('Sicherheitsstopp: Zuerst 00 - Verbindung und Initialisierung ausführen.');",
+                      "}",
+                      "const id = Number(pm.collectionVariables.get('test_klasse_id'));",
+                      "if (!Number.isInteger(id) || id <= 0) { throw new Error('Sicherheitsstopp: Keine gültige Test-ID für Klasse vorhanden.'); }"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                      "if (pm.response.code === 200) {",
+                      "    const data = pm.response.json();",
+                      "    pm.test('Antwort gehört zum Testdatensatz', function () { pm.expect(String(data.klassenId)).to.eql(String(pm.collectionVariables.get('test_klasse_id'))); });",
+                      "}"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}api/Klasse/{{test_klasse_id}}",
+                  "host": [
+                    "{{base_url}}api"
+                  ],
+                  "path": [
+                    "Klasse",
+                    "{{test_klasse_id}}"
+                  ]
+                },
+                "description": "Liest nur die im Testlauf erstellte Klasse."
+              },
+              "response": []
+            },
+            {
+              "name": "Schüler nach Test-ID lesen",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (pm.collectionVariables.get('test_run_active') !== 'true') {",
+                      "    throw new Error('Sicherheitsstopp: Zuerst 00 - Verbindung und Initialisierung ausführen.');",
+                      "}",
+                      "const id = Number(pm.collectionVariables.get('test_schueler_id'));",
+                      "if (!Number.isInteger(id) || id <= 0) { throw new Error('Sicherheitsstopp: Keine gültige Test-ID für Schüler vorhanden.'); }"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                      "if (pm.response.code === 200) {",
+                      "    const data = pm.response.json();",
+                      "    pm.test('Antwort gehört zum Testdatensatz', function () { pm.expect(String(data.schuelerId)).to.eql(String(pm.collectionVariables.get('test_schueler_id'))); });",
+                      "}"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}api/Schueler/{{test_schueler_id}}",
+                  "host": [
+                    "{{base_url}}api"
+                  ],
+                  "path": [
+                    "Schueler",
+                    "{{test_schueler_id}}"
+                  ]
+                },
+                "description": "Liest nur den im Testlauf erstellten Schüler."
+              },
+              "response": []
+            },
+            {
+              "name": "Kurs nach Test-ID lesen",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (pm.collectionVariables.get('test_run_active') !== 'true') {",
+                      "    throw new Error('Sicherheitsstopp: Zuerst 00 - Verbindung und Initialisierung ausführen.');",
+                      "}",
+                      "const id = Number(pm.collectionVariables.get('test_kurs_id'));",
+                      "if (!Number.isInteger(id) || id <= 0) { throw new Error('Sicherheitsstopp: Keine gültige Test-ID für Kurs vorhanden.'); }"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                      "if (pm.response.code === 200) {",
+                      "    const data = pm.response.json();",
+                      "    pm.test('Antwort gehört zum Testdatensatz', function () { pm.expect(String(data.kursId)).to.eql(String(pm.collectionVariables.get('test_kurs_id'))); });",
+                      "}"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}api/Kurs/{{test_kurs_id}}",
+                  "host": [
+                    "{{base_url}}api"
+                  ],
+                  "path": [
+                    "Kurs",
+                    "{{test_kurs_id}}"
+                  ]
+                },
+                "description": "Liest nur den im Testlauf erstellten Kurs."
+              },
+              "response": []
+            },
+            {
+              "name": "Stundenplan nach Test-ID lesen",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (pm.collectionVariables.get('test_run_active') !== 'true') {",
+                      "    throw new Error('Sicherheitsstopp: Zuerst 00 - Verbindung und Initialisierung ausführen.');",
+                      "}",
+                      "const id = Number(pm.collectionVariables.get('test_stundenplan_id'));",
+                      "if (!Number.isInteger(id) || id <= 0) { throw new Error('Sicherheitsstopp: Keine gültige Test-ID für Stundenplan vorhanden.'); }"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                      "if (pm.response.code === 200) {",
+                      "    const data = pm.response.json();",
+                      "    pm.test('Antwort gehört zum Testdatensatz', function () { pm.expect(String(data.stundenplanId)).to.eql(String(pm.collectionVariables.get('test_stundenplan_id'))); });",
+                      "}"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}api/Stundenplan/{{test_stundenplan_id}}",
+                  "host": [
+                    "{{base_url}}api"
+                  ],
+                  "path": [
+                    "Stundenplan",
+                    "{{test_stundenplan_id}}"
+                  ]
+                },
+                "description": "Liest nur den im Testlauf erstellten Stundenplaneintrag."
+              },
+              "response": []
+            },
+            {
+              "name": "Einstellung nach Test-ID lesen",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (pm.collectionVariables.get('test_run_active') !== 'true') {",
+                      "    throw new Error('Sicherheitsstopp: Zuerst 00 - Verbindung und Initialisierung ausführen.');",
+                      "}",
+                      "const id = Number(pm.collectionVariables.get('test_einstellung_id'));",
+                      "if (!Number.isInteger(id) || id <= 0) { throw new Error('Sicherheitsstopp: Keine gültige Test-ID für Einstellung vorhanden.'); }"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                      "if (pm.response.code === 200) {",
+                      "    const data = pm.response.json();",
+                      "    pm.test('Antwort gehört zum Testdatensatz', function () { pm.expect(String(data.id)).to.eql(String(pm.collectionVariables.get('test_einstellung_id'))); });",
+                      "}"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}api/Einstellung/{{test_einstellung_id}}",
+                  "host": [
+                    "{{base_url}}api"
+                  ],
+                  "path": [
+                    "Einstellung",
+                    "{{test_einstellung_id}}"
+                  ]
+                },
+                "description": "Liest nur den im Testlauf erstellten Einstellung-Datensatz."
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "C - Aktualisieren",
+          "item": [
+            {
+              "name": "Lehrer aktualisieren",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (pm.collectionVariables.get('test_run_active') !== 'true') {",
+                      "    throw new Error('Sicherheitsstopp: Zuerst 00 - Verbindung und Initialisierung ausführen.');",
+                      "}",
+                      "const id = Number(pm.collectionVariables.get('test_lehrer_id'));",
+                      "if (!Number.isInteger(id) || id <= 0) { throw new Error('Sicherheitsstopp: Keine gültige Test-ID für Lehrer vorhanden.'); }"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                      "if (pm.response.code === 200) { const data = pm.response.json();",
+                      "pm.test('Nur Test-Lehrer aktualisiert', function () { pm.expect(String(data.lehrerId)).to.eql(String(pm.collectionVariables.get('test_lehrer_id'))); pm.expect(data.name).to.include('POSTMAN_TEST_Lehrer_Updated_'); }); }"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"POSTMAN_TEST_Lehrer_Updated_{{run_id}}\",\n  \"email\": \"postman.updated.{{run_id}}@example.test\",\n  \"telefon\": \"+41000000001\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}api/Lehrer/{{test_lehrer_id}}",
+                  "host": [
+                    "{{base_url}}api"
+                  ],
+                  "path": [
+                    "Lehrer",
+                    "{{test_lehrer_id}}"
+                  ]
+                },
+                "description": "Aktualisiert ausschliesslich den zuvor erzeugten Test-Lehrer."
+              },
+              "response": []
+            },
+            {
+              "name": "Klasse aktualisieren",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (pm.collectionVariables.get('test_run_active') !== 'true') {",
+                      "    throw new Error('Sicherheitsstopp: Zuerst 00 - Verbindung und Initialisierung ausführen.');",
+                      "}",
+                      "const klasseId = Number(pm.collectionVariables.get('test_klasse_id'));",
+                      "const lehrerId = Number(pm.collectionVariables.get('test_lehrer_id'));",
+                      "if (!Number.isInteger(klasseId) || klasseId <= 0 || !Number.isInteger(lehrerId) || lehrerId <= 0) { throw new Error('Sicherheitsstopp: Test-Klasse oder Test-Lehrer fehlt.'); }"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                      "if (pm.response.code === 200) { const data = pm.response.json();",
+                      "pm.test('Nur Test-Klasse aktualisiert', function () { pm.expect(String(data.klassenId)).to.eql(String(pm.collectionVariables.get('test_klasse_id'))); pm.expect(data.bezeichnung).to.include('PMU_'); }); }"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"bezeichnung\": \"PMU_{{run_id}}\",\n  \"klassenlehrerId\": {{test_lehrer_id}}\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}api/Klasse/{{test_klasse_id}}",
+                  "host": [
+                    "{{base_url}}api"
+                  ],
+                  "path": [
+                    "Klasse",
+                    "{{test_klasse_id}}"
+                  ]
+                },
+                "description": "Aktualisiert ausschliesslich die zuvor erzeugte Test-Klasse."
+              },
+              "response": []
+            },
+            {
+              "name": "Schüler aktualisieren",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (pm.collectionVariables.get('test_run_active') !== 'true') {",
+                      "    throw new Error('Sicherheitsstopp: Zuerst 00 - Verbindung und Initialisierung ausführen.');",
+                      "}",
+                      "const schuelerId = Number(pm.collectionVariables.get('test_schueler_id'));",
+                      "const klasseId = Number(pm.collectionVariables.get('test_klasse_id'));",
+                      "if (!Number.isInteger(schuelerId) || schuelerId <= 0 || !Number.isInteger(klasseId) || klasseId <= 0) { throw new Error('Sicherheitsstopp: Test-Schüler oder Test-Klasse fehlt.'); }"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                      "if (pm.response.code === 200) { const data = pm.response.json();",
+                      "pm.test('Nur Test-Schüler aktualisiert', function () { pm.expect(String(data.schuelerId)).to.eql(String(pm.collectionVariables.get('test_schueler_id'))); pm.expect(data.name).to.include('POSTMAN_TEST_Schueler_Updated_'); }); }"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"POSTMAN_TEST_Schueler_Updated_{{run_id}}\",\n  \"klasseId\": {{test_klasse_id}}\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}api/Schueler/{{test_schueler_id}}",
+                  "host": [
+                    "{{base_url}}api"
+                  ],
+                  "path": [
+                    "Schueler",
+                    "{{test_schueler_id}}"
+                  ]
+                },
+                "description": "Aktualisiert ausschliesslich den zuvor erzeugten Test-Schüler."
+              },
+              "response": []
+            },
+            {
+              "name": "Kurs aktualisieren",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (pm.collectionVariables.get('test_run_active') !== 'true') {",
+                      "    throw new Error('Sicherheitsstopp: Zuerst 00 - Verbindung und Initialisierung ausführen.');",
+                      "}",
+                      "const kursId = Number(pm.collectionVariables.get('test_kurs_id'));",
+                      "const klasseId = Number(pm.collectionVariables.get('test_klasse_id'));",
+                      "const lehrerId = Number(pm.collectionVariables.get('test_lehrer_id'));",
+                      "if (![kursId, klasseId, lehrerId].every((x) => Number.isInteger(x) && x > 0)) { throw new Error('Sicherheitsstopp: Benötigte Test-IDs fehlen.'); }"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                      "if (pm.response.code === 200) { const data = pm.response.json();",
+                      "pm.test('Nur Test-Kurs aktualisiert', function () { pm.expect(String(data.kursId)).to.eql(String(pm.collectionVariables.get('test_kurs_id'))); pm.expect(data.name).to.include('POSTMAN_TEST_Kurs_Updated_'); }); }"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"POSTMAN_TEST_Kurs_Updated_{{run_id}}\",\n  \"klasseId\": {{test_klasse_id}},\n  \"lehrerId\": {{test_lehrer_id}}\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}api/Kurs/{{test_kurs_id}}",
+                  "host": [
+                    "{{base_url}}api"
+                  ],
+                  "path": [
+                    "Kurs",
+                    "{{test_kurs_id}}"
+                  ]
+                },
+                "description": "Aktualisiert ausschliesslich den zuvor erzeugten Test-Kurs."
+              },
+              "response": []
+            },
+            {
+              "name": "Stundenplan aktualisieren",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (pm.collectionVariables.get('test_run_active') !== 'true') {",
+                      "    throw new Error('Sicherheitsstopp: Zuerst 00 - Verbindung und Initialisierung ausführen.');",
+                      "}",
+                      "const stundenplanId = Number(pm.collectionVariables.get('test_stundenplan_id'));",
+                      "const kursId = Number(pm.collectionVariables.get('test_kurs_id'));",
+                      "if (![stundenplanId, kursId].every((x) => Number.isInteger(x) && x > 0)) { throw new Error('Sicherheitsstopp: Test-Stundenplan oder Test-Kurs fehlt.'); }"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                      "if (pm.response.code === 200) { const data = pm.response.json();",
+                      "pm.test('Nur Test-Stundenplan aktualisiert', function () { pm.expect(String(data.stundenplanId)).to.eql(String(pm.collectionVariables.get('test_stundenplan_id'))); pm.expect(data.wochentag).to.eql(2); }); }"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"kursId\": {{test_kurs_id}},\n  \"wochentag\": 2,\n  \"startzeit\": \"09:00:00\",\n  \"endzeit\": \"09:45:00\",\n  \"raum\": \"PMU_{{run_id}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}api/Stundenplan/{{test_stundenplan_id}}",
+                  "host": [
+                    "{{base_url}}api"
+                  ],
+                  "path": [
+                    "Stundenplan",
+                    "{{test_stundenplan_id}}"
+                  ]
+                },
+                "description": "Aktualisiert ausschliesslich den zuvor erzeugten Test-Stundenplaneintrag."
+              },
+              "response": []
+            },
+            {
+              "name": "Einstellung aktualisieren",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (pm.collectionVariables.get('test_run_active') !== 'true') {",
+                      "    throw new Error('Sicherheitsstopp: Zuerst 00 - Verbindung und Initialisierung ausführen.');",
+                      "}",
+                      "const id = Number(pm.collectionVariables.get('test_einstellung_id'));",
+                      "if (!Number.isInteger(id) || id <= 0) { throw new Error('Sicherheitsstopp: Keine gültige Test-ID für Einstellung vorhanden.'); }"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                      "if (pm.response.code === 200) { const data = pm.response.json();",
+                      "pm.test('Nur Test-Einstellung aktualisiert', function () { pm.expect(String(data.id)).to.eql(String(pm.collectionVariables.get('test_einstellung_id'))); pm.expect(data.hintergrundFarbe).to.eql(-16777216); pm.expect(data.textFarbe).to.eql(-1); }); }"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"hintergrundFarbe\": -16777216,\n  \"textFarbe\": -1\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}api/Einstellung/{{test_einstellung_id}}",
+                  "host": [
+                    "{{base_url}}api"
+                  ],
+                  "path": [
+                    "Einstellung",
+                    "{{test_einstellung_id}}"
+                  ]
+                },
+                "description": "Aktualisiert ausschliesslich den zuvor erzeugten temporären Einstellung-Datensatz."
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "D - Update prüfen",
+          "item": [
+            {
+              "name": "Lehrer nach Update prüfen",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (pm.collectionVariables.get('test_run_active') !== 'true') {",
+                      "    throw new Error('Sicherheitsstopp: Zuerst 00 - Verbindung und Initialisierung ausführen.');",
+                      "}",
+                      "const id = Number(pm.collectionVariables.get('test_lehrer_id'));",
+                      "if (!Number.isInteger(id) || id <= 0) { throw new Error('Sicherheitsstopp: Keine gültige Test-ID für Lehrer vorhanden.'); }"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                      "if (pm.response.code === 200) { const data = pm.response.json(); pm.test('Update sichtbar', function () { pm.expect(data.name).to.include('POSTMAN_TEST_Lehrer_Updated_'); }); }"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}api/Lehrer/{{test_lehrer_id}}",
+                  "host": [
+                    "{{base_url}}api"
+                  ],
+                  "path": [
+                    "Lehrer",
+                    "{{test_lehrer_id}}"
+                  ]
+                },
+                "description": "Prüft den aktualisierten Test-Lehrer."
+              },
+              "response": []
+            },
+            {
+              "name": "Klasse nach Update prüfen",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (pm.collectionVariables.get('test_run_active') !== 'true') {",
+                      "    throw new Error('Sicherheitsstopp: Zuerst 00 - Verbindung und Initialisierung ausführen.');",
+                      "}",
+                      "const id = Number(pm.collectionVariables.get('test_klasse_id'));",
+                      "if (!Number.isInteger(id) || id <= 0) { throw new Error('Sicherheitsstopp: Keine gültige Test-ID für Klasse vorhanden.'); }"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                      "if (pm.response.code === 200) { const data = pm.response.json(); pm.test('Update sichtbar', function () { pm.expect(data.bezeichnung).to.include('PMU_'); }); }"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}api/Klasse/{{test_klasse_id}}",
+                  "host": [
+                    "{{base_url}}api"
+                  ],
+                  "path": [
+                    "Klasse",
+                    "{{test_klasse_id}}"
+                  ]
+                },
+                "description": "Prüft die aktualisierte Test-Klasse."
+              },
+              "response": []
+            },
+            {
+              "name": "Schüler nach Update prüfen",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (pm.collectionVariables.get('test_run_active') !== 'true') {",
+                      "    throw new Error('Sicherheitsstopp: Zuerst 00 - Verbindung und Initialisierung ausführen.');",
+                      "}",
+                      "const id = Number(pm.collectionVariables.get('test_schueler_id'));",
+                      "if (!Number.isInteger(id) || id <= 0) { throw new Error('Sicherheitsstopp: Keine gültige Test-ID für Schüler vorhanden.'); }"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                      "if (pm.response.code === 200) { const data = pm.response.json(); pm.test('Update sichtbar', function () { pm.expect(data.name).to.include('POSTMAN_TEST_Schueler_Updated_'); }); }"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}api/Schueler/{{test_schueler_id}}",
+                  "host": [
+                    "{{base_url}}api"
+                  ],
+                  "path": [
+                    "Schueler",
+                    "{{test_schueler_id}}"
+                  ]
+                },
+                "description": "Prüft den aktualisierten Test-Schüler."
+              },
+              "response": []
+            },
+            {
+              "name": "Kurs nach Update prüfen",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (pm.collectionVariables.get('test_run_active') !== 'true') {",
+                      "    throw new Error('Sicherheitsstopp: Zuerst 00 - Verbindung und Initialisierung ausführen.');",
+                      "}",
+                      "const id = Number(pm.collectionVariables.get('test_kurs_id'));",
+                      "if (!Number.isInteger(id) || id <= 0) { throw new Error('Sicherheitsstopp: Keine gültige Test-ID für Kurs vorhanden.'); }"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                      "if (pm.response.code === 200) { const data = pm.response.json(); pm.test('Update sichtbar', function () { pm.expect(data.name).to.include('POSTMAN_TEST_Kurs_Updated_'); }); }"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}api/Kurs/{{test_kurs_id}}",
+                  "host": [
+                    "{{base_url}}api"
+                  ],
+                  "path": [
+                    "Kurs",
+                    "{{test_kurs_id}}"
+                  ]
+                },
+                "description": "Prüft den aktualisierten Test-Kurs."
+              },
+              "response": []
+            },
+            {
+              "name": "Stundenplan nach Update prüfen",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (pm.collectionVariables.get('test_run_active') !== 'true') {",
+                      "    throw new Error('Sicherheitsstopp: Zuerst 00 - Verbindung und Initialisierung ausführen.');",
+                      "}",
+                      "const id = Number(pm.collectionVariables.get('test_stundenplan_id'));",
+                      "if (!Number.isInteger(id) || id <= 0) { throw new Error('Sicherheitsstopp: Keine gültige Test-ID für Stundenplan vorhanden.'); }"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                      "if (pm.response.code === 200) { const data = pm.response.json(); pm.test('Update sichtbar', function () { pm.expect(data.wochentag).to.eql(2); pm.expect(data.raum).to.include('PMU_'); }); }"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}api/Stundenplan/{{test_stundenplan_id}}",
+                  "host": [
+                    "{{base_url}}api"
+                  ],
+                  "path": [
+                    "Stundenplan",
+                    "{{test_stundenplan_id}}"
+                  ]
+                },
+                "description": "Prüft den aktualisierten Test-Stundenplaneintrag."
+              },
+              "response": []
+            },
+            {
+              "name": "Einstellung nach Update prüfen",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (pm.collectionVariables.get('test_run_active') !== 'true') {",
+                      "    throw new Error('Sicherheitsstopp: Zuerst 00 - Verbindung und Initialisierung ausführen.');",
+                      "}",
+                      "const id = Number(pm.collectionVariables.get('test_einstellung_id'));",
+                      "if (!Number.isInteger(id) || id <= 0) { throw new Error('Sicherheitsstopp: Keine gültige Test-ID für Einstellung vorhanden.'); }"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                      "if (pm.response.code === 200) { const data = pm.response.json(); pm.test('Update sichtbar', function () { pm.expect(data.hintergrundFarbe).to.eql(-16777216); pm.expect(data.textFarbe).to.eql(-1); }); }"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}api/Einstellung/{{test_einstellung_id}}",
+                  "host": [
+                    "{{base_url}}api"
+                  ],
+                  "path": [
+                    "Einstellung",
+                    "{{test_einstellung_id}}"
+                  ]
+                },
+                "description": "Prüft den aktualisierten temporären Einstellung-Datensatz."
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "E - Aufräumen",
+          "item": [
+            {
+              "name": "1. Stundenplan löschen",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (pm.collectionVariables.get('test_run_active') !== 'true') {",
+                      "    if (pm.execution && typeof pm.execution.skipRequest === 'function') {",
+                      "        pm.execution.skipRequest();",
+                      "    } else {",
+                      "        throw new Error('Sicherheitsstopp: Kein aktiver Testlauf.');",
+                      "    }",
+                      "}",
+                      "const cleanupId = Number(pm.collectionVariables.get('test_stundenplan_id'));",
+                      "if (!Number.isInteger(cleanupId) || cleanupId <= 0) {",
+                      "    if (pm.execution && typeof pm.execution.skipRequest === 'function') {",
+                      "        pm.execution.skipRequest();",
+                      "    } else {",
+                      "        throw new Error('Kein Stundenplan-Testdatensatz zum Aufräumen vorhanden.');",
+                      "    }",
+                      "}"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200 oder bereits gelöscht', function () { pm.expect([200, 404]).to.include(pm.response.code); });",
+                      "if (pm.response.code === 200) {",
+                      "    const data = pm.response.json();",
+                      "    pm.test('Gelöschte ID stimmt', function () { pm.expect(String(data.stundenplanId)).to.eql(String(pm.collectionVariables.get('test_stundenplan_id'))); });",
+                      "}",
+                      "if (pm.response.code === 200 || pm.response.code === 404) {",
+                      "    pm.collectionVariables.unset('test_stundenplan_id');",
+                      "}"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}api/Stundenplan/{{test_stundenplan_id}}",
+                  "host": [
+                    "{{base_url}}api"
+                  ],
+                  "path": [
+                    "Stundenplan",
+                    "{{test_stundenplan_id}}"
+                  ]
+                },
+                "description": "Löscht nur den aktuellen Test-Stundenplaneintrag."
+              },
+              "response": []
+            },
+            {
+              "name": "2. Schüler löschen",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (pm.collectionVariables.get('test_run_active') !== 'true') {",
+                      "    if (pm.execution && typeof pm.execution.skipRequest === 'function') {",
+                      "        pm.execution.skipRequest();",
+                      "    } else {",
+                      "        throw new Error('Sicherheitsstopp: Kein aktiver Testlauf.');",
+                      "    }",
+                      "}",
+                      "const cleanupId = Number(pm.collectionVariables.get('test_schueler_id'));",
+                      "if (!Number.isInteger(cleanupId) || cleanupId <= 0) {",
+                      "    if (pm.execution && typeof pm.execution.skipRequest === 'function') {",
+                      "        pm.execution.skipRequest();",
+                      "    } else {",
+                      "        throw new Error('Kein Schüler-Testdatensatz zum Aufräumen vorhanden.');",
+                      "    }",
+                      "}"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200 oder bereits gelöscht', function () { pm.expect([200, 404]).to.include(pm.response.code); });",
+                      "if (pm.response.code === 200) {",
+                      "    const data = pm.response.json();",
+                      "    pm.test('Gelöschte ID stimmt', function () { pm.expect(String(data.schuelerId)).to.eql(String(pm.collectionVariables.get('test_schueler_id'))); });",
+                      "}",
+                      "if (pm.response.code === 200 || pm.response.code === 404) {",
+                      "    pm.collectionVariables.unset('test_schueler_id');",
+                      "}"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}api/Schueler/{{test_schueler_id}}",
+                  "host": [
+                    "{{base_url}}api"
+                  ],
+                  "path": [
+                    "Schueler",
+                    "{{test_schueler_id}}"
+                  ]
+                },
+                "description": "Löscht nur den aktuellen Test-Schüler."
+              },
+              "response": []
+            },
+            {
+              "name": "3. Kurs löschen",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (pm.collectionVariables.get('test_run_active') !== 'true') {",
+                      "    if (pm.execution && typeof pm.execution.skipRequest === 'function') {",
+                      "        pm.execution.skipRequest();",
+                      "    } else {",
+                      "        throw new Error('Sicherheitsstopp: Kein aktiver Testlauf.');",
+                      "    }",
+                      "}",
+                      "const cleanupId = Number(pm.collectionVariables.get('test_kurs_id'));",
+                      "if (!Number.isInteger(cleanupId) || cleanupId <= 0) {",
+                      "    if (pm.execution && typeof pm.execution.skipRequest === 'function') {",
+                      "        pm.execution.skipRequest();",
+                      "    } else {",
+                      "        throw new Error('Kein Kurs-Testdatensatz zum Aufräumen vorhanden.');",
+                      "    }",
+                      "}"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200 oder bereits gelöscht', function () { pm.expect([200, 404]).to.include(pm.response.code); });",
+                      "if (pm.response.code === 200) {",
+                      "    const data = pm.response.json();",
+                      "    pm.test('Gelöschte ID stimmt', function () { pm.expect(String(data.kursId)).to.eql(String(pm.collectionVariables.get('test_kurs_id'))); });",
+                      "}",
+                      "if (pm.response.code === 200 || pm.response.code === 404) {",
+                      "    pm.collectionVariables.unset('test_kurs_id');",
+                      "}"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}api/Kurs/{{test_kurs_id}}",
+                  "host": [
+                    "{{base_url}}api"
+                  ],
+                  "path": [
+                    "Kurs",
+                    "{{test_kurs_id}}"
+                  ]
+                },
+                "description": "Löscht nur den aktuellen Test-Kurs."
+              },
+              "response": []
+            },
+            {
+              "name": "4. Klasse löschen",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (pm.collectionVariables.get('test_run_active') !== 'true') {",
+                      "    if (pm.execution && typeof pm.execution.skipRequest === 'function') {",
+                      "        pm.execution.skipRequest();",
+                      "    } else {",
+                      "        throw new Error('Sicherheitsstopp: Kein aktiver Testlauf.');",
+                      "    }",
+                      "}",
+                      "const cleanupId = Number(pm.collectionVariables.get('test_klasse_id'));",
+                      "if (!Number.isInteger(cleanupId) || cleanupId <= 0) {",
+                      "    if (pm.execution && typeof pm.execution.skipRequest === 'function') {",
+                      "        pm.execution.skipRequest();",
+                      "    } else {",
+                      "        throw new Error('Kein Klasse-Testdatensatz zum Aufräumen vorhanden.');",
+                      "    }",
+                      "}"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200 oder bereits gelöscht', function () { pm.expect([200, 404]).to.include(pm.response.code); });",
+                      "if (pm.response.code === 200) {",
+                      "    const data = pm.response.json();",
+                      "    pm.test('Gelöschte ID stimmt', function () { pm.expect(String(data.klassenId)).to.eql(String(pm.collectionVariables.get('test_klasse_id'))); });",
+                      "}",
+                      "if (pm.response.code === 200 || pm.response.code === 404) {",
+                      "    pm.collectionVariables.unset('test_klasse_id');",
+                      "}"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}api/Klasse/{{test_klasse_id}}",
+                  "host": [
+                    "{{base_url}}api"
+                  ],
+                  "path": [
+                    "Klasse",
+                    "{{test_klasse_id}}"
+                  ]
+                },
+                "description": "Löscht nur die aktuelle Test-Klasse, nachdem abhängige Testdaten entfernt wurden."
+              },
+              "response": []
+            },
+            {
+              "name": "5. Lehrer löschen",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (pm.collectionVariables.get('test_run_active') !== 'true') {",
+                      "    if (pm.execution && typeof pm.execution.skipRequest === 'function') {",
+                      "        pm.execution.skipRequest();",
+                      "    } else {",
+                      "        throw new Error('Sicherheitsstopp: Kein aktiver Testlauf.');",
+                      "    }",
+                      "}",
+                      "const cleanupId = Number(pm.collectionVariables.get('test_lehrer_id'));",
+                      "if (!Number.isInteger(cleanupId) || cleanupId <= 0) {",
+                      "    if (pm.execution && typeof pm.execution.skipRequest === 'function') {",
+                      "        pm.execution.skipRequest();",
+                      "    } else {",
+                      "        throw new Error('Kein Lehrer-Testdatensatz zum Aufräumen vorhanden.');",
+                      "    }",
+                      "}"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200 oder bereits gelöscht', function () { pm.expect([200, 404]).to.include(pm.response.code); });",
+                      "if (pm.response.code === 200) {",
+                      "    const data = pm.response.json();",
+                      "    pm.test('Gelöschte ID stimmt', function () { pm.expect(String(data.lehrerId)).to.eql(String(pm.collectionVariables.get('test_lehrer_id'))); });",
+                      "}",
+                      "if (pm.response.code === 200 || pm.response.code === 404) {",
+                      "    pm.collectionVariables.unset('test_lehrer_id');",
+                      "}"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}api/Lehrer/{{test_lehrer_id}}",
+                  "host": [
+                    "{{base_url}}api"
+                  ],
+                  "path": [
+                    "Lehrer",
+                    "{{test_lehrer_id}}"
+                  ]
+                },
+                "description": "Löscht nur den aktuellen Test-Lehrer, nachdem die Test-Klasse und der Test-Kurs entfernt wurden."
+              },
+              "response": []
+            },
+            {
+              "name": "6. Einstellung löschen",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (pm.collectionVariables.get('test_run_active') !== 'true') {",
+                      "    if (pm.execution && typeof pm.execution.skipRequest === 'function') {",
+                      "        pm.execution.skipRequest();",
+                      "    } else {",
+                      "        throw new Error('Sicherheitsstopp: Kein aktiver Testlauf.');",
+                      "    }",
+                      "}",
+                      "const cleanupId = Number(pm.collectionVariables.get('test_einstellung_id'));",
+                      "if (!Number.isInteger(cleanupId) || cleanupId <= 0) {",
+                      "    if (pm.execution && typeof pm.execution.skipRequest === 'function') {",
+                      "        pm.execution.skipRequest();",
+                      "    } else {",
+                      "        throw new Error('Kein Einstellung-Testdatensatz zum Aufräumen vorhanden.');",
+                      "    }",
+                      "}"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200 oder bereits gelöscht', function () { pm.expect([200, 404]).to.include(pm.response.code); });",
+                      "if (pm.response.code === 200) {",
+                      "    const data = pm.response.json();",
+                      "    pm.test('Gelöschte ID stimmt', function () { pm.expect(String(data.id)).to.eql(String(pm.collectionVariables.get('test_einstellung_id'))); });",
+                      "}",
+                      "if (pm.response.code === 200 || pm.response.code === 404) {",
+                      "    pm.collectionVariables.unset('test_einstellung_id');",
+                      "}"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}api/Einstellung/{{test_einstellung_id}}",
+                  "host": [
+                    "{{base_url}}api"
+                  ],
+                  "path": [
+                    "Einstellung",
+                    "{{test_einstellung_id}}"
+                  ]
+                },
+                "description": "Löscht nur den aktuellen temporären Einstellung-Datensatz."
+              },
+              "response": []
+            },
+            {
+              "name": "7. Cleanup prüfen und Testlauf abschliessen",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                      "const idKeys = ['test_lehrer_id','test_klasse_id','test_schueler_id','test_kurs_id','test_stundenplan_id','test_einstellung_id'];",
+                      "const leftovers = idKeys.filter((key) => { const value = pm.collectionVariables.get(key); return value !== undefined && value !== null && String(value).trim() !== ''; });",
+                      "pm.test('Alle Test-IDs wurden bereinigt', function () { pm.expect(leftovers).to.eql([]); });",
+                      "if (leftovers.length === 0) {",
+                      "    pm.collectionVariables.set('test_run_active', 'false');",
+                      "    pm.collectionVariables.unset('run_id');",
+                      "}"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}api/Lehrer",
+                  "host": [
+                    "{{base_url}}api"
+                  ],
+                  "path": [
+                    "Lehrer"
+                  ]
+                },
+                "description": "Prüft, ob alle gespeicherten Test-IDs entfernt wurden. Nur wenn das Cleanup vollständig ist, wird der Testlauf als beendet markiert."
+              },
+              "response": []
+            }
+          ]
+        }
+      ],
+      "description": "In dieser Reihenfolge ausführen. Der Test erstellt nur eigene markierte Daten, liest und aktualisiert diese und räumt sie danach in korrekter Abhängigkeitsreihenfolge wieder auf."
+    },
+    {
+      "name": "02 - Read-only Übersicht",
+      "item": [
+        {
+          "name": "Alle Lehrer",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Antwort ist eine JSON-Liste', function () { pm.expect(pm.response.json()).to.be.an('array'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}api/Lehrer",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "Lehrer"
+              ]
+            },
+            "description": "Read-only. Liefert alle Lehrer."
+          },
+          "response": []
+        },
+        {
+          "name": "Alle Klassen",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Antwort ist eine JSON-Liste', function () { pm.expect(pm.response.json()).to.be.an('array'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}api/Klasse",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "Klasse"
+              ]
+            },
+            "description": "Read-only. Liefert alle Klassen."
+          },
+          "response": []
+        },
+        {
+          "name": "Alle Schüler",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Antwort ist eine JSON-Liste', function () { pm.expect(pm.response.json()).to.be.an('array'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}api/Schueler",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "Schueler"
+              ]
+            },
+            "description": "Read-only. Liefert alle Schüler."
+          },
+          "response": []
+        },
+        {
+          "name": "Alle Kurse",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Antwort ist eine JSON-Liste', function () { pm.expect(pm.response.json()).to.be.an('array'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}api/Kurs",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "Kurs"
+              ]
+            },
+            "description": "Read-only. Liefert alle Kurse."
+          },
+          "response": []
+        },
+        {
+          "name": "Gesamten Stundenplan",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Antwort ist eine JSON-Liste', function () { pm.expect(pm.response.json()).to.be.an('array'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}api/Stundenplan",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "Stundenplan"
+              ]
+            },
+            "description": "Read-only. Liefert alle Stundenplaneinträge."
+          },
+          "response": []
+        },
+        {
+          "name": "Alle Einstellungen",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Antwort ist eine JSON-Liste', function () { pm.expect(pm.response.json()).to.be.an('array'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}api/Einstellung",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "Einstellung"
+              ]
+            },
+            "description": "Read-only. Liefert alle Einstellung-Datensätze."
+          },
+          "response": []
+        },
+        {
+          "name": "PingPong-Bestenliste",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Antwort ist eine JSON-Liste', function () { pm.expect(pm.response.json()).to.be.an('array'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}api/PingPong/bestenliste",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "PingPong",
+                "bestenliste"
+              ]
+            },
+            "description": "Read-only. Liefert die Bestenliste und verändert keine Benutzerstatistiken."
+          },
+          "response": []
+        }
+      ],
+      "description": "Diese Requests verändern keine Datenbankdaten und können jederzeit ausgeführt werden."
+    },
+    {
+      "name": "03 - PingPong sichere Tests",
+      "item": [
+        {
+          "name": "Bestenliste laden",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Antwort ist eine JSON-Liste', function () { pm.expect(pm.response.json()).to.be.an('array'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}api/PingPong/bestenliste",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "PingPong",
+                "bestenliste"
+              ]
+            },
+            "description": "Read-only. Entspricht dem Endpoint, den die WinForms-PingPong-Funktion für Benutzer und Bestenliste nutzt."
+          },
+          "response": []
+        },
+        {
+          "name": "Ungültiges Spiel: gleicher Benutzer",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400 erwartet', function () { pm.response.to.have.status(400); });",
+                  "pm.test('Keine erfolgreiche Speicherung', function () { pm.expect(pm.response.code).to.not.eql(200); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"spielerLinksId\": 1,\n  \"spielerRechtsId\": 1,\n  \"toreLinks\": 5,\n  \"toreRechts\": 0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/PingPong/spiel",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "PingPong",
+                "spiel"
+              ]
+            },
+            "description": "Sicherer Negativtest. Die API lehnt die Anfrage vor jedem Datenbank-Schreibvorgang ab, weil beide Spieler-IDs gleich sind."
+          },
+          "response": []
+        },
+        {
+          "name": "Ungültiges Spiel: kein Spieler bei 5 Punkten",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400 erwartet', function () { pm.response.to.have.status(400); });",
+                  "pm.test('Keine erfolgreiche Speicherung', function () { pm.expect(pm.response.code).to.not.eql(200); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"spielerLinksId\": 1,\n  \"spielerRechtsId\": 2,\n  \"toreLinks\": 4,\n  \"toreRechts\": 3\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/PingPong/spiel",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "PingPong",
+                "spiel"
+              ]
+            },
+            "description": "Sicherer Negativtest. Die Anfrage wird wegen eines ungültigen Ergebnisses vor einem Datenbank-Schreibvorgang abgelehnt."
+          },
+          "response": []
+        }
+      ],
+      "description": "Enthält nur Read-only oder garantiert vor dem Schreibvorgang abgewiesene PingPong-Tests."
+    },
+    {
+      "name": "04 - Manuell und absichtlich schreibend",
+      "item": [
+        {
+          "name": "Spiel erfolgreich speichern",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const allowWrite = pm.collectionVariables.get('allow_pingpong_write') === 'true';",
+                  "if (!allowWrite) {",
+                  "    if (pm.execution && typeof pm.execution.skipRequest === 'function') {",
+                  "        pm.execution.skipRequest();",
+                  "    } else {",
+                  "        throw new Error('Sicherheitsstopp: allow_pingpong_write ist nicht true.');",
+                  "    }",
+                  "} else {",
+                  "    const links = Number(pm.collectionVariables.get('pingpong_spieler_links_id'));",
+                  "    const rechts = Number(pm.collectionVariables.get('pingpong_spieler_rechts_id'));",
+                  "    const toreLinks = Number(pm.collectionVariables.get('pingpong_tore_links'));",
+                  "    const toreRechts = Number(pm.collectionVariables.get('pingpong_tore_rechts'));",
+                  "    if (!Number.isInteger(links) || links <= 0 || !Number.isInteger(rechts) || rechts <= 0 || links === rechts) {",
+                  "        throw new Error('Sicherheitsstopp: Zwei unterschiedliche gültige Benutzer-IDs sind erforderlich.');",
+                  "    }",
+                  "    const scoreValid = [toreLinks, toreRechts].every((x) => Number.isInteger(x) && x >= 0 && x <= 5) && toreLinks !== toreRechts && (toreLinks === 5 || toreRechts === 5);",
+                  "    if (!scoreValid) {",
+                  "        throw new Error('Sicherheitsstopp: Ergebnis muss mit genau einem Spieler bei 5 Punkten enden.');",
+                  "    }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "if (pm.response.code === 200) { const data = pm.response.json();",
+                  "pm.test('Spiel-ID und Gewinner vorhanden', function () { pm.expect(data.id).to.be.a('number').and.above(0); pm.expect(data.gewinnerId).to.be.a('number').and.above(0); }); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"spielerLinksId\": {{pingpong_spieler_links_id}},\n  \"spielerRechtsId\": {{pingpong_spieler_rechts_id}},\n  \"toreLinks\": {{pingpong_tore_links}},\n  \"toreRechts\": {{pingpong_tore_rechts}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/PingPong/spiel",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "PingPong",
+                "spiel"
+              ]
+            },
+            "description": "Achtung: Dieser Request verändert echte Benutzerstatistiken und legt einen PingPongSpiel-Datensatz an. Die aktuelle API besitzt dafür keinen Delete-Endpunkt. Standardmässig wird der Request übersprungen. Zum bewussten Ausführen allow_pingpong_write=true setzen und zwei echte Benutzer-IDs eintragen."
+          },
+          "response": []
+        }
+      ],
+      "description": "Nicht Teil des sicheren automatischen Testlaufs. Enthält Aktionen, die nicht automatisch rückgängig gemacht werden können."
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://localhost:63635/"
+    },
+    {
+      "key": "test_run_active",
+      "value": "false"
+    },
+    {
+      "key": "allow_pingpong_write",
+      "value": "false"
+    },
+    {
+      "key": "pingpong_spieler_links_id",
+      "value": ""
+    },
+    {
+      "key": "pingpong_spieler_rechts_id",
+      "value": ""
+    },
+    {
+      "key": "pingpong_tore_links",
+      "value": "5"
+    },
+    {
+      "key": "pingpong_tore_rechts",
+      "value": "0"
+    }
+  ]
+}

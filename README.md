@@ -15,6 +15,7 @@ Zusätzlich enthält das Projekt ein eigenes Login- und Registrierungssystem mit
 - [PingPong](#pingpong)
 - [Bestenliste](#bestenliste)
 - [REST API](#rest-api)
+- [REST API mit Postman testen](#rest-api-mit-postman-testen)
 - [Verwaltete Daten](#verwaltete-daten)
 - [Datenbank und Entity Framework Core](#datenbank-und-entity-framework-core)
 - [Architektur und Service-Schicht](#architektur-und-service-schicht)
@@ -347,6 +348,90 @@ Beim Speichern werden:
 - Bestenlistenpunkte aktualisiert
 - erzielte Tore aktualisiert
 - kassierte Tore aktualisiert
+
+## REST API mit Postman testen
+
+Für einen vollständigen Test der REST API befindet sich im Hauptordner des Projekts eine vorbereitete Postman Collection:
+
+```text
+Postman/SchulAppRESTAPI.postman_collection.json
+```
+
+Die Collection ist dafür vorgesehen, als **gesamte Collection über den Postman Collection Runner** ausgeführt zu werden. Die enthaltenen Skripte prüfen automatisch, ob die Requests wie erwartet ausgeführt wurden.
+
+### Voraussetzungen
+
+Vor dem Test müssen folgende Voraussetzungen erfüllt sein:
+
+1. Microsoft SQL Server läuft.
+2. Die Datenbank `SchulAppDB` ist eingerichtet und erreichbar.
+3. Die REST API läuft.
+
+Am einfachsten wird die Anwendung wie gewohnt im Hauptordner gestartet:
+
+```powershell
+.\start.ps1
+```
+
+Dadurch wird zuerst `schulAppREST` gestartet. Die Postman Collection verwendet standardmässig folgende API-Adresse:
+
+```text
+https://localhost:63635/
+```
+
+### Collection in Postman importieren
+
+1. Postman öffnen.
+2. **Import** auswählen.
+3. Die Datei `Postman/SchulAppRESTAPI.postman_collection.json` auswählen.
+4. Die importierte Collection **SchulApp REST API - Sicher und vollständig** öffnen.
+
+Die benötigten Collection-Variablen sind bereits in der Collection hinterlegt.
+
+### Vollständigen API-Test ausführen
+
+Die Requests sollten nicht einzeln in einer beliebigen Reihenfolge ausgeführt werden. Für den vollständigen Test wird die gesamte Collection über den Collection Runner gestartet:
+
+1. Die Collection **SchulApp REST API - Sicher und vollständig** öffnen.
+2. **Run collection** auswählen.
+3. Alle Ordner und Requests aktiviert lassen.
+4. Die Requests in der vorhandenen Reihenfolge ausführen.
+5. Den Lauf starten.
+6. Nach dem Lauf die Test Results im Collection Runner prüfen.
+
+Die Collection führt den Test in einer festgelegten Reihenfolge aus. Zuerst wird geprüft, ob die API erreichbar ist. Danach werden eigene Testdatensätze erstellt, gelesen, aktualisiert und erneut geprüft. Anschliessend werden diese Testdatensätze wieder gelöscht.
+
+Die Testdaten verwenden eigene Kennzeichnungen und gespeicherte Test-IDs. Dadurch arbeiten die CRUD-Tests nicht mit fest eingetragenen IDs bestehender Schuldaten.
+
+Beim Aufräumen werden die Testdatensätze in einer Reihenfolge gelöscht, welche die vorhandenen Datenbankabhängigkeiten berücksichtigt.
+
+### Automatische Prüfungen
+
+Die Collection enthält Postman-Skripte, welche unter anderem prüfen:
+
+- ob die erwarteten HTTP-Statuscodes zurückgegeben werden
+- ob Antworten gültige JSON-Daten enthalten
+- ob neu erstellte Datensätze eine gültige ID erhalten
+- ob die angelegten Testdaten wieder geladen werden können
+- ob Änderungen durch `PUT` tatsächlich übernommen wurden
+- ob die Testdatensätze am Ende wieder aufgeräumt wurden
+- ob ungültige PingPong-Ergebnisse von der API abgelehnt werden
+
+Ein erfolgreicher Collection-Run sollte deshalb nicht nur erfolgreiche HTTP-Requests zeigen, sondern auch erfolgreiche Tests im Collection Runner.
+
+### Schutz wichtiger Daten
+
+Der normale vollständige Collection-Run ist so aufgebaut, dass für die CRUD-Tests eigene Testdaten angelegt und danach wieder entfernt werden.
+
+Der Request **Spiel erfolgreich speichern** ist absichtlich zusätzlich geschützt. Ein erfolgreich gespeichertes PingPong-Spiel würde echte Benutzerstatistiken verändern und einen dauerhaften Spiel-Datensatz erstellen. Standardmässig steht deshalb:
+
+```text
+allow_pingpong_write=false
+```
+
+Bei diesem Wert wird der dauerhafte PingPong-Schreibrequest beim Collection-Run automatisch übersprungen.
+
+Für den normalen REST-API-Test soll diese Einstellung auf `false` bleiben.
 
 ## Verwaltete Daten
 
@@ -733,6 +818,9 @@ Eine vereinfachte Struktur sieht folgendermassen aus:
 Schulapp
 │
 ├── start.ps1
+│
+├── Postman
+│   └── SchulAppRESTAPI.postman_collection.json
 │
 ├── SchulApp
 │   ├── Data
