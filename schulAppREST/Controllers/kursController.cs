@@ -17,7 +17,7 @@ namespace schulAppREST.Controllers
             _context = context;
         }
 
-        //GetStudents
+        //GetKurs
         [HttpGet]
         public async Task<IActionResult> GetKurs()
         {
@@ -26,7 +26,7 @@ namespace schulAppREST.Controllers
             return Ok(kurs);
         }
 
-        //GetStudentsWithID
+        //GetKurssWithID
         [HttpGet("{id}")]
         public async Task<IActionResult> GetKursById(int id)
         {
@@ -40,7 +40,7 @@ namespace schulAppREST.Controllers
             return Ok(kurs);
         }
 
-        // AddStudent
+        // AddKurs
         [HttpPost]
         public async Task<IActionResult> AddKurs([FromBody] KursModel kurs)
         {
@@ -50,10 +50,10 @@ namespace schulAppREST.Controllers
 
             return Ok(kurs);
         }
-        // UpdateStudent
-        // UpdateStudent
+        // UpdateKurs
+        // UpdateKurs
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateStudent(
+        public async Task<IActionResult> UpdateKurs(
             int id,
             [FromBody] KursModel kurs)
         {
@@ -75,9 +75,9 @@ namespace schulAppREST.Controllers
             return Ok(kurs1);
         }
 
-        //DeleteStudent
+        //DeleteKurs
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DelStudent(int id)
+        public async Task<IActionResult> DelKurs(int id)
         {
             var kurs = await _context.Kurs.FindAsync(id);
 

@@ -17,7 +17,7 @@ namespace schulAppREST.Controllers
             _context = context;
         }
 
-        //GetStudents
+        //GetStundenplan
         [HttpGet]
         public async Task<IActionResult> GetStundenplan()
         {
@@ -26,7 +26,7 @@ namespace schulAppREST.Controllers
             return Ok(stundenplan);
         }
 
-        //GetStudentsWithID
+        //GetStundenplansWithID
         [HttpGet("{id}")]
         public async Task<IActionResult> GetStundenplanById(int id)
         {
@@ -40,7 +40,7 @@ namespace schulAppREST.Controllers
             return Ok(stundenplan);
         }
 
-        // AddStudent
+        // AddStundenplan
         [HttpPost]
         public async Task<IActionResult> AddStundenplan([FromBody] StundenplanModel stundenplan)
         {
@@ -50,10 +50,10 @@ namespace schulAppREST.Controllers
 
             return Ok(stundenplan);
         }
-        // UpdateStudent
-        // UpdateStudent
+        // UpdateStundenplan
+        // UpdateStundenplan
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateStudent(
+        public async Task<IActionResult> UpdateStundenplan(
             int id,
             [FromBody] StundenplanModel stundenplan)
         {
@@ -75,9 +75,9 @@ namespace schulAppREST.Controllers
             return Ok(stundenplan1);
         }
 
-        //DeleteStudent
+        //DeleteStundenplan
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DelStudent(int id)
+        public async Task<IActionResult> DelStundenplan(int id)
         {
             var stundenplan = await _context.Stundenplan.FindAsync(id);
 
