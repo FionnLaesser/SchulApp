@@ -32,7 +32,7 @@ namespace SchulApp
             InitializeComponent();
 
             ThemeManager.Anwenden(this);
-
+            Minimizing += PingPong_Minimizing;
             panelLinks.BackColor = Color.Black;
             panelRechts.BackColor = Color.Black;
             panelTop.BackColor = Color.Black;
@@ -47,6 +47,36 @@ namespace SchulApp
 
             PunkteAnzeigen();
             SpielfeldZuruecksetzen(1);
+        }
+
+        private void PingPong_Minimizing(object? sender, EventArgs e)
+        {
+            if (!spielLaeuft)
+            {
+                return;
+            }
+
+            gameTimer.Stop();
+
+            hochGedruecktLinks = false;
+            runterGedruecktLinks = false;
+            hochGedruecktRechts = false;
+            runterGedruecktRechts = false;
+
+            pausePanel.Visible = true;
+            pausePanel.BringToFront();
+        }
+
+        private void fortsetzenBtn_Click(object sender, EventArgs e)
+        {
+            if (!spielLaeuft)
+            {
+                return;
+            }
+
+            pausePanel.Visible = false;
+            gameTimer.Start();
+            Focus();
         }
 
         private async void PingPong_Shown(object sender, EventArgs e)
@@ -120,7 +150,7 @@ namespace SchulApp
                 );
             }
         }
-        
+
 
         private void gegnerComboBox_SelectedIndexChanged(
             object sender,
@@ -169,6 +199,7 @@ namespace SchulApp
             PunkteAnzeigen();
 
             spielEndePanel.Visible = false;
+            pausePanel.Visible = false;
             gegnerComboBox.Enabled = false;
             spielStartBtn.Enabled = false;
 
@@ -343,6 +374,7 @@ namespace SchulApp
 
             spielLaeuft = false;
             gameTimer.Stop();
+            pausePanel.Visible = false;
 
             string gewinner = punkteLinks > punkteRechts
                 ? spielerLinksName
@@ -398,7 +430,7 @@ namespace SchulApp
 
         private void PingPong_KeyDown(object? sender, KeyEventArgs e)
         {
-            if (!spielLaeuft)
+            if (!spielLaeuft || pausePanel.Visible)
             {
                 return;
             }

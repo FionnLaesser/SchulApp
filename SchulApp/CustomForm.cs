@@ -5,6 +5,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using System.Threading.Tasks;
+using System.Security.Cryptography.X509Certificates;
 
 namespace SchulApp
 {
@@ -34,7 +35,8 @@ namespace SchulApp
         private Button btnClose = null!;
 
         private bool layoutAngepasst;
-
+        //Event for Pause PingPong
+        public event EventHandler? Minimizing;
         protected CustomForm()
         {
             FormBorderStyle = FormBorderStyle.None;
@@ -73,9 +75,9 @@ namespace SchulApp
             {
                 Environment.Exit(0); // beendet die ganze App (z.B bei register funktioniert normal nicht)
             };
-
             btnMinimize.Click += async (_, _) =>
             {
+                Minimizing?.Invoke(this, EventArgs.Empty);
                 await MinimizeMitAnimation();
             };
 
