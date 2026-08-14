@@ -334,7 +334,7 @@ Prüfe:
 
 Das Klartext-Passwort kann nicht aus dem gespeicherten BCrypt-Hash zurückgelesen werden.
 
-## 15. Empfohlene Startreihenfolge
+## 14. Empfohlene Startreihenfolge
 
 Für die lokale Entwicklung ist diese Reihenfolge am einfachsten:
 

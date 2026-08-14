@@ -115,7 +115,7 @@ namespace SchulApp
                 statusLabel.Text = "REST API nicht erreichbar.";
 
                 MessageBox.Show(
-                    "Die Benutzer konnten nicht über die REST API geladen werden. Bitte prüfe, ob schulAppREST gestartet ist.",
+                    "Die Benutzer konnten nicht über die REST API geladen werden. Bitte prüfe, ob schulAppREST gestartet ist.(Im schulAppREST Ordner: dotnet run)",
                     "Ping Pong",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error
