@@ -1,6 +1,7 @@
-Set-Location $PSScriptRoot
+$startPfad = Get-Location
 
-Start-Process powershell -ArgumentList `
+Set-Location $PSScriptRoot
+$apiProcess = Start-Process powershell -PassThru -ArgumentList `
     "-NoExit", `
     "-Command", "Set-Location '$PSScriptRoot\schulAppREST'; dotnet run"
 
@@ -26,4 +27,15 @@ Write-Host "REST API ist bereit."
 
 Set-Location "$PSScriptRoot\SchulApp"
 
-dotnet run --project SchulApp.csproj
+try {
+    dotnet run --project SchulApp.csproj
+}
+finally {
+    if (!$apiProcess.HasExited) {
+        taskkill /PID $apiProcess.Id /T /F | Out-Null
+    }
+    Set-Location $startPfad
+
+    Write-Host "REST API wurde beendet."
+    Write-Host "Zuruek zu: $startPfad"
+}
