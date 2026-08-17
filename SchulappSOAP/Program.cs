@@ -2,6 +2,7 @@ using CoreWCF;
 using CoreWCF.Configuration;
 using CoreWCF.Description;
 using Microsoft.EntityFrameworkCore;
+using Prometheus;
 using SchulAppSOAP.Contracts;
 using SchulAppSOAP.Data;
 using SchulAppSOAP.Services;
@@ -22,10 +23,22 @@ builder.Services.AddDbContext<SchulAppContext>(options =>
 builder.Services.AddScoped<SchuelerService>();
 
 builder.Services
-    .AddServiceModelServices() //aktiviert CoreWCF Servicefunktionen
-    .AddServiceModelMetadata(); //aktiviert Metadaten wie die *WSDL *WSDL (Web Services Description Language) is an XML-based file that tells computer programs how to connect to and use a SOAP web service
+    .AddServiceModelServices() // aktiviert CoreWCF Servicefunktionen
+    .AddServiceModelMetadata(); // aktiviert Metadaten wie WSDL
 
 var app = builder.Build();
+
+app.UseRouting();
+
+// Requests, Antwortzeiten und HTTP-Statuscodes für Prometheus erfassen.
+// Der /metrics-Endpunkt selbst wird ausgeschlossen, damit die Scrapes die Request-Zahlen nicht verfälschen.
+app.UseWhen(
+    context => !context.Request.Path.StartsWithSegments("/metrics"),
+    branch => branch.UseHttpMetrics(options =>
+    {
+        options.ReduceStatusCodeCardinality();
+    })
+);
 
 app.UseServiceModel(serviceBuilder =>
 {
@@ -44,5 +57,7 @@ var metadata = app.Services
     .GetRequiredService<ServiceMetadataBehavior>();
 
 metadata.HttpGetEnabled = true;
+
+app.MapMetrics();
 
 app.Run();
