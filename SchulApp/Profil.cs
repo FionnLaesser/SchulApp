@@ -531,8 +531,8 @@ namespace SchulApp
             passwortWiederholenText.Enabled = !busy;
 
             Cursor = busy
-                ? Cursors.WaitCursor
-                : Cursors.Default;
+                ? Cursors.WaitCursor //If 
+                : Cursors.Default; //else
         }
 
         private static bool IstGueltigeEmail(string email)
