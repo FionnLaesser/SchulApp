@@ -12,6 +12,25 @@ namespace SchulApp.Tests;
 public class GlobalExceptionMiddlewareTests
 {
     [Fact]
+    public async Task NoException_PassesThroughWithoutChangingResponse()
+    {
+        var middleware = new RestGlobalExceptionMiddleware(
+            async context =>
+            {
+                context.Response.StatusCode = StatusCodes.Status204NoContent;
+                await Task.CompletedTask;
+            },
+            NullLogger<RestGlobalExceptionMiddleware>.Instance
+        );
+
+        var context = new DefaultHttpContext();
+
+        await middleware.InvokeAsync(context);
+
+        Assert.Equal(StatusCodes.Status204NoContent, context.Response.StatusCode);
+    }
+
+    [Fact]
     public async Task UnknownException_Returns500WithoutInternalDetails()
     {
         var result = await ExecuteAsync(
