@@ -193,7 +193,7 @@ IF OBJECT_ID(N'dbo.Einstellung', N'U') IS NULL
 BEGIN
     CREATE TABLE dbo.Einstellung
     (
-        Id INT IDENTITY(1,1) NOT NULL,
+        Id INT NOT NULL,
         HintergrundFarbe INT NOT NULL,
         TextFarbe INT NOT NULL,
         BallSpeed INT NOT NULL
@@ -205,23 +205,47 @@ BEGIN
         CONSTRAINT CK_Einstellung_BallSpeed
             CHECK (BallSpeed BETWEEN 1 AND 20)
     );
+END;
+GO
 
-    -- Erstellt die Standard-Einstellung. Bei einer neuen Tabelle erhält sie Id 1.
-    INSERT INTO dbo.Einstellung
+IF OBJECT_ID(N'dbo.AuditLog', N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.AuditLog
     (
-        HintergrundFarbe,
-        TextFarbe,
-        BallSpeed
-    )
-    VALUES
-    (
-        -1250856,
-        -16777216,
-        6
+        Id INT IDENTITY(1,1) NOT NULL
+            CONSTRAINT PK_AuditLog PRIMARY KEY,
+
+        TimestampUtc DATETIME2 NOT NULL,
+
+        UserName NVARCHAR(100) NOT NULL,
+
+        UserRole NVARCHAR(50) NULL,
+
+        Action NVARCHAR(10) NOT NULL,
+
+        EntityType NVARCHAR(128) NOT NULL,
+
+        EntityId NVARCHAR(200) NULL,
+
+        Changes NVARCHAR(MAX) NULL,
+
+        Source NVARCHAR(50) NOT NULL
     );
 END;
 GO
 
+IF NOT EXISTS
+(
+    SELECT 1
+    FROM sys.indexes
+    WHERE object_id = OBJECT_ID(N'dbo.AuditLog')
+      AND name = N'IX_AuditLog_TimestampUtc'
+)
+BEGIN
+    CREATE INDEX IX_AuditLog_TimestampUtc
+        ON dbo.AuditLog(TimestampUtc DESC);
+END;
+GO
 -- ============================================================================
 -- 3. BENUTZER UND PROFIL
 -- ============================================================================
