@@ -16,7 +16,7 @@ builder.Services.AddDbContext<SchulAppContext>(options =>
 
 // Controller
 builder.Services.AddControllers();
-
+builder.Services.AddHttpClient();
 // Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
