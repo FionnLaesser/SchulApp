@@ -1,12 +1,14 @@
 using Microsoft.EntityFrameworkCore;
 using SchulApp.Data;
 using SchulApp.Services;
+using ServiceReference1;
 
 namespace SchulApp
 {
     public partial class Schueler : CustomForm
     {
         private readonly SchuelerService schuelerService;
+        private readonly SchuelerServiceClient soapClient;
         private readonly bool nurHinzufuegen;
         private int? ausgewaehlteSchuelerId;
 
@@ -16,27 +18,32 @@ namespace SchulApp
 
             InitializeComponent();
 
-            // Das Repository verwendet jetzt intern Entity Framework
+            // Lokaler Service bleibt vorerst für Erstellen und Bearbeiten bestehen.
+            // Sobald diese Operationen auch im SOAP-Contract vorhanden sind,
+            // können sie ebenfalls über soapClient aufgerufen werden.
             schuelerService = new SchuelerService(
                 new SqlSchuelerRepository()
             );
+
+            // SOAP-Client aus der Connected Service Reference.
+            soapClient = new SchuelerServiceClient();
 
             ThemeManager.Anwenden(this);
             RechteAnwenden();
 
             KlassenLaden();
-            SchuelerListeAktualisieren();
+
+            // Ein Konstruktor kann nicht direkt await verwenden.
+            // Deshalb laden wir die Schüler beim Anzeigen der Form asynchron.
+            Shown += async (_, _) => await SchuelerListeAktualisierenAsync();
         }
 
         private void KlassenLaden()
         {
             try
             {
-                // Erstellt den Entity-Framework-Datenbankkontext
                 using SchulAppContext context = new SchulAppContext();
 
-                // Lädt alle Klassen aus der Datenbank.
-                // Entity Framework erstellt SELECT und ORDER BY automatisch.
                 var klassen = context.Klassen
                     .AsNoTracking()
                     .OrderBy(k => k.KlassenId)
@@ -49,18 +56,12 @@ namespace SchulApp
 
                 newStudentKlasse.DisplayMember = "Bezeichnung";
                 newStudentKlasse.ValueMember = "KlassenId";
-
-                // Eigene Liste für die ComboBox
                 newStudentKlasse.DataSource = klassen.ToList();
 
                 editKlasse.DisplayMember = "Bezeichnung";
                 editKlasse.ValueMember = "KlassenId";
-
-                // Eigene Liste für die zweite ComboBox
                 editKlasse.DataSource = klassen.ToList();
 
-                // Schüler können nur erstellt oder bearbeitet werden,
-                // wenn mindestens eine Klasse vorhanden ist
                 bool vorhanden = klassen.Count > 0;
 
                 OKnewStudent.Enabled = vorhanden;
@@ -75,27 +76,25 @@ namespace SchulApp
             }
         }
 
-        private void SchuelerListeAktualisieren()
+        private async Task SchuelerListeAktualisierenAsync()
         {
             try
             {
-                // Der Service lädt die Schüler über das EF-Repository.
-                // Die Klasse wird hier in einen String umgewandelt,
-                // damit im DataGridView die Klassenbezeichnung angezeigt wird.
-                var schueler = schuelerService
-                    .AlleLaden()
+                // Schüler werden jetzt über SOAP geladen.
+                var schueler = await soapClient.GetSchuelerAsync();
+
+                var anzeige = schueler
                     .OrderBy(s => s.SchuelerId)
                     .Select(s => new
                     {
                         s.SchuelerId,
                         s.Name,
                         s.KlasseId,
-
-                        Klasse = s.Klasse?.Bezeichnung ?? ""
+                        Klasse = ""
                     })
                     .ToList();
 
-                studentGrid.DataSource = schueler;
+                studentGrid.DataSource = anzeige;
 
                 if (studentGrid.Columns.Contains("KlasseId"))
                 {
@@ -125,13 +124,13 @@ namespace SchulApp
             catch (Exception ex)
             {
                 MessageBox.Show(
-                    "Die Schüler konnten nicht geladen werden.\n\n" +
+                    "Die Schüler konnten nicht über SOAP geladen werden.\n\n" +
                     ex.Message
                 );
             }
         }
 
-        private void OKnewStudent_Click(
+        private async void OKnewStudent_Click(
             object sender,
             EventArgs e)
         {
@@ -146,8 +145,7 @@ namespace SchulApp
 
             try
             {
-                // Der Service erstellt den Schüler.
-                // Das Repository verwendet dafür Entity Framework.
+                // Noch lokal, bis AddSchueler im SOAP-Service vorhanden ist.
                 schuelerService.Erstellen(
                     newStudentName.Text,
                     Convert.ToInt32(
@@ -157,7 +155,7 @@ namespace SchulApp
 
                 newStudentName.Text = "";
 
-                SchuelerListeAktualisieren();
+                await SchuelerListeAktualisierenAsync();
 
                 MessageBox.Show(
                     "Schüler wurde gespeichert."
@@ -169,7 +167,6 @@ namespace SchulApp
             }
             catch (DbUpdateException ex)
             {
-                // Fehler beim Speichern mit Entity Framework
                 MessageBox.Show(
                     "Der Schüler konnte nicht gespeichert werden.\n\n" +
                     ex.Message
@@ -184,12 +181,12 @@ namespace SchulApp
             }
         }
 
-        private void showStudents_Click(
+        private async void showStudents_Click(
             object sender,
             EventArgs e)
         {
             KlassenLaden();
-            SchuelerListeAktualisieren();
+            await SchuelerListeAktualisierenAsync();
         }
 
         private void studentGrid_SelectionChanged(
@@ -231,7 +228,7 @@ namespace SchulApp
             editKlasse.SelectedValue = klasseId;
         }
 
-        private void OKchangeName_Click(
+        private async void OKchangeName_Click(
             object sender,
             EventArgs e)
         {
@@ -260,8 +257,7 @@ namespace SchulApp
 
             try
             {
-                // Der Service bearbeitet den Schüler.
-                // Das Repository verwendet Find() und SaveChanges().
+                // Noch lokal, bis UpdateSchueler im SOAP-Service vorhanden ist.
                 bool bearbeitet =
                     schuelerService.Bearbeiten(
                         ausgewaehlteSchuelerId.Value,
@@ -277,12 +273,12 @@ namespace SchulApp
                         "Der Schüler wurde nicht gefunden."
                     );
 
-                    SchuelerListeAktualisieren();
+                    await SchuelerListeAktualisierenAsync();
 
                     return;
                 }
 
-                SchuelerListeAktualisieren();
+                await SchuelerListeAktualisierenAsync();
 
                 MessageBox.Show(
                     "Schüler wurde bearbeitet."
@@ -294,7 +290,6 @@ namespace SchulApp
             }
             catch (DbUpdateException ex)
             {
-                // Fehler beim UPDATE über Entity Framework
                 MessageBox.Show(
                     "Der Schüler konnte nicht bearbeitet werden.\n\n" +
                     ex.Message
@@ -309,7 +304,7 @@ namespace SchulApp
             }
         }
 
-        private void OKdeleteBtn_Click(
+        private async void OKdeleteBtn_Click(
             object sender,
             EventArgs e)
         {
@@ -342,10 +337,9 @@ namespace SchulApp
 
             try
             {
-                // Der Service löscht den Schüler.
-                // Das Repository verwendet Remove() und SaveChanges().
+                // Löschen läuft jetzt über SOAP.
                 bool geloescht =
-                    schuelerService.Loeschen(
+                    await soapClient.DeleteSchuelerAsync(
                         ausgewaehlteSchuelerId.Value
                     );
 
@@ -362,25 +356,16 @@ namespace SchulApp
                     );
                 }
 
-                SchuelerListeAktualisieren();
-            }
-            catch (DbUpdateException ex)
-            {
-                // Fehler beim DELETE über Entity Framework
-                MessageBox.Show(
-                    "Der Schüler konnte nicht gelöscht werden.\n\n" +
-                    ex.Message
-                );
+                await SchuelerListeAktualisierenAsync();
             }
             catch (Exception ex)
             {
                 MessageBox.Show(
-                    "Der Schüler konnte nicht gelöscht werden.\n\n" +
+                    "Der Schüler konnte nicht über SOAP gelöscht werden.\n\n" +
                     ex.Message
                 );
             }
         }
-
 
         private void RechteAnwenden()
         {

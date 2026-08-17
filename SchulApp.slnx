@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="SchulApp.Tests/SchulApp.Tests.csproj" />
+  <Project Path="SchulApp/SchulApp.csproj" />
+  <Project Path="schulAppREST/schulAppREST.csproj" />
+  <Project Path="SchulappSOAP/SchulappSOAP.csproj" />
+</Solution>
