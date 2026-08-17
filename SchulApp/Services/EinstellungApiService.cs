@@ -8,9 +8,11 @@ namespace SchulApp.Services
         private const int MinBallSpeed = 1;
         private const int MaxBallSpeed = 20;
 
-        private static readonly HttpClient httpClient = HttpClientErstellen();
+        private static readonly HttpClient httpClient =
+            HttpClientErstellen();
 
-        public async Task<int> BallSpeedLadenAsync(int benutzerId)
+        public async Task<int> BallSpeedLadenAsync(
+            int benutzerId)
         {
             using HttpResponseMessage response =
                 await httpClient.GetAsync(
@@ -20,7 +22,8 @@ namespace SchulApp.Services
             response.EnsureSuccessStatusCode();
 
             BallSpeedAntwort? antwort =
-                await response.Content.ReadFromJsonAsync<BallSpeedAntwort>();
+                await response.Content
+                    .ReadFromJsonAsync<BallSpeedAntwort>();
 
             return Math.Clamp(
                 antwort?.BallSpeed ?? StandardBallSpeed,
@@ -35,22 +38,33 @@ namespace SchulApp.Services
             int hintergrundFarbe,
             int textFarbe)
         {
-            BallSpeedAnfrage anfrage = new BallSpeedAnfrage
-            {
-                BallSpeed = Math.Clamp(
-                    ballSpeed,
-                    MinBallSpeed,
-                    MaxBallSpeed
-                ),
-                HintergrundFarbe = hintergrundFarbe,
-                TextFarbe = textFarbe
-            };
+            BallSpeedAnfrage anfrage =
+                new BallSpeedAnfrage
+                {
+                    BallSpeed = Math.Clamp(
+                        ballSpeed,
+                        MinBallSpeed,
+                        MaxBallSpeed
+                    ),
+                    HintergrundFarbe =
+                        hintergrundFarbe,
+                    TextFarbe =
+                        textFarbe
+                };
+
+            using HttpRequestMessage request =
+                new HttpRequestMessage(
+                    HttpMethod.Put,
+                    $"api/Einstellung/{benutzerId}/ball-speed"
+                )
+                {
+                    Content = JsonContent.Create(anfrage)
+                };
+
+            ApiAuditHeaders.Anwenden(request);
 
             using HttpResponseMessage response =
-                await httpClient.PutAsJsonAsync(
-                    $"api/Einstellung/{benutzerId}/ball-speed",
-                    anfrage
-                );
+                await httpClient.SendAsync(request);
 
             response.EnsureSuccessStatusCode();
         }
@@ -62,9 +76,10 @@ namespace SchulApp.Services
                     "SCHULAPP_API_BASE_URL"
                 );
 
-            string baseUrl = string.IsNullOrWhiteSpace(konfigurierteUrl)
-                ? "https://localhost:63635/"
-                : konfigurierteUrl.Trim();
+            string baseUrl =
+                string.IsNullOrWhiteSpace(konfigurierteUrl)
+                    ? "https://localhost:63635/"
+                    : konfigurierteUrl.Trim();
 
             if (!baseUrl.EndsWith('/'))
             {

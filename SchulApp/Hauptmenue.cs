@@ -55,6 +55,7 @@ namespace SchulApp
             lehrerPage.Visible = false;
             klassenPage.Visible = false;
             kursePage.Visible = false;
+            auditLogPage.Visible = false;
 
             if (IstLehrer)
             {
@@ -117,19 +118,35 @@ namespace SchulApp
 
         private void stundenplanPage_Click(object sender, EventArgs e)
         {
-            OeffneBereich(new Stundenplan(darfBearbeiten: IstAdmin || IstLehrer));
+            OeffneBereich(
+                new Stundenplan(
+                    darfBearbeiten: IstAdmin || IstLehrer
+                )
+            );
+        }
+
+        private void auditLogPage_Click(object sender, EventArgs e)
+        {
+            if (!IstAdmin)
+            {
+                return;
+            }
+
+            OeffneBereich(new AuditLog());
         }
 
         private void hauptbildLaden()
         {
-            hauptbild.Image = Image.FromFile("images/Hauptbild.png");
+            hauptbild.Image =
+                Image.FromFile("images/Hauptbild.png");
         }
 
         private async Task ProfilButtonBildLadenAsync()
         {
             try
             {
-                await using SchulAppContext db = new SchulAppContext();
+                await using SchulAppContext db =
+                    new SchulAppContext();
 
                 byte[]? profilbild = await db.Benutzer
                     .AsNoTracking()
@@ -137,17 +154,24 @@ namespace SchulApp
                     .Select(x => x.Profilbild)
                     .SingleOrDefaultAsync();
 
-                if (profilbild == null || profilbild.Length == 0)
+                if (profilbild == null ||
+                    profilbild.Length == 0)
                 {
                     StandardProfilButtonBildLaden();
                     return;
                 }
 
-                using MemoryStream stream = new MemoryStream(profilbild);
-                using Image original = Image.FromStream(stream);
+                using MemoryStream stream =
+                    new MemoryStream(profilbild);
+
+                using Image original =
+                    Image.FromStream(stream);
 
                 SetProfilButtonBild(
-                    new Bitmap(original, new Size(34, 34))
+                    new Bitmap(
+                        original,
+                        new Size(34, 34)
+                    )
                 );
             }
             catch (Exception)
@@ -171,10 +195,14 @@ namespace SchulApp
                 return;
             }
 
-            using Image original = Image.FromFile(pfad);
+            using Image original =
+                Image.FromFile(pfad);
 
             SetProfilButtonBild(
-                new Bitmap(original, new Size(30, 30))
+                new Bitmap(
+                    original,
+                    new Size(30, 30)
+                )
             );
         }
 
@@ -183,8 +211,12 @@ namespace SchulApp
             Image? altesBild = profileBtn.Image;
 
             profileBtn.Image = neuesBild;
-            profileBtn.ImageAlign = ContentAlignment.MiddleCenter;
-            profileBtn.Text = neuesBild == null ? "Profil" : string.Empty;
+            profileBtn.ImageAlign =
+                ContentAlignment.MiddleCenter;
+            profileBtn.Text =
+                neuesBild == null
+                    ? "Profil"
+                    : string.Empty;
 
             altesBild?.Dispose();
         }
@@ -211,7 +243,9 @@ namespace SchulApp
             OeffneBereich(new PingPong());
         }
 
-        private void bestenlistePage_Click(object sender, EventArgs e)
+        private void bestenlistePage_Click(
+            object sender,
+            EventArgs e)
         {
             OeffneBereich(new Bestenliste());
         }
