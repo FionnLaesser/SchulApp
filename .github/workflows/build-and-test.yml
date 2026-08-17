@@ -1,0 +1,32 @@
+name: Build and Test
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    name: Build and test .NET solution
+    runs-on: windows-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore SchulApp.slnx
+
+      - name: Build solution
+        run: dotnet build SchulApp.slnx --configuration Release --no-restore
+
+      - name: Run tests
+        run: dotnet test SchulApp.Tests/SchulApp.Tests.csproj --configuration Release --no-build --verbosity normal
