@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Prometheus;
 using SchulApp.Data;
+using SchulAppREST.Exceptions;
 using SchulAppREST.Monitoring;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -40,6 +41,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseRouting();
+
+// Unerwartete API-Fehler zentral behandeln und als einheitliche JSON-Antwort zurückgeben.
+app.UseMiddleware<GlobalExceptionMiddleware>();
 
 // /metrics muss über HTTP erreichbar bleiben, damit Prometheus aus Docker scrapen kann.
 app.UseWhen(
