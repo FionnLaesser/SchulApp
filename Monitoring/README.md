@@ -1,12 +1,14 @@
 # SchulApp Monitoring
 
-Das Monitoring besteht aus Prometheus und Grafana und wird mit Docker Compose gestartet.
+Das Monitoring besteht aus Prometheus und Grafana und wird mit Docker Compose gestartet. Es überwacht die REST API, die SOAP API und den SQL-Datenbankstatus.
 
 ## Voraussetzungen
 
 - Docker Desktop ist installiert und gestartet.
-- REST API, SOAP API und SQL Server laufen lokal wie bisher.
-- Die Dateien aus diesem ZIP werden in die entsprechenden Projektordner kopiert.
+- Docker Compose ist verfügbar.
+- .NET 10 SDK und SQL Server 2022 sind installiert.
+- Die Datenbank `SchulAppDB` ist eingerichtet.
+- REST API und SOAP API werden beim normalen Start automatisch durch `start.ps1` gestartet.
 
 ## Start
 
@@ -22,7 +24,8 @@ Das Skript startet automatisch:
 2. Grafana in Docker
 3. REST API
 4. SOAP API
-5. SchulApp
+5. Prüfung der REST- und SOAP-Metrik-Endpunkte
+6. SchulApp
 
 Beim Beenden der SchulApp werden REST API, SOAP API, Prometheus und Grafana beendet. Die Docker-Volumes werden nicht geloescht, deshalb bleibt die Monitoring-Historie erhalten.
 
@@ -32,6 +35,8 @@ Beim Beenden der SchulApp werden REST API, SOAP API, Prometheus und Grafana been
 - Prometheus: http://localhost:9090
 - REST Metriken: http://localhost:63636/metrics
 - SOAP Metriken: http://localhost:5210/metrics
+- Health Check: https://localhost:63635/health
+- Swagger: https://localhost:63635/swagger
 
 Grafana Login:
 
@@ -39,6 +44,8 @@ Grafana Login:
 - Passwort: `schulapp`
 
 Das Dashboard wird automatisch im Grafana-Ordner `SchulApp` geladen.
+
+Prometheus fragt die REST- und SOAP-Metriken alle **5 Sekunden** ab.
 
 ## Was wird angezeigt?
 
@@ -54,6 +61,26 @@ Das Dashboard wird automatisch im Grafana-Ordner `SchulApp` geladen.
 - Fehler als Verlauf
 
 Prometheus speichert die Metriken bis zu 30 Tage in einem Docker-Volume.
+
+## Health Check und Monitoring
+
+Der Health Check und Prometheus erfüllen unterschiedliche Aufgaben.
+
+Der Health Check:
+
+```text
+https://localhost:63635/health
+```
+
+prüft bei einem Request den aktuellen Status von:
+
+- REST API
+- SQL-Datenbank
+- SOAP API
+
+Er antwortet mit HTTP `200`, wenn alle Komponenten gesund sind, oder HTTP `503`, wenn mindestens Datenbank oder SOAP API nicht erreichbar sind.
+
+Prometheus sammelt dagegen fortlaufend Metriken wie Request-Anzahl, Statuscodes und Antwortzeiten. Der Datenbankstatus wird von der REST API zusätzlich als Prometheus-Metrik erfasst.
 
 ## Warum wurden die HTTP-Bindings angepasst?
 

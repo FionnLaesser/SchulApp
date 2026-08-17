@@ -4,7 +4,7 @@ SchulApp ist eine Schulverwaltungsanwendung mit **C#**, **.NET 10** und **Window
 
 Die Anwendung verwaltet zentrale Schuldaten wie **Schüler, Lehrer, Klassen, Kurse und Stundenpläne**. Die Daten werden in einer lokalen **Microsoft SQL Server 2022** Datenbank gespeichert und über **Entity Framework Core** verarbeitet.
 
-Zusätzlich enthält das Projekt ein eigenes Login- und Registrierungssystem mit Rollen und Berechtigungen, benutzerspezifische Design-Einstellungen, Profilbilder, eine REST API, eine SOAP API mit CoreWCF sowie ein integriertes PingPong-Spiel mit Bestenliste.
+Zusätzlich enthält das Projekt ein eigenes Login- und Registrierungssystem mit Rollen und Berechtigungen, benutzerspezifische Design-Einstellungen inklusive PingPong-Ballgeschwindigkeit, Profilbilder, eine REST API mit Swagger und Health Check, eine SOAP API mit CoreWCF, automatisierte xUnit-Tests, GitHub Actions sowie Prometheus- und Grafana-Monitoring.
 
 ## Inhaltsverzeichnis
 
@@ -15,7 +15,9 @@ Zusätzlich enthält das Projekt ein eigenes Login- und Registrierungssystem mit
 - [PingPong](#pingpong)
 - [Bestenliste](#bestenliste)
 - [REST API](#rest-api)
+- [Health Check](#health-check)
 - [SOAP API](#soap-api)
+- [Monitoring](#monitoring)
 - [REST API mit Postman testen](#rest-api-mit-postman-testen)
 - [Verwaltete Daten](#verwaltete-daten)
 - [Datenbank und Entity Framework Core](#datenbank-und-entity-framework-core)
@@ -28,6 +30,7 @@ Zusätzlich enthält das Projekt ein eigenes Login- und Registrierungssystem mit
 - [Projektstruktur](#projektstruktur)
 - [Setup](#setup)
 - [Unit-Tests](#unit-tests)
+- [GitHub Actions](#github-actions)
 - [Definition of Done](#definition-of-done)
 
 ## Funktionen
@@ -69,42 +72,72 @@ Zu den wichtigsten Funktionen der Anwendung gehören:
 - Schülerdaten über eine SOAP API laden
 - Schüler über die SOAP API löschen
 - SOAP-Funktionen über eine WSDL beschreiben und als WCF Web Service Reference in der WinForms-App verwenden
+- REST API über Swagger dokumentieren und testen
+- Gesundheitsstatus von REST API, SOAP API und Datenbank über `/health` prüfen
+- REST- und SOAP-Metriken über `/metrics` für Prometheus bereitstellen
+- Prometheus und Grafana automatisch über Docker Compose starten
+- REST API, SOAP API und Datenbankstatus in einem Grafana-Dashboard überwachen
+- PingPong-Ballgeschwindigkeit zwischen 1 und 20 speichern
+- Schüler-Service, REST-Controller und SOAP-Service mit xUnit testen
+- Build und Tests bei Pushes und Pull Requests automatisch mit GitHub Actions ausführen
 
 ## Programmstart
 
-Für den normalen Start müssen **SQL Server** und die Datenbank `SchulAppDB` verfügbar sein.
+Für den normalen Start müssen folgende Komponenten verfügbar sein:
 
-Beim ersten Einrichten des Projekts muss nur dieses eine SQL-Skript ausgeführt werden:
+- Microsoft SQL Server 2022 mit der Datenbank `SchulAppDB`
+- .NET 10 SDK
+- Docker Desktop mit Docker Compose
+
+Beim ersten Einrichten des Projekts muss nur dieses SQL-Skript ausgeführt werden:
 
 ```text
 SchulApp/SQL/SchulAppDB.sql
 ```
 
-Das Skript richtet die benötigte Datenbankstruktur inklusive der PingPong- und Bestenlisten-Daten ein.
+Das Skript richtet die benötigte Datenbankstruktur inklusive Benutzer, Profil, PingPong, Bestenliste und Ballgeschwindigkeit ein.
 
-Danach wird die komplette Anwendung aus dem **Hauptordner `Schulapp`** mit einem einzigen Befehl gestartet:
+Danach wird die komplette Anwendung aus dem Hauptordner `SchulApp` mit einem einzigen Befehl gestartet:
 
 ```powershell
 .\start.ps1
 ```
 
-`start.ps1` startet die **schulAppREST** API und die **SchulappSOAP** API, wartet bis beide Dienste erreichbar sind und startet danach die **WinForms-Anwendung**.
+`start.ps1` führt den aktuellen Startablauf automatisch aus:
 
-Der Startvorgang der WinForms-Anwendung läuft vereinfacht so ab:
+1. Docker und Docker Compose werden geprüft.
+2. Prometheus und Grafana werden über `Monitoring/docker-compose.yml` gestartet.
+3. Das Skript wartet auf Prometheus und Grafana.
+4. `schulAppREST` und `SchulappSOAP` werden gestartet.
+5. Das Skript wartet auf REST API und SOAP-WSDL.
+6. Die REST- und SOAP-`/metrics`-Endpunkte werden geprüft.
+7. Danach wird die WinForms-Anwendung `SchulApp` gestartet.
+8. Der LoadingScreen prüft die SQL-Datenbankverbindung.
+9. Nach erfolgreicher Prüfung wird das Login geöffnet.
 
-1. Die Anwendung wird initialisiert.
-2. Eine vorhandene lokale `.env` Datei kann eingelesen werden.
-3. Der LoadingScreen wird angezeigt.
-4. Die Verbindung zur SQL-Datenbank wird geprüft.
-5. Bei erfolgreicher Datenbankverbindung wird das Login geöffnet.
-6. Nach erfolgreichem Login wird die eigentliche Anwendung geöffnet.
-7. Die zum angemeldeten Benutzer gehörenden Design-Einstellungen werden geladen.
-8. Die Berechtigungen werden anhand der Benutzerrolle angewendet.
-9. Das App-Icon wird zentral auf die geöffneten Forms angewendet.
+Beim Beenden der WinForms-Anwendung beendet das Skript REST API, SOAP API, Prometheus und Grafana. Die Docker-Volumes bleiben bestehen, damit die Monitoring-Historie erhalten bleibt.
 
-Kann keine Verbindung zur Datenbank hergestellt werden, wird eine Fehlermeldung angezeigt und der normale Startvorgang beendet.
+Wichtige lokale URLs:
 
-Für PingPong und die Bestenliste muss die REST API laufen. Beim Start über `.\start.ps1` wird sie automatisch gestartet.
+| Dienst | URL |
+|---|---|
+| REST API Swagger | `https://localhost:63635/swagger` |
+| REST API HTTP | `http://localhost:63636` |
+| Health Check | `https://localhost:63635/health` |
+| REST Metriken | `http://localhost:63636/metrics` |
+| SOAP Service | `http://localhost:5210/SchuelerService.svc` |
+| SOAP WSDL | `http://localhost:5210/SchuelerService.svc?wsdl` |
+| SOAP Metriken | `http://localhost:5210/metrics` |
+| Prometheus | `http://localhost:9090` |
+| Grafana | `http://localhost:3000` |
+
+Grafana verwendet lokal standardmässig:
+
+```text
+Benutzer: admin
+Passwort: schulapp
+```
+
 ## Login und Registrierung
 
 Die Anwendung verfügt über ein eigenes Login mit Benutzername und Passwort.
@@ -254,6 +287,23 @@ Nach jedem normalen Punkt werden Ball und Schläger wieder auf ihre Startpositio
 
 Der aktuelle Punktestand wird über `punkteZahlLabel` angezeigt.
 
+### Ballgeschwindigkeit
+
+Die Ballgeschwindigkeit kann in den **Einstellungen** konfiguriert werden.
+
+- gültiger Bereich: `1` bis `20`
+- Standardwert: `6`
+- derselbe Wert wird für X- und Y-Geschwindigkeit verwendet
+- die Einstellung wird über die REST API geladen und gespeichert
+- falls die REST API beim Laden nicht erreichbar ist, verwendet PingPong den Standardwert `6`
+
+Verwendete REST-Endpunkte:
+
+```http
+GET /api/Einstellung/{id}/ball-speed
+PUT /api/Einstellung/{id}/ball-speed
+```
+
 ### Spielende
 
 Sobald ein Spieler 5 Punkte erreicht:
@@ -308,6 +358,25 @@ Die Bestenliste wird nicht lokal in der WinForms-Anwendung gespeichert.
 
 Zum Projekt gehört die bestehende **schulAppREST** ASP.NET Core REST API.
 
+Sie läuft lokal mit zwei Bindings:
+
+```text
+HTTPS: https://localhost:63635
+HTTP:  http://localhost:63636
+```
+
+Der HTTP-Endpunkt bleibt insbesondere für Prometheus verfügbar. Normale Requests werden auf HTTPS umgeleitet, während `/metrics` absichtlich über HTTP erreichbar bleibt.
+
+### Swagger
+
+Im Development-Modus stellt die REST API eine Swagger-Oberfläche bereit:
+
+```text
+https://localhost:63635/swagger
+```
+
+Beim direkten Start des REST-Projekts ist `launchBrowser` aktiviert und öffnet automatisch die Swagger-Seite.
+
 Die PingPong-Funktionen verwenden `PingPongApiService` in der WinForms-Anwendung, um mit dieser API zu kommunizieren.
 
 ### PingPong-Endpunkte
@@ -353,6 +422,38 @@ Beim Speichern werden:
 - erzielte Tore aktualisiert
 - kassierte Tore aktualisiert
 
+
+## Health Check
+
+Die REST API enthält einen eigenen Health-Check-Endpunkt:
+
+```http
+GET /health
+```
+
+Lokal ist er über folgende Adresse erreichbar:
+
+```text
+https://localhost:63635/health
+```
+
+Der Health Check prüft:
+
+- ob die REST API selbst läuft
+- ob `SchulAppDB` über Entity Framework Core erreichbar ist
+- ob die SOAP-WSDL unter der konfigurierten `SoapApi:HealthUrl` erreichbar ist
+
+Die SOAP-Adresse wird in `schulAppREST/appsettings.json` konfiguriert:
+
+```json
+{
+  "SoapApi": {
+    "HealthUrl": "http://localhost:5210/SchuelerService.svc?wsdl"
+  }
+}
+```
+
+Wenn alle Komponenten erreichbar sind, antwortet der Endpunkt mit HTTP `200` und `Healthy`. Wenn Datenbank oder SOAP API nicht erreichbar sind, liefert er HTTP `503` und `Unhealthy`. Die JSON-Antwort enthält zusätzlich einen UTC-Zeitstempel und den Status der einzelnen Komponenten.
 
 ## SOAP API
 
@@ -449,6 +550,38 @@ Entity Framework Core
     v
 SQL Server / SchulAppDB
 ```
+
+## Monitoring
+
+SchulApp enthält ein lokales Monitoring mit **Prometheus** und **Grafana**.
+
+Die Konfiguration liegt unter:
+
+```text
+Monitoring/
+```
+
+`start.ps1` startet das Monitoring automatisch über Docker Compose. Prometheus liest alle 5 Sekunden Metriken von:
+
+```text
+REST: http://host.docker.internal:63636/metrics
+SOAP: http://host.docker.internal:5210/metrics
+```
+
+Das automatisch provisionierte Grafana-Dashboard zeigt unter anderem:
+
+- Erreichbarkeit der REST API
+- Erreichbarkeit der SOAP API
+- Erreichbarkeit der Datenbank
+- Anzahl REST- und SOAP-Requests
+- HTTP-Fehler
+- durchschnittliche Antwortzeiten
+- Requests pro Minute
+- zeitliche Verläufe für Antwortzeiten und Fehler
+
+Prometheus speichert die Metriken bis zu 30 Tage im Docker-Volume. Grafana und Prometheus verwenden persistente Docker-Volumes.
+
+Weitere Details stehen in [`Monitoring/README.md`](Monitoring/README.md).
 
 ## REST API mit Postman testen
 
@@ -618,9 +751,10 @@ Abgeschlossene PingPong-Spiele werden zusätzlich gespeichert mit:
 
 Für jeden Benutzer können eigene Design-Einstellungen gespeichert werden:
 
-- Benutzer-ID
+- Einstellungs-ID
 - Hintergrundfarbe
 - Textfarbe
+- PingPong-Ballgeschwindigkeit (`1` bis `20`, Standard `6`)
 
 ## Entity-Relationship-Diagramm
 
@@ -685,9 +819,10 @@ erDiagram
     }
 
     EINSTELLUNG {
-        int Id PK, FK
+        int Id PK
         int HintergrundFarbe
         int TextFarbe
+        int BallSpeed
     }
 
     PINGPONGSPIEL {
@@ -708,7 +843,7 @@ erDiagram
     KURS ||--o{ STUNDENPLAN : "kommt vor in"
     LEHRER ||--o{ STUNDENPLAN : "unterrichtet"
     KLASSE ||--o{ STUNDENPLAN : "hat"
-    BENUTZER ||--o| EINSTELLUNG : "hat Einstellungen"
+    BENUTZER ||--o| EINSTELLUNG : "verwendet Einstellung"
     BENUTZER ||--o{ PINGPONGSPIEL : "spielt"
     BENUTZER ||--o{ PINGPONGSPIEL : "gewinnt"
 ```
@@ -794,6 +929,14 @@ Der Service:
 
 Die WinForms-Anwendung speichert die PingPong-Bestenlistenwerte dadurch nicht selbst direkt in SQL.
 
+### EinstellungApiService
+
+`EinstellungApiService` kommuniziert mit der REST API, um die PingPong-Ballgeschwindigkeit zu laden und zu speichern. PingPong verwendet den gespeicherten Wert beim Start des Spiels.
+
+### Monitoring
+
+Die REST API verwendet `prometheus-net.AspNetCore` für HTTP-Metriken. Ein `DatabaseMetricsService` erfasst zusätzlich den Datenbankstatus. REST und SOAP stellen jeweils einen `/metrics`-Endpunkt bereit, der von Prometheus abgefragt wird.
+
 ## Theme-Management
 
 Das Projekt enthält einen zentralen `ThemeManager`.
@@ -808,7 +951,15 @@ Dieser verwaltet:
 - Aktualisieren bereits geöffneter Forms
 - Zurücksetzen auf Standardfarben
 
-Die Theme-Einstellungen werden pro Benutzer in der SQL-Datenbank gespeichert.
+Zusätzlich kann in der Form **Einstellungen** die PingPong-Ballgeschwindigkeit gespeichert werden. Sie wird über `EinstellungApiService` und die REST API verwaltet.
+
+Für die Ballgeschwindigkeit gelten:
+
+```text
+Minimum: 1
+Standard: 6
+Maximum: 20
+```
 
 Hintergrundfarbe und Textfarbe dürfen nicht identisch sein.
 
@@ -906,6 +1057,13 @@ Für die Entwicklung werden unter anderem folgende Technologien verwendet:
 - DotNetEnv
 - HttpClient
 - xUnit
+- Microsoft.EntityFrameworkCore.InMemory
+- Swagger / Swashbuckle
+- prometheus-net.AspNetCore
+- Prometheus
+- Grafana
+- Docker Compose
+- GitHub Actions
 - Git
 - GitHub
 
@@ -923,42 +1081,51 @@ Microsoft.Data.SqlClient
 DotNetEnv
 BCrypt.Net-Next
 xunit
+Microsoft.EntityFrameworkCore.InMemory
+prometheus-net.AspNetCore
+Swashbuckle.AspNetCore
 ```
 
 ## Projektstruktur
 
-Eine vereinfachte Struktur sieht folgendermassen aus:
+Eine vereinfachte aktuelle Struktur sieht folgendermassen aus:
 
 ```text
-Schulapp
+SchulApp
 │
-├── start.ps1
+├── .github
+│   └── workflows
+│       └── build-and-test.yml
+│
+├── Monitoring
+│   ├── README.md
+│   ├── docker-compose.yml
+│   ├── prometheus
+│   │   └── prometheus.yml
+│   └── grafana
+│       ├── dashboards
+│       └── provisioning
 │
 ├── Postman
 │   └── SchulAppRESTAPI.postman_collection.json
 │
+├── SchulApp.Tests
+│   ├── README.md
+│   ├── FakeSchuelerRepository.cs
+│   ├── SchuelerServiceTests.cs
+│   ├── RestSchuelerControllerTests.cs
+│   ├── SoapSchuelerServiceTests.cs
+│   └── SchulApp.Tests.csproj
+│
 ├── SchulApp
 │   ├── Data
 │   ├── Models
-│   │   └── BestenlisteEintragModel.cs
 │   ├── Repositories
 │   ├── Services
-│   │   └── PingPongApiService.cs
 │   ├── images
-│   ├── Screenshots
 │   ├── SQL
-│   │   ├── SchulAppDB.sql
-│   ├── Login.cs
-│   ├── Register.cs
-│   ├── LoadingScreen.cs
-│   ├── Hauptmenue.cs
-│   ├── Schueler.cs
-│   ├── Lehrer.cs
-│   ├── Klassen.cs
-│   ├── Kurse.cs
-│   ├── Stundenplan.cs
+│   │   └── SchulAppDB.sql
 │   ├── Einstellungen.cs
-│   ├── Profil.cs
 │   ├── PingPong.cs
 │   ├── Bestenliste.cs
 │   ├── ThemeManager.cs
@@ -966,58 +1133,113 @@ Schulapp
 │
 ├── schulAppREST
 │   ├── Controllers
-│   │   └── PingPongController.cs
+│   │   ├── HealthController.cs
+│   │   ├── einstellungController.cs
+│   │   ├── pingPongController.cs
+│   │   └── schuelerController.cs
+│   ├── Monitoring
+│   │   └── DatabaseMetricsService.cs
 │   ├── Data
-│   │   └── SchulAppContext.cs
 │   ├── Models
-│   │   └── PingPongSpiel.cs
+│   ├── appsettings.json
 │   └── Program.cs
 │
-└── SchulappSOAP
-    ├── Contracts
-    │   └── ISchuelerService.cs
-    ├── Data
-    │   └── SchulAppContext.cs
-    ├── Models
-    │   └── SchuelerModel.cs
-    ├── Services
-    │   └── SchuelerService.cs
-    ├── Properties
-    │   └── launchSettings.json
-    ├── appsettings.json
-    └── Program.cs
+├── SchulappSOAP
+│   ├── Contracts
+│   │   └── ISchuelerService.cs
+│   ├── Data
+│   ├── Models
+│   ├── Services
+│   │   └── SchuelerService.cs
+│   └── Program.cs
+│
+├── SchulApp.slnx
+└── start.ps1
 ```
+
+`SchulApp.slnx` enthält aktuell alle vier .NET-Projekte: WinForms, REST API, SOAP API und `SchulApp.Tests`.
 
 ## Setup
 
-Für den normalen lokalen Start sind nur wenige Schritte nötig:
+Für den normalen lokalen Start:
 
 1. Microsoft SQL Server starten.
-2. Beim ersten Einrichten einmal `SchulApp/SQL/SchulAppDB.sql` ausführen.
-3. Im Hauptordner `Schulapp` PowerShell öffnen.
-4. Die Anwendung starten:
+2. Docker Desktop starten.
+3. Beim ersten Einrichten einmal `SchulApp/SQL/SchulAppDB.sql` ausführen.
+4. Im Hauptordner `SchulApp` PowerShell öffnen.
+5. Die Anwendung starten:
 
 ```powershell
 .\start.ps1
 ```
 
-Das Startskript startet die REST API und die SOAP API, wartet auf beide Dienste und startet danach automatisch die WinForms-Anwendung. Ein separates `dotnet run` für `schulAppREST`, `SchulappSOAP` oder `SchulApp` ist im normalen Ablauf nicht nötig.
+Das Startskript startet Prometheus und Grafana, wartet auf beide Monitoring-Dienste, startet REST API und SOAP API, prüft deren Erreichbarkeit und `/metrics`-Endpunkte und startet danach automatisch die WinForms-Anwendung.
+
+Ein separates `dotnet run` für `schulAppREST`, `SchulappSOAP` oder `SchulApp` ist im normalen Ablauf nicht nötig.
 
 Für PingPong müssen mindestens zwei Benutzerkonten vorhanden sein.
 
-Die vollständige Anleitung befindet sich in [SETUP.md](SETUP.md).
+Die vollständige Anleitung befindet sich in [SETUP.md](SETUP.md). Details zum Monitoring stehen in [Monitoring/README.md](Monitoring/README.md), Details zu den Tests in [SchulApp.Tests/README.md](SchulApp.Tests/README.md).
+
 ## Unit-Tests
 
-Für Teile der Service-Schicht werden Unit-Tests mit **xUnit** verwendet.
+Das Projekt enthält ein eigenes xUnit-Projekt unter:
 
-Für die Schüler-Service-Schicht kann eine Fake-Repository-Implementierung verwendet werden, damit die Geschäftslogik unabhängig von einer echten Datenbank getestet werden kann.
+```text
+SchulApp.Tests/
+```
 
-Die Tests prüfen unter anderem:
+Aktuell sind **16 Tests** vorhanden:
 
-- Erstellen von Daten
-- Bearbeiten von Daten
-- Löschen von Daten
-- Validierungen der Service-Schicht
+- 3 Tests für die lokale `SchuelerService`-Schicht mit `FakeSchuelerRepository`
+- 8 Tests für den REST-`SchuelerController`
+- 5 Tests für den SOAP-`SchuelerService`
+
+Die REST- und SOAP-Tests verwenden `Microsoft.EntityFrameworkCore.InMemory`. Dadurch greifen sie nicht auf die produktive SQL-Server-Datenbank zu.
+
+Getestet werden unter anderem:
+
+- Schüler erstellen
+- Schüler bearbeiten
+- Schüler löschen
+- alle Schüler laden
+- Schüler nach ID laden
+- Verhalten bei nicht vorhandenen IDs
+- REST-Statuscodes wie `200` und `404`
+- SOAP-Rückgabewerte bei vorhandenen und fehlenden Schülern
+
+Alle Tests können aus dem Repository-Root gestartet werden:
+
+```powershell
+dotnet test
+```
+
+Oder nur das Testprojekt:
+
+```powershell
+dotnet test .\SchulApp.Tests\SchulApp.Tests.csproj
+```
+
+Weitere Details stehen in [`SchulApp.Tests/README.md`](SchulApp.Tests/README.md).
+
+## GitHub Actions
+
+Unter `.github/workflows/build-and-test.yml` befindet sich eine CI-Pipeline.
+
+Sie läuft automatisch bei:
+
+- jedem `push`
+- jedem `pull_request`
+
+Der Workflow verwendet `windows-latest` und .NET 10 und führt nacheinander aus:
+
+```text
+dotnet restore SchulApp.slnx
+dotnet build SchulApp.slnx --configuration Release --no-restore
+dotnet test SchulApp.Tests/SchulApp.Tests.csproj --configuration Release --no-build --verbosity normal
+```
+
+Damit werden bei Änderungen die komplette Solution gebaut und die automatisierten Tests ausgeführt. Der Job hat aktuell ein Timeout von 15 Minuten.
 
 ## Definition of Done
 
@@ -1045,3 +1267,10 @@ Das Projekt gilt als funktionsfähig, wenn unter anderem:
 - erzielte und kassierte Tore aktualisiert werden
 - die Bestenliste korrekt sortiert wird
 - Unit-Tests erfolgreich durchlaufen
+- der Health Check REST API, SOAP API und Datenbankstatus ausgibt
+- REST und SOAP ihre Prometheus-Metriken unter `/metrics` bereitstellen
+- Prometheus und Grafana über `start.ps1` gestartet werden
+- das Grafana-Dashboard REST, SOAP und Datenbank überwacht
+- die PingPong-Ballgeschwindigkeit zwischen 1 und 20 konfigurierbar ist
+- Swagger unter `https://localhost:63635/swagger` erreichbar ist
+- GitHub Actions bei Pushes und Pull Requests Build und Tests ausführt
