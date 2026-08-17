@@ -1,4 +1,4 @@
-name: Build and Test
+name: Build, Test and Coverage
 
 on:
   push:
@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   build-and-test:
-    name: Build and test .NET solution
+    name: Build, test and generate coverage
     runs-on: windows-latest
     timeout-minutes: 15
 
@@ -28,5 +28,49 @@ jobs:
       - name: Build solution
         run: dotnet build SchulApp.slnx --configuration Release --no-restore
 
-      - name: Run tests
-        run: dotnet test SchulApp.Tests/SchulApp.Tests.csproj --configuration Release --no-build --verbosity normal
+      - name: Run tests with code coverage
+        run: dotnet test SchulApp.Tests/SchulApp.Tests.csproj --configuration Release --no-build --verbosity normal --collect:"XPlat Code Coverage" --results-directory TestResults
+
+      - name: Install ReportGenerator
+        run: dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.5.10
+
+      - name: Generate coverage report
+        run: reportgenerator "-reports:TestResults/**/coverage.cobertura.xml" "-targetdir:coverage-report" "-reporttypes:Html"
+
+      - name: Add coverage summary
+        shell: pwsh
+        run: |
+          $coverageFile = Get-ChildItem -Path "TestResults" -Filter "coverage.cobertura.xml" -Recurse | Select-Object -First 1
+
+          if (-not $coverageFile) {
+              throw "No coverage.cobertura.xml file was generated."
+          }
+
+          [xml]$coverage = Get-Content $coverageFile.FullName
+
+          $lineRate = [double]::Parse(
+              $coverage.coverage.'line-rate',
+              [System.Globalization.CultureInfo]::InvariantCulture
+          )
+
+          $lineCoverage = [math]::Round($lineRate * 100, 2)
+
+          Write-Host "Line coverage: $lineCoverage%"
+
+          @"
+          ## Code Coverage
+
+          **Line coverage: $lineCoverage%**
+
+          Download the `code-coverage-report` artifact and open `index.html` to view the detailed report.
+          "@ | Add-Content -Path $env:GITHUB_STEP_SUMMARY
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: code-coverage-report
+          path: |
+            coverage-report
+            TestResults/**/coverage.cobertura.xml
+          if-no-files-found: error
+          retention-days: 14
