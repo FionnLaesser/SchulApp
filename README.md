@@ -4,7 +4,7 @@ SchulApp ist eine Schulverwaltungsanwendung mit **C#**, **.NET 10** und **Window
 
 Die Anwendung verwaltet zentrale Schuldaten wie **Schüler, Lehrer, Klassen, Kurse und Stundenpläne**. Die Daten werden in einer lokalen **Microsoft SQL Server 2022** Datenbank gespeichert und über **Entity Framework Core** verarbeitet.
 
-Zusätzlich enthält das Projekt ein eigenes Login- und Registrierungssystem mit Rollen und Berechtigungen, benutzerspezifische Design-Einstellungen, Profilbilder, eine REST API sowie ein integriertes PingPong-Spiel mit Bestenliste.
+Zusätzlich enthält das Projekt ein eigenes Login- und Registrierungssystem mit Rollen und Berechtigungen, benutzerspezifische Design-Einstellungen, Profilbilder, eine REST API, eine SOAP API mit CoreWCF sowie ein integriertes PingPong-Spiel mit Bestenliste.
 
 ## Inhaltsverzeichnis
 
@@ -15,6 +15,7 @@ Zusätzlich enthält das Projekt ein eigenes Login- und Registrierungssystem mit
 - [PingPong](#pingpong)
 - [Bestenliste](#bestenliste)
 - [REST API](#rest-api)
+- [SOAP API](#soap-api)
 - [REST API mit Postman testen](#rest-api-mit-postman-testen)
 - [Verwaltete Daten](#verwaltete-daten)
 - [Datenbank und Entity Framework Core](#datenbank-und-entity-framework-core)
@@ -65,6 +66,9 @@ Zu den wichtigsten Funktionen der Anwendung gehören:
 - Laufende PingPong-Spiele über `Q` oder beim Minimieren pausieren
 - Spielergebnisse über die REST API speichern
 - Eine REST-basierte Bestenliste anzeigen
+- Schülerdaten über eine SOAP API laden
+- Schüler über die SOAP API löschen
+- SOAP-Funktionen über eine WSDL beschreiben und als WCF Web Service Reference in der WinForms-App verwenden
 
 ## Programmstart
 
@@ -84,7 +88,7 @@ Danach wird die komplette Anwendung aus dem **Hauptordner `Schulapp`** mit einem
 .\start.ps1
 ```
 
-`start.ps1` startet zuerst die **schulAppREST** API, wartet bis sie erreichbar ist und startet danach die **WinForms-Anwendung**.
+`start.ps1` startet die **schulAppREST** API und die **SchulappSOAP** API, wartet bis beide Dienste erreichbar sind und startet danach die **WinForms-Anwendung**.
 
 Der Startvorgang der WinForms-Anwendung läuft vereinfacht so ab:
 
@@ -348,6 +352,103 @@ Beim Speichern werden:
 - Bestenlistenpunkte aktualisiert
 - erzielte Tore aktualisiert
 - kassierte Tore aktualisiert
+
+
+## SOAP API
+
+Zusätzlich zur REST API enthält das Projekt die **SchulappSOAP** API. Sie basiert auf **CoreWCF** und stellt SOAP-Dienste für die WinForms-Anwendung bereit.
+
+Die SOAP API verwendet wie die restliche Anwendung die lokale Datenbank `SchulAppDB` und greift über **Entity Framework Core** auf die Schülerdaten zu.
+
+### SOAP-Endpunkt
+
+Der aktuelle lokale SOAP-Endpunkt lautet:
+
+```text
+http://localhost:5210/SchuelerService.svc
+```
+
+Die zugehörige WSDL ist erreichbar unter:
+
+```text
+http://localhost:5210/SchuelerService.svc?wsdl
+```
+
+WSDL steht für **Web Services Description Language**. Die WSDL beschreibt den SOAP-Service, seine Operationen, Parameter und Rückgabewerte in XML.
+
+### Schüler-Service
+
+Der SOAP-Vertrag wird über `ISchuelerService` definiert.
+
+Aktuell stehen folgende Operationen zur Verfügung:
+
+```text
+GetSchueler
+GetSchuelerById
+DeleteSchueler
+```
+
+`[ServiceContract]` markiert das Interface als SOAP-Servicevertrag. `[OperationContract]` legt fest, welche Methoden über SOAP aufgerufen werden können.
+
+Der Service wird in CoreWCF mit `BasicHttpBinding` veröffentlicht:
+
+```csharp
+app.UseServiceModel(serviceBuilder =>
+{
+    serviceBuilder
+        .AddService<SchuelerService>()
+        .AddServiceEndpoint<SchuelerService, ISchuelerService>(
+            new BasicHttpBinding(),
+            "/SchuelerService.svc"
+        );
+});
+```
+
+Die WSDL-Metadaten werden mit `AddServiceModelMetadata()` und `ServiceMetadataBehavior` aktiviert.
+
+### Verwendung in der WinForms-Anwendung
+
+Die WinForms-Anwendung verwendet eine **WCF Web Service Reference**, die aus der WSDL generiert wird.
+
+Dadurch kann der SOAP-Service wie ein normaler C#-Client verwendet werden:
+
+```csharp
+var schueler = await soapClient.GetSchuelerAsync();
+```
+
+Aktueller Stand der Schülerverwaltung:
+
+| Funktion | Zugriff |
+|---|---|
+| Schüler laden | SOAP |
+| Schüler nach ID abrufen | SOAP-Service vorhanden |
+| Schüler löschen | SOAP |
+| Schüler erstellen | lokaler Service / Entity Framework |
+| Schüler bearbeiten | lokaler Service / Entity Framework |
+| Klassen laden | Entity Framework |
+
+Die SOAP-Integration ist damit bereits aktiv, aber die Schülerverwaltung ist noch nicht vollständig auf SOAP umgestellt.
+
+Der vereinfachte Datenfluss beim Laden von Schülern ist:
+
+```text
+SchulApp WinForms
+    |
+    v
+WCF SOAP Client
+    |
+    v
+SchulappSOAP
+    |
+    v
+SchuelerService
+    |
+    v
+Entity Framework Core
+    |
+    v
+SQL Server / SchulAppDB
+```
 
 ## REST API mit Postman testen
 
@@ -673,6 +774,14 @@ Für die Schülerverwaltung ist der Datenzugriff zusätzlich über Repository un
 
 Die Service-Schicht enthält unter anderem Geschäftslogik und Validierungen.
 
+### SOAP-Schüler-Service
+
+Für die Schülerverwaltung besteht zusätzlich eine SOAP-Schicht.
+
+`ISchuelerService` definiert den SOAP-Vertrag. `SchuelerService` implementiert die Operationen und greift über einen eigenen `SchulAppContext` auf SQL Server zu.
+
+Die WinForms-Anwendung verwendet eine aus der WSDL generierte WCF Web Service Reference. Schüler werden dadurch über SOAP geladen und gelöscht, statt diese beiden Operationen direkt aus der Form gegen die Datenbank auszuführen.
+
 ### PingPongApiService
 
 `PingPongApiService` übernimmt die Kommunikation der WinForms-Anwendung mit der REST API.
@@ -786,6 +895,9 @@ Für die Entwicklung werden unter anderem folgende Technologien verwendet:
 - .NET 10
 - Windows Forms
 - ASP.NET Core Web API
+- SOAP
+- CoreWCF
+- WCF Web Service Reference
 - Visual Studio 2026
 - Microsoft SQL Server 2022
 - Entity Framework Core
@@ -804,6 +916,9 @@ Unter anderem werden folgende Pakete beziehungsweise Bibliotheken verwendet:
 ```text
 Microsoft.EntityFrameworkCore
 Microsoft.EntityFrameworkCore.SqlServer
+CoreWCF.Http
+System.ServiceModel.Primitives
+System.ServiceModel.Http
 Microsoft.Data.SqlClient
 DotNetEnv
 BCrypt.Net-Next
@@ -849,13 +964,27 @@ Schulapp
 │   ├── ThemeManager.cs
 │   └── Program.cs
 │
-└── schulAppREST
-    ├── Controllers
-    │   └── PingPongController.cs
+├── schulAppREST
+│   ├── Controllers
+│   │   └── PingPongController.cs
+│   ├── Data
+│   │   └── SchulAppContext.cs
+│   ├── Models
+│   │   └── PingPongSpiel.cs
+│   └── Program.cs
+│
+└── SchulappSOAP
+    ├── Contracts
+    │   └── ISchuelerService.cs
     ├── Data
     │   └── SchulAppContext.cs
     ├── Models
-    │   └── PingPongSpiel.cs
+    │   └── SchuelerModel.cs
+    ├── Services
+    │   └── SchuelerService.cs
+    ├── Properties
+    │   └── launchSettings.json
+    ├── appsettings.json
     └── Program.cs
 ```
 
@@ -872,7 +1001,7 @@ Für den normalen lokalen Start sind nur wenige Schritte nötig:
 .\start.ps1
 ```
 
-Das Startskript startet die REST API und danach automatisch die WinForms-Anwendung. Ein separates `dotnet run` für `schulAppREST` oder `SchulApp` ist im normalen Ablauf nicht nötig.
+Das Startskript startet die REST API und die SOAP API, wartet auf beide Dienste und startet danach automatisch die WinForms-Anwendung. Ein separates `dotnet run` für `schulAppREST`, `SchulappSOAP` oder `SchulApp` ist im normalen Ablauf nicht nötig.
 
 Für PingPong müssen mindestens zwei Benutzerkonten vorhanden sein.
 
@@ -905,6 +1034,9 @@ Das Projekt gilt als funktionsfähig, wenn unter anderem:
 - Theme-Einstellungen pro Benutzer gespeichert und geladen werden
 - Profilbilder verwendet werden können
 - die REST API gestartet werden kann
+- die SOAP API gestartet werden kann
+- die SOAP-WSDL unter `http://localhost:5210/SchuelerService.svc?wsdl` erreichbar ist
+- Schüler über SOAP geladen und gelöscht werden können
 - die Bestenliste über die REST API geladen werden kann
 - mindestens zwei Benutzer für PingPong ausgewählt werden können
 - PingPong bis 5 Punkte gespielt werden kann

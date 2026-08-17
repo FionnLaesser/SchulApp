@@ -1,6 +1,6 @@
 # Setup
 
-Diese Anleitung beschreibt die lokale Einrichtung und den Start der aktuellen **SchulApp** mit **WinForms**, **SQL Server**, **schulAppREST**, **PingPong** und **Bestenliste**.
+Diese Anleitung beschreibt die lokale Einrichtung und den Start der aktuellen **SchulApp** mit **WinForms**, **SQL Server**, **schulAppREST**, **SchulappSOAP**, **PingPong** und **Bestenliste**.
 
 ## 1. Voraussetzungen
 
@@ -38,15 +38,20 @@ Schulapp
 │   └── SQL
 │       └── SchulAppDB.sql
 │
-└── schulAppREST
-    └── schulAppREST.csproj
+├── schulAppREST
+│   └── schulAppREST.csproj
+│
+└── SchulappSOAP
+    └── SchulappSOAP.csproj
 ```
 
 `SchulApp` ist die Windows-Forms-Anwendung.
 
 `schulAppREST` ist die ASP.NET Core REST API.
 
-`start.ps1` startet beide Anwendungen in der richtigen Reihenfolge.
+`SchulappSOAP` ist die CoreWCF SOAP API.
+
+`start.ps1` startet beide APIs und danach die WinForms-Anwendung in der richtigen Reihenfolge.
 
 ## 3. NuGet-Pakete
 
@@ -57,6 +62,7 @@ Falls eine manuelle Wiederherstellung nötig ist:
 ```powershell
 dotnet restore .\SchulApp\SchulApp.csproj
 dotnet restore .\schulAppREST\schulAppREST.csproj
+dotnet restore .\SchulappSOAP\SchulappSOAP.csproj
 ```
 
 ## 4. SQL Server und Datenbank vorbereiten
@@ -98,12 +104,14 @@ Starte danach:
 Das Skript übernimmt den normalen Startablauf:
 
 1. `schulAppREST` wird gestartet.
-2. Das Skript wartet, bis die REST API erreichbar ist.
-3. Danach wird die WinForms-Anwendung `SchulApp` gestartet.
-4. Der LoadingScreen prüft die SQL-Datenbankverbindung.
-5. Anschliessend wird das Login geöffnet.
+2. `SchulappSOAP` wird gestartet.
+3. Das Skript wartet, bis die REST API erreichbar ist.
+4. Das Skript wartet, bis die SOAP-WSDL erreichbar ist.
+5. Danach wird die WinForms-Anwendung `SchulApp` gestartet.
+6. Der LoadingScreen prüft die SQL-Datenbankverbindung.
+7. Anschliessend wird das Login geöffnet.
 
-Für den normalen Start müssen `schulAppREST` und `SchulApp` deshalb nicht mehr separat mit `dotnet run` gestartet werden.
+Für den normalen Start müssen `schulAppREST`, `SchulappSOAP` und `SchulApp` deshalb nicht mehr separat mit `dotnet run` gestartet werden.
 
 ## 6. Benutzer registrieren
 
@@ -156,7 +164,46 @@ https://localhost:63635/
 
 Falls die API bewusst auf einer anderen Adresse gestartet wird, kann optional `SCHULAPP_API_BASE_URL` gesetzt werden.
 
-## 8. PingPong testen
+
+## 8. SOAP API testen
+
+Die SOAP API wird durch `start.ps1` automatisch gestartet.
+
+Der aktuelle lokale SOAP-Endpunkt lautet:
+
+```text
+http://localhost:5210/SchuelerService.svc
+```
+
+Die WSDL kann direkt im Browser getestet werden:
+
+```text
+http://localhost:5210/SchuelerService.svc?wsdl
+```
+
+Wenn die SOAP API korrekt läuft, wird dort ein XML-Dokument mit der Servicebeschreibung angezeigt.
+
+Der Schüler-Service bietet aktuell folgende Operationen:
+
+```text
+GetSchueler
+GetSchuelerById
+DeleteSchueler
+```
+
+Die WinForms-Anwendung verwendet dafür eine generierte **WCF Web Service Reference**.
+
+Aktuell werden Schüler über SOAP geladen und gelöscht. Erstellen und Bearbeiten verwenden weiterhin die vorhandene lokale Service- und Entity-Framework-Logik.
+
+Falls der SOAP-Vertrag oder das SOAP-Model geändert wird:
+
+1. `SchulappSOAP` starten.
+2. Prüfen, ob die WSDL erreichbar ist.
+3. In Visual Studio unter `SchulApp` die vorhandene WCF Web Service Reference öffnen.
+4. Die Service Reference aktualisieren.
+5. Die Projektmappe neu erstellen.
+
+## 9. PingPong testen
 
 1. Mit Benutzer 1 anmelden.
 2. Im Hauptmenü PingPong öffnen.
@@ -181,7 +228,7 @@ Nach dem fünften Punkt:
 - der Gewinner erhält 1 Sieg und 3 Bestenlistenpunkte
 - erzielte und kassierte Tore werden aktualisiert
 
-## 9. Bestenliste testen
+## 10. Bestenliste testen
 
 Öffne im Hauptmenü die Bestenliste.
 
@@ -200,7 +247,7 @@ Angezeigt werden:
 - kassierte Tore
 - Torverhältnis
 
-## 10. `.env` Datei
+## 11. `.env` Datei
 
 Die `.env` Datei wird nicht für Benutzername oder Passwort des Logins benötigt.
 
@@ -208,7 +255,7 @@ Benutzerkonten werden direkt in der SQL-Datenbank gespeichert.
 
 Eine vorhandene `.env` Datei kann weiterhin für optionale lokale Konfigurationen verwendet werden.
 
-## 11. Häufige Probleme
+## 12. Häufige Probleme
 
 ### Datenbankverbindung schlägt fehl
 
@@ -235,6 +282,43 @@ https://localhost:63635/api/PingPong/bestenliste
 ```
 
 Wenn dort keine Antwort kommt, prüfe das PowerShell-Fenster der REST API auf Fehlermeldungen.
+
+
+### SOAP API oder WSDL nicht erreichbar
+
+Starte die Anwendung erneut aus dem Hauptordner:
+
+```powershell
+./start.ps1
+```
+
+Teste danach:
+
+```text
+http://localhost:5210/SchuelerService.svc?wsdl
+```
+
+Wenn keine WSDL angezeigt wird, prüfe das PowerShell-Fenster der SOAP API auf Fehlermeldungen.
+
+Falls die WinForms-Anwendung nach Änderungen am SOAP-Vertrag noch alte Datentypen verwendet, aktualisiere die WCF Web Service Reference in Visual Studio.
+
+### SOAP meldet einen internen Serverfehler
+
+Bei einem SOAP-Fehler liegt die eigentliche Exception häufig im Serverprojekt.
+
+Prüfe insbesondere:
+
+- läuft SQL Server?
+- ist `SchulAppDB` erreichbar?
+- stimmen die Properties des `SchuelerModel` mit der Datenbank überein?
+- ist `SchuelerId` im SOAP-Model als Primärschlüssel definiert?
+
+Beispiel:
+
+```csharp
+[Key]
+public int SchuelerId { get; set; }
+```
 
 ### REST API liefert HTTP 500
 
@@ -284,7 +368,7 @@ oder:
 dotnet build .\SchulApp.slnx
 ```
 
-## 12. Kurzstart
+## 13. Kurzstart
 
 Nach der einmaligen Einrichtung reicht normalerweise:
 
@@ -292,7 +376,8 @@ Nach der einmaligen Einrichtung reicht normalerweise:
 1. SQL Server starten
 2. PowerShell im Hauptordner Schulapp öffnen
 3. ./start.ps1 ausführen
-4. Anmelden
+4. Warten, bis REST API und SOAP API bereit sind
+5. Anmelden
 ```
 
 Beim allerersten Einrichten muss davor einmal ausgeführt werden:
