@@ -75,6 +75,12 @@ namespace ServiceReference1
         [System.ServiceModel.OperationContractAttribute(Action="http://tempuri.org/ISchuelerService/GetSchuelerById", ReplyAction="http://tempuri.org/ISchuelerService/GetSchuelerByIdResponse")]
         System.Threading.Tasks.Task<ServiceReference1.SchuelerModel> GetSchuelerByIdAsync(int id);
         
+        [System.ServiceModel.OperationContractAttribute(Action="http://tempuri.org/ISchuelerService/AddSchueler", ReplyAction="http://tempuri.org/ISchuelerService/AddSchuelerResponse")]
+        System.Threading.Tasks.Task<bool> AddSchuelerAsync(ServiceReference1.SchuelerModel schueler);
+        
+        [System.ServiceModel.OperationContractAttribute(Action="http://tempuri.org/ISchuelerService/UpdateSchueler", ReplyAction="http://tempuri.org/ISchuelerService/UpdateSchuelerResponse")]
+        System.Threading.Tasks.Task<bool> UpdateSchuelerAsync(ServiceReference1.SchuelerModel schueler);
+        
         [System.ServiceModel.OperationContractAttribute(Action="http://tempuri.org/ISchuelerService/DeleteSchueler", ReplyAction="http://tempuri.org/ISchuelerService/DeleteSchuelerResponse")]
         System.Threading.Tasks.Task<bool> DeleteSchuelerAsync(int id);
     }
@@ -137,6 +143,16 @@ namespace ServiceReference1
         public System.Threading.Tasks.Task<ServiceReference1.SchuelerModel> GetSchuelerByIdAsync(int id)
         {
             return base.Channel.GetSchuelerByIdAsync(id);
+        }
+        
+        public System.Threading.Tasks.Task<bool> AddSchuelerAsync(ServiceReference1.SchuelerModel schueler)
+        {
+            return base.Channel.AddSchuelerAsync(schueler);
+        }
+        
+        public System.Threading.Tasks.Task<bool> UpdateSchuelerAsync(ServiceReference1.SchuelerModel schueler)
+        {
+            return base.Channel.UpdateSchuelerAsync(schueler);
         }
         
         public System.Threading.Tasks.Task<bool> DeleteSchuelerAsync(int id)

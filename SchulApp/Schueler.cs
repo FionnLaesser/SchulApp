@@ -1,13 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using SchulApp.Data;
-using SchulApp.Services;
 using ServiceReference1;
 
 namespace SchulApp
 {
     public partial class Schueler : CustomForm
     {
-        private readonly SchuelerService schuelerService;
         private readonly SchuelerServiceClient soapClient;
         private readonly bool nurHinzufuegen;
         private int? ausgewaehlteSchuelerId;
@@ -18,14 +16,6 @@ namespace SchulApp
 
             InitializeComponent();
 
-            // Lokaler Service bleibt vorerst für Erstellen und Bearbeiten bestehen.
-            // Sobald diese Operationen auch im SOAP-Contract vorhanden sind,
-            // können sie ebenfalls über soapClient aufgerufen werden.
-            schuelerService = new SchuelerService(
-                new SqlSchuelerRepository()
-            );
-
-            // SOAP-Client aus der Connected Service Reference.
             soapClient = new SchuelerServiceClient();
 
             ThemeManager.Anwenden(this);
@@ -33,8 +23,6 @@ namespace SchulApp
 
             KlassenLaden();
 
-            // Ein Konstruktor kann nicht direkt await verwenden.
-            // Deshalb laden wir die Schüler beim Anzeigen der Form asynchron.
             Shown += async (_, _) => await SchuelerListeAktualisierenAsync();
         }
 
@@ -80,7 +68,6 @@ namespace SchulApp
         {
             try
             {
-                // Schüler werden jetzt über SOAP geladen.
                 var schueler = await soapClient.GetSchuelerAsync();
 
                 var anzeige = schueler
@@ -143,15 +130,36 @@ namespace SchulApp
                 return;
             }
 
+            if (string.IsNullOrWhiteSpace(newStudentName.Text))
+            {
+                MessageBox.Show(
+                    "Bitte einen Namen eingeben."
+                );
+
+                return;
+            }
+
             try
             {
-                // Noch lokal, bis AddSchueler im SOAP-Service vorhanden ist.
-                schuelerService.Erstellen(
-                    newStudentName.Text,
-                    Convert.ToInt32(
+                var schueler = new ServiceReference1.SchuelerModel
+                {
+                    Name = newStudentName.Text.Trim(),
+                    KlasseId = Convert.ToInt32(
                         newStudentKlasse.SelectedValue
                     )
-                );
+                };
+
+                bool erstellt =
+                    await soapClient.AddSchuelerAsync(schueler);
+
+                if (!erstellt)
+                {
+                    MessageBox.Show(
+                        "Der Schüler konnte nicht gespeichert werden."
+                    );
+
+                    return;
+                }
 
                 newStudentName.Text = "";
 
@@ -161,21 +169,10 @@ namespace SchulApp
                     "Schüler wurde gespeichert."
                 );
             }
-            catch (ArgumentException ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
-            catch (DbUpdateException ex)
-            {
-                MessageBox.Show(
-                    "Der Schüler konnte nicht gespeichert werden.\n\n" +
-                    ex.Message
-                );
-            }
             catch (Exception ex)
             {
                 MessageBox.Show(
-                    "Der Schüler konnte nicht gespeichert werden.\n\n" +
+                    "Der Schüler konnte nicht über SOAP gespeichert werden.\n\n" +
                     ex.Message
                 );
             }
@@ -255,22 +252,33 @@ namespace SchulApp
                 return;
             }
 
+            if (string.IsNullOrWhiteSpace(newName.Text))
+            {
+                MessageBox.Show(
+                    "Bitte einen Namen eingeben."
+                );
+
+                return;
+            }
+
             try
             {
-                // Noch lokal, bis UpdateSchueler im SOAP-Service vorhanden ist.
+                var schueler = new ServiceReference1.SchuelerModel
+                {
+                    SchuelerId = ausgewaehlteSchuelerId.Value,
+                    Name = newName.Text.Trim(),
+                    KlasseId = Convert.ToInt32(
+                        editKlasse.SelectedValue
+                    )
+                };
+
                 bool bearbeitet =
-                    schuelerService.Bearbeiten(
-                        ausgewaehlteSchuelerId.Value,
-                        newName.Text,
-                        Convert.ToInt32(
-                            editKlasse.SelectedValue
-                        )
-                    );
+                    await soapClient.UpdateSchuelerAsync(schueler);
 
                 if (!bearbeitet)
                 {
                     MessageBox.Show(
-                        "Der Schüler wurde nicht gefunden."
+                        "Der Schüler wurde nicht gefunden oder konnte nicht bearbeitet werden."
                     );
 
                     await SchuelerListeAktualisierenAsync();
@@ -284,21 +292,10 @@ namespace SchulApp
                     "Schüler wurde bearbeitet."
                 );
             }
-            catch (ArgumentException ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
-            catch (DbUpdateException ex)
-            {
-                MessageBox.Show(
-                    "Der Schüler konnte nicht bearbeitet werden.\n\n" +
-                    ex.Message
-                );
-            }
             catch (Exception ex)
             {
                 MessageBox.Show(
-                    "Der Schüler konnte nicht bearbeitet werden.\n\n" +
+                    "Der Schüler konnte nicht über SOAP bearbeitet werden.\n\n" +
                     ex.Message
                 );
             }
@@ -337,7 +334,6 @@ namespace SchulApp
 
             try
             {
-                // Löschen läuft jetzt über SOAP.
                 bool geloescht =
                     await soapClient.DeleteSchuelerAsync(
                         ausgewaehlteSchuelerId.Value

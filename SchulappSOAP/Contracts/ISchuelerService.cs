@@ -6,11 +6,17 @@ namespace SchulAppSOAP.Contracts
     [ServiceContract]
     public interface ISchuelerService
     {
-        [OperationContract] //Sagt das es zu SOAP gehört
+        [OperationContract]
         Task<List<SchuelerModel>> GetSchueler();
 
         [OperationContract]
         Task<SchuelerModel?> GetSchuelerById(int id);
+
+        [OperationContract]
+        Task<bool> AddSchueler(SchuelerModel schueler);
+
+        [OperationContract]
+        Task<bool> UpdateSchueler(SchuelerModel schueler);
 
         [OperationContract]
         Task<bool> DeleteSchueler(int id);

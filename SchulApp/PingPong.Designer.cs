@@ -56,7 +56,7 @@ namespace SchulApp
             ball.Image = (Image)resources.GetObject("ball.Image");
             ball.Location = new Point(571, 350);
             ball.Name = "ball";
-            ball.Size = new Size(59, 62);
+            ball.Size = new Size(40, 40);
             ball.SizeMode = PictureBoxSizeMode.StretchImage;
             ball.TabIndex = 1;
             ball.TabStop = false;
