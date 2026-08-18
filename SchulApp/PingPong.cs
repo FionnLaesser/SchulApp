@@ -42,6 +42,12 @@ namespace SchulApp
 
             KeyPreview = true;
 
+            spielStartBtn.TabStop = false;
+            backBtn.TabStop = false;
+
+            spielStartBtn.PreviewKeyDown += GameButton_PreviewKeyDown;
+            backBtn.PreviewKeyDown += GameButton_PreviewKeyDown;
+
             KeyDown += PingPong_KeyDown;
             KeyUp += PingPong_KeyUp;
 
@@ -208,11 +214,12 @@ namespace SchulApp
 
         private void spielStartBtn_Click(object sender, EventArgs e)
         {
+
             if (spielerRechtsId == 0)
             {
                 return;
             }
-
+            ActiveControl = null;
             NeuesSpielStarten();
         }
 
@@ -529,6 +536,21 @@ namespace SchulApp
             if (e.KeyCode == Keys.Down)
             {
                 runterGedruecktRechts = false;
+            }
+        }
+
+        private void backBtn_Click(object sender, EventArgs e)
+        {
+            Close();
+        }
+        private void GameButton_PreviewKeyDown(object? sender, PreviewKeyDownEventArgs e)
+        {
+            if (e.KeyCode == Keys.Up ||
+                e.KeyCode == Keys.Down ||
+                e.KeyCode == Keys.W ||
+                e.KeyCode == Keys.S)
+            {
+                e.IsInputKey = true;
             }
         }
     }

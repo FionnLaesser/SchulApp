@@ -31,7 +31,7 @@ namespace SchulApp
             spielerRechtsNameLabel = new Label();
             gegnerLabel = new Label();
             gegnerComboBox = new ComboBox();
-            spielStartBtn = new Button();
+            spielStartBtn = new NoFocusButton();
             statusLabel = new Label();
             spielEndePanel = new Panel();
             speicherStatusLabel = new Label();
@@ -45,11 +45,11 @@ namespace SchulApp
             pauseHauptmenueBtn = new Button();
             fortsetzenBtn = new Button();
             pauseTitelLabel = new Label();
+            backBtn = new NoFocusButton();
             ((System.ComponentModel.ISupportInitialize)ball).BeginInit();
             spielEndePanel.SuspendLayout();
             pausePanel.SuspendLayout();
             SuspendLayout();
-
             // 
             // ball
             // 
@@ -60,7 +60,6 @@ namespace SchulApp
             ball.SizeMode = PictureBoxSizeMode.StretchImage;
             ball.TabIndex = 1;
             ball.TabStop = false;
-
             // 
             // panelLinks
             // 
@@ -69,7 +68,6 @@ namespace SchulApp
             panelLinks.Name = "panelLinks";
             panelLinks.Size = new Size(34, 196);
             panelLinks.TabIndex = 3;
-
             // 
             // panelRechts
             // 
@@ -79,22 +77,19 @@ namespace SchulApp
             panelRechts.Name = "panelRechts";
             panelRechts.Size = new Size(34, 196);
             panelRechts.TabIndex = 4;
-
             // 
             // gameTimer
             // 
             gameTimer.Tick += gameTimer_Tick;
-
             // 
             // label1
             // 
             label1.AutoSize = true;
             label1.Location = new Point(20, 18);
             label1.Name = "label1";
-            label1.Size = new Size(257, 15);
+            label1.Size = new Size(222, 15);
             label1.TabIndex = 5;
             label1.Text = "Links: W/S | Rechts: Pfeiltasten | Q: Pause";
-
             // 
             // panelTop
             // 
@@ -104,7 +99,6 @@ namespace SchulApp
             panelTop.Name = "panelTop";
             panelTop.Size = new Size(1200, 6);
             panelTop.TabIndex = 6;
-
             // 
             // punkteZahlLabel
             // 
@@ -116,7 +110,6 @@ namespace SchulApp
             punkteZahlLabel.TabIndex = 7;
             punkteZahlLabel.Text = "0 : 0";
             punkteZahlLabel.TextAlign = ContentAlignment.MiddleCenter;
-
             // 
             // spielerLinksNameLabel
             // 
@@ -124,22 +117,20 @@ namespace SchulApp
             spielerLinksNameLabel.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
             spielerLinksNameLabel.Location = new Point(20, 55);
             spielerLinksNameLabel.Name = "spielerLinksNameLabel";
-            spielerLinksNameLabel.Size = new Size(62, 20);
+            spielerLinksNameLabel.Size = new Size(59, 20);
             spielerLinksNameLabel.TabIndex = 8;
             spielerLinksNameLabel.Text = "Links: -";
-
             // 
             // spielerRechtsNameLabel
             // 
             spielerRechtsNameLabel.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             spielerRechtsNameLabel.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
-            spielerRechtsNameLabel.Location = new Point(850, 62);
+            spielerRechtsNameLabel.Location = new Point(850, 73);
             spielerRechtsNameLabel.Name = "spielerRechtsNameLabel";
             spielerRechtsNameLabel.Size = new Size(330, 24);
             spielerRechtsNameLabel.TabIndex = 9;
             spielerRechtsNameLabel.Text = "Rechts: -";
             spielerRechtsNameLabel.TextAlign = ContentAlignment.MiddleRight;
-
             // 
             // gegnerLabel
             // 
@@ -147,10 +138,9 @@ namespace SchulApp
             gegnerLabel.AutoSize = true;
             gegnerLabel.Location = new Point(800, 20);
             gegnerLabel.Name = "gegnerLabel";
-            gegnerLabel.Size = new Size(49, 15);
+            gegnerLabel.Size = new Size(48, 15);
             gegnerLabel.TabIndex = 10;
             gegnerLabel.Text = "Gegner:";
-
             // 
             // gegnerComboBox
             // 
@@ -163,7 +153,6 @@ namespace SchulApp
             gegnerComboBox.Size = new Size(205, 23);
             gegnerComboBox.TabIndex = 11;
             gegnerComboBox.SelectedIndexChanged += gegnerComboBox_SelectedIndexChanged;
-
             // 
             // spielStartBtn
             // 
@@ -174,20 +163,19 @@ namespace SchulApp
             spielStartBtn.Name = "spielStartBtn";
             spielStartBtn.Size = new Size(110, 28);
             spielStartBtn.TabIndex = 12;
+            spielStartBtn.TabStop = false;
             spielStartBtn.Text = "Spiel starten";
             spielStartBtn.UseVisualStyleBackColor = true;
             spielStartBtn.Click += spielStartBtn_Click;
-
             // 
             // statusLabel
             // 
             statusLabel.AutoSize = true;
             statusLabel.Location = new Point(20, 82);
             statusLabel.Name = "statusLabel";
-            statusLabel.Size = new Size(253, 15);
+            statusLabel.Size = new Size(245, 15);
             statusLabel.TabIndex = 13;
             statusLabel.Text = "Benutzer werden über die REST API geladen...";
-
             // 
             // spielEndePanel
             // 
@@ -204,7 +192,6 @@ namespace SchulApp
             spielEndePanel.Size = new Size(400, 250);
             spielEndePanel.TabIndex = 14;
             spielEndePanel.Visible = false;
-
             // 
             // speicherStatusLabel
             // 
@@ -214,7 +201,6 @@ namespace SchulApp
             speicherStatusLabel.TabIndex = 5;
             speicherStatusLabel.Text = "Ergebnis wird gespeichert...";
             speicherStatusLabel.TextAlign = ContentAlignment.MiddleCenter;
-
             // 
             // zurueckBtn
             // 
@@ -226,7 +212,6 @@ namespace SchulApp
             zurueckBtn.Text = "Zurück zum Hauptmenü";
             zurueckBtn.UseVisualStyleBackColor = true;
             zurueckBtn.Click += zurueckBtn_Click;
-
             // 
             // erneutSpielenBtn
             // 
@@ -238,7 +223,6 @@ namespace SchulApp
             erneutSpielenBtn.Text = "Erneut spielen";
             erneutSpielenBtn.UseVisualStyleBackColor = true;
             erneutSpielenBtn.Click += erneutSpielenBtn_Click;
-
             // 
             // ergebnisLabel
             // 
@@ -249,7 +233,6 @@ namespace SchulApp
             ergebnisLabel.TabIndex = 2;
             ergebnisLabel.Text = "Ergebnis: 5 : 0";
             ergebnisLabel.TextAlign = ContentAlignment.MiddleCenter;
-
             // 
             // gewinnerLabel
             // 
@@ -260,7 +243,6 @@ namespace SchulApp
             gewinnerLabel.TabIndex = 1;
             gewinnerLabel.Text = "Gewinner: Spieler";
             gewinnerLabel.TextAlign = ContentAlignment.MiddleCenter;
-
             // 
             // spielEndeTitelLabel
             // 
@@ -271,8 +253,6 @@ namespace SchulApp
             spielEndeTitelLabel.TabIndex = 0;
             spielEndeTitelLabel.Text = "Spiel beendet!";
             spielEndeTitelLabel.TextAlign = ContentAlignment.MiddleCenter;
-
-
             // 
             // pausePanel
             // 
@@ -287,7 +267,6 @@ namespace SchulApp
             pausePanel.Size = new Size(400, 220);
             pausePanel.TabIndex = 15;
             pausePanel.Visible = false;
-
             // 
             // pauseTextLabel
             // 
@@ -297,7 +276,6 @@ namespace SchulApp
             pauseTextLabel.TabIndex = 1;
             pauseTextLabel.Text = "Das Spiel ist pausiert.";
             pauseTextLabel.TextAlign = ContentAlignment.MiddleCenter;
-
             // 
             // pauseHauptmenueBtn
             // 
@@ -309,7 +287,6 @@ namespace SchulApp
             pauseHauptmenueBtn.Text = "Zurück zum Hauptmenü";
             pauseHauptmenueBtn.UseVisualStyleBackColor = true;
             pauseHauptmenueBtn.Click += pauseHauptmenueBtn_Click;
-
             // 
             // fortsetzenBtn
             // 
@@ -321,7 +298,6 @@ namespace SchulApp
             fortsetzenBtn.Text = "Fortsetzen";
             fortsetzenBtn.UseVisualStyleBackColor = true;
             fortsetzenBtn.Click += fortsetzenBtn_Click;
-
             // 
             // pauseTitelLabel
             // 
@@ -332,13 +308,25 @@ namespace SchulApp
             pauseTitelLabel.TabIndex = 0;
             pauseTitelLabel.Text = "Spiel pausiert";
             pauseTitelLabel.TextAlign = ContentAlignment.MiddleCenter;
-
+            // 
+            // backBtn
+            // 
+            backBtn.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            backBtn.Location = new Point(1085, 48);
+            backBtn.Name = "backBtn";
+            backBtn.Size = new Size(95, 23);
+            backBtn.TabIndex = 16;
+            backBtn.TabStop = false;
+            backBtn.Text = "Zurück";
+            backBtn.UseVisualStyleBackColor = true;
+            backBtn.Click += backBtn_Click;
             // 
             // PingPong
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1200, 750);
+            Controls.Add(backBtn);
             Controls.Add(pausePanel);
             Controls.Add(spielEndePanel);
             Controls.Add(statusLabel);
@@ -372,6 +360,7 @@ namespace SchulApp
             Controls.SetChildIndex(statusLabel, 0);
             Controls.SetChildIndex(spielEndePanel, 0);
             Controls.SetChildIndex(pausePanel, 0);
+            Controls.SetChildIndex(backBtn, 0);
             ((System.ComponentModel.ISupportInitialize)ball).EndInit();
             spielEndePanel.ResumeLayout(false);
             pausePanel.ResumeLayout(false);
@@ -392,7 +381,7 @@ namespace SchulApp
         private Label spielerRechtsNameLabel;
         private Label gegnerLabel;
         private ComboBox gegnerComboBox;
-        private Button spielStartBtn;
+        private NoFocusButton spielStartBtn;
         private Label statusLabel;
         private Panel spielEndePanel;
         private Label speicherStatusLabel;
@@ -406,5 +395,6 @@ namespace SchulApp
         private Button pauseHauptmenueBtn;
         private Button fortsetzenBtn;
         private Label pauseTitelLabel;
+        private NoFocusButton backBtn;
     }
 }
