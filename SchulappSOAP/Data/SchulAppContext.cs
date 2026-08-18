@@ -12,5 +12,6 @@ namespace SchulAppSOAP.Data
 
         public DbSet<SchuelerModel> Schueler { get; set; }
         public DbSet<KlasseModel> Klassen { get; set; }
+        public DbSet<AuditLogModel> AuditLogs { get; set; }
     }
 }
