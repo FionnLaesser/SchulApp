@@ -70,6 +70,15 @@ namespace SchulApp
             {
                 var schueler = await soapClient.GetSchuelerAsync();
 
+                using SchulAppContext context = new SchulAppContext();
+
+                var klassen = context.Klassen
+                    .AsNoTracking()
+                    .ToDictionary(
+                        k => k.KlassenId,
+                        k => k.Bezeichnung
+                    );
+
                 var anzeige = schueler
                     .OrderBy(s => s.SchuelerId)
                     .Select(s => new
@@ -77,7 +86,12 @@ namespace SchulApp
                         s.SchuelerId,
                         s.Name,
                         s.KlasseId,
-                        Klasse = ""
+                        Klasse = klassen.TryGetValue(
+                            s.KlasseId,
+                            out string? bezeichnung
+                        )
+                            ? bezeichnung
+                            : "Unbekannt"
                     })
                     .ToList();
 
