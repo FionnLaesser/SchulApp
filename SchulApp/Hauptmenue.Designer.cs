@@ -29,6 +29,7 @@ namespace SchulApp
             pingPong = new Button();
             bestenlistePage = new Button();
             auditLogPage = new Button();
+            dataTransferBtn = new Button();
             ((System.ComponentModel.ISupportInitialize)hauptbild).BeginInit();
             SuspendLayout();
             // 
@@ -180,12 +181,25 @@ namespace SchulApp
             auditLogPage.UseVisualStyleBackColor = true;
             auditLogPage.Click += auditLogPage_Click;
             // 
+            // dataTransferBtn
+            // 
+            dataTransferBtn.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+            dataTransferBtn.Location = new Point(12, 371);
+            dataTransferBtn.Name = "dataTransferBtn";
+            dataTransferBtn.Padding = new Padding(8, 0, 8, 0);
+            dataTransferBtn.Size = new Size(163, 50);
+            dataTransferBtn.TabIndex = 14;
+            dataTransferBtn.Text = "Import / Export";
+            dataTransferBtn.UseVisualStyleBackColor = true;
+            dataTransferBtn.Click += dataTransferBtn_Click;
+            // 
             // Hauptmenue
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = SystemColors.ActiveCaption;
             ClientSize = new Size(984, 561);
+            Controls.Add(dataTransferBtn);
             Controls.Add(auditLogPage);
             Controls.Add(bestenlistePage);
             Controls.Add(pingPong);
@@ -220,6 +234,7 @@ namespace SchulApp
             Controls.SetChildIndex(pingPong, 0);
             Controls.SetChildIndex(bestenlistePage, 0);
             Controls.SetChildIndex(auditLogPage, 0);
+            Controls.SetChildIndex(dataTransferBtn, 0);
             ((System.ComponentModel.ISupportInitialize)hauptbild).EndInit();
             ResumeLayout(false);
             PerformLayout();
@@ -239,5 +254,6 @@ namespace SchulApp
         private Button pingPong;
         private Button bestenlistePage;
         private Button auditLogPage;
+        private Button dataTransferBtn;
     }
 }
