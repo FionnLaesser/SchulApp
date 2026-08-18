@@ -1,6 +1,7 @@
 using SchulApp.Models;
 using SchulApp.Services;
 using System.Text;
+using Xunit;
 
 namespace SchulApp.Tests
 {
