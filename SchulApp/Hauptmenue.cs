@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using SchulApp.Data;
 using SchulApp.Models;
+using SchulApp.Services;
 using System.IO;
 
 namespace SchulApp
@@ -9,6 +10,7 @@ namespace SchulApp
     {
         private readonly int benutzerId;
         private readonly string rolle;
+        private ContextMenuStrip? dataTransferMenu;
 
         public bool AbmeldenAngefordert { get; private set; }
 
@@ -29,6 +31,8 @@ namespace SchulApp
             RechteAnwenden();
             hauptbildLaden();
             StandardProfilButtonBildLaden();
+            DataTransferButtonBildLaden();
+            DataTransferMenuErstellen();
         }
 
         private bool IstAdmin =>
@@ -56,6 +60,7 @@ namespace SchulApp
             klassenPage.Visible = false;
             kursePage.Visible = false;
             auditLogPage.Visible = false;
+            dataTransferBtn.Visible = false;
 
             if (IstLehrer)
             {
@@ -219,6 +224,290 @@ namespace SchulApp
                     : string.Empty;
 
             altesBild?.Dispose();
+        }
+
+        private void DataTransferButtonBildLaden()
+        {
+            string pfad = Path.Combine(
+                AppContext.BaseDirectory,
+                "images",
+                "CSVandPDFicon.png"
+            );
+
+            if (!File.Exists(pfad))
+            {
+                return;
+            }
+
+            using Image original = Image.FromFile(pfad);
+
+            dataTransferBtn.Image = new Bitmap(
+                original,
+                new Size(28, 28)
+            );
+            dataTransferBtn.ImageAlign = ContentAlignment.MiddleLeft;
+            dataTransferBtn.TextImageRelation =
+                TextImageRelation.ImageBeforeText;
+        }
+
+        private void DataTransferMenuErstellen()
+        {
+            dataTransferMenu?.Dispose();
+            dataTransferMenu = new ContextMenuStrip();
+
+            ToolStripMenuItem exportItem = new ToolStripMenuItem(
+                "Exportieren"
+            )
+            {
+                Image = MenuBildLaden("export.png")
+            };
+
+            exportItem.DropDownItems.Add(
+                ExportDatensatzMenuErstellen(
+                    "Schülerliste",
+                    ExportDataSet.Schueler
+                )
+            );
+            exportItem.DropDownItems.Add(
+                ExportDatensatzMenuErstellen(
+                    "Klassenliste",
+                    ExportDataSet.Klassen
+                )
+            );
+            exportItem.DropDownItems.Add(
+                ExportDatensatzMenuErstellen(
+                    "Stundenplan",
+                    ExportDataSet.Stundenplan
+                )
+            );
+            exportItem.DropDownItems.Add(
+                ExportDatensatzMenuErstellen(
+                    "Audit Log",
+                    ExportDataSet.AuditLog
+                )
+            );
+
+            ToolStripMenuItem importItem = new ToolStripMenuItem(
+                "Schüler aus CSV importieren"
+            )
+            {
+                Image = MenuBildLaden("Import.png")
+            };
+
+            importItem.Click += async (_, _) =>
+                await SchuelerImportierenAsync();
+
+            dataTransferMenu.Items.Add(exportItem);
+            dataTransferMenu.Items.Add(importItem);
+        }
+
+        private ToolStripMenuItem ExportDatensatzMenuErstellen(
+            string text,
+            ExportDataSet dataSet)
+        {
+            ToolStripMenuItem item = new ToolStripMenuItem(text);
+            ToolStripMenuItem csvItem = new ToolStripMenuItem("CSV");
+            ToolStripMenuItem pdfItem = new ToolStripMenuItem("PDF");
+
+            csvItem.Click += async (_, _) =>
+                await ExportierenAsync(
+                    dataSet,
+                    ExportFileFormat.Csv
+                );
+
+            pdfItem.Click += async (_, _) =>
+                await ExportierenAsync(
+                    dataSet,
+                    ExportFileFormat.Pdf
+                );
+
+            item.DropDownItems.Add(csvItem);
+            item.DropDownItems.Add(pdfItem);
+
+            return item;
+        }
+
+        private static Image? MenuBildLaden(string dateiname)
+        {
+            string pfad = Path.Combine(
+                AppContext.BaseDirectory,
+                "images",
+                dateiname
+            );
+
+            if (!File.Exists(pfad))
+            {
+                return null;
+            }
+
+            using Image original = Image.FromFile(pfad);
+            return new Bitmap(original, new Size(20, 20));
+        }
+
+        private void dataTransferBtn_Click(object sender, EventArgs e)
+        {
+            if (!IstAdmin || dataTransferMenu == null)
+            {
+                return;
+            }
+
+            dataTransferMenu.Show(
+                dataTransferBtn,
+                new Point(0, dataTransferBtn.Height)
+            );
+        }
+
+        private async Task ExportierenAsync(
+            ExportDataSet dataSet,
+            ExportFileFormat format)
+        {
+            string extension = format == ExportFileFormat.Csv
+                ? "csv"
+                : "pdf";
+
+            using SaveFileDialog dialog = new SaveFileDialog
+            {
+                Title = "Daten exportieren",
+                Filter = format == ExportFileFormat.Csv
+                    ? "CSV-Datei (*.csv)|*.csv"
+                    : "PDF-Datei (*.pdf)|*.pdf",
+                DefaultExt = extension,
+                AddExtension = true,
+                RestoreDirectory = true,
+                FileName =
+                    $"{ExportDateiname(dataSet)}-{DateTime.Now:yyyyMMdd-HHmm}.{extension}"
+            };
+
+            if (dialog.ShowDialog(this) != DialogResult.OK)
+            {
+                return;
+            }
+
+            try
+            {
+                Cursor = Cursors.WaitCursor;
+                dataTransferBtn.Enabled = false;
+
+                await DataTransferService.ExportAsync(
+                    dataSet,
+                    format,
+                    dialog.FileName
+                );
+
+                MessageBox.Show(
+                    this,
+                    "Export erfolgreich abgeschlossen.",
+                    "Export",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information
+                );
+            }
+            catch (Exception exception)
+            {
+                MessageBox.Show(
+                    this,
+                    $"Export fehlgeschlagen:{Environment.NewLine}{exception.Message}",
+                    "Exportfehler",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error
+                );
+            }
+            finally
+            {
+                dataTransferBtn.Enabled = true;
+                Cursor = Cursors.Default;
+            }
+        }
+
+        private async Task SchuelerImportierenAsync()
+        {
+            using OpenFileDialog dialog = new OpenFileDialog
+            {
+                Title =
+                    "Schüler importieren - erforderliche Spalten: Name;KlasseId",
+                Filter = "CSV-Datei (*.csv)|*.csv",
+                CheckFileExists = true,
+                Multiselect = false,
+                RestoreDirectory = true
+            };
+
+            if (dialog.ShowDialog(this) != DialogResult.OK)
+            {
+                return;
+            }
+
+            try
+            {
+                Cursor = Cursors.WaitCursor;
+                dataTransferBtn.Enabled = false;
+
+                CsvImportResult result =
+                    await DataTransferService.ImportStudentsAsync(
+                        dialog.FileName
+                    );
+
+                if (result.Errors.Count > 0)
+                {
+                    string errorText = string.Join(
+                        Environment.NewLine,
+                        result.Errors.Take(15)
+                    );
+
+                    if (result.Errors.Count > 15)
+                    {
+                        errorText +=
+                            $"{Environment.NewLine}... und {result.Errors.Count - 15} weitere Fehler.";
+                    }
+
+                    MessageBox.Show(
+                        this,
+                        "Import abgebrochen. Es wurden keine Schüler gespeichert." +
+                        Environment.NewLine +
+                        Environment.NewLine +
+                        errorText,
+                        "CSV-Importfehler",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning
+                    );
+
+                    return;
+                }
+
+                MessageBox.Show(
+                    this,
+                    $"{result.ImportedCount} Schüler wurden erfolgreich importiert.",
+                    "CSV-Import",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information
+                );
+            }
+            catch (Exception exception)
+            {
+                MessageBox.Show(
+                    this,
+                    $"Import fehlgeschlagen:{Environment.NewLine}{exception.Message}",
+                    "Importfehler",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error
+                );
+            }
+            finally
+            {
+                dataTransferBtn.Enabled = true;
+                Cursor = Cursors.Default;
+            }
+        }
+
+        private static string ExportDateiname(ExportDataSet dataSet)
+        {
+            return dataSet switch
+            {
+                ExportDataSet.Schueler => "schueler",
+                ExportDataSet.Klassen => "klassen",
+                ExportDataSet.Stundenplan => "stundenplan",
+                ExportDataSet.AuditLog => "audit-log",
+                _ => "export"
+            };
         }
 
         private void abmeldenBtn_Click(object sender, EventArgs e)
