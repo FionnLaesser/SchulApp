@@ -2,6 +2,7 @@
 using SchulAppSOAP.Contracts;
 using SchulAppSOAP.Data;
 using SchulAppSOAP.Models;
+using System.Text.Json;
 
 namespace SchulAppSOAP.Services
 {
@@ -50,6 +51,16 @@ namespace SchulAppSOAP.Services
 
             await _context.SaveChangesAsync();
 
+            await AuditLogSicherSpeichernAsync(
+                "CREATE",
+                schueler.SchuelerId,
+                new
+                {
+                    schueler.Name,
+                    schueler.KlasseId
+                }
+            );
+
             return true;
         }
 
@@ -78,10 +89,47 @@ namespace SchulAppSOAP.Services
                 return false;
             }
 
-            vorhandenerSchueler.Name = schueler.Name.Trim();
+            string alterName = vorhandenerSchueler.Name;
+            int alteKlasseId = vorhandenerSchueler.KlasseId;
+            string neuerName = schueler.Name.Trim();
+
+            Dictionary<string, object?> changes =
+                new Dictionary<string, object?>();
+
+            if (!string.Equals(
+                    alterName,
+                    neuerName,
+                    StringComparison.Ordinal))
+            {
+                changes["Name"] = new
+                {
+                    Old = alterName,
+                    New = neuerName
+                };
+            }
+
+            if (alteKlasseId != schueler.KlasseId)
+            {
+                changes["KlasseId"] = new
+                {
+                    Old = alteKlasseId,
+                    New = schueler.KlasseId
+                };
+            }
+
+            vorhandenerSchueler.Name = neuerName;
             vorhandenerSchueler.KlasseId = schueler.KlasseId;
 
             await _context.SaveChangesAsync();
+
+            if (changes.Count > 0)
+            {
+                await AuditLogSicherSpeichernAsync(
+                    "UPDATE",
+                    vorhandenerSchueler.SchuelerId,
+                    changes
+                );
+            }
 
             return true;
         }
@@ -95,11 +143,61 @@ namespace SchulAppSOAP.Services
                 return false;
             }
 
+            string name = schueler.Name;
+            int klasseId = schueler.KlasseId;
+
             _context.Schueler.Remove(schueler);
 
             await _context.SaveChangesAsync();
 
+            await AuditLogSicherSpeichernAsync(
+                "DELETE",
+                id,
+                new
+                {
+                    Name = name,
+                    KlasseId = klasseId
+                }
+            );
+
             return true;
+        }
+
+        private async Task AuditLogSicherSpeichernAsync(
+            string action,
+            int schuelerId,
+            object? changes)
+        {
+            AuditLogModel auditLog = new AuditLogModel
+            {
+                TimestampUtc = DateTime.UtcNow,
+                UserName = "System",
+                UserRole = "System",
+                Action = action,
+                EntityType = "Schueler",
+                EntityId = $"SchuelerId={schuelerId}",
+                Changes = changes == null
+                    ? null
+                    : JsonSerializer.Serialize(changes),
+                Source = "SOAP"
+            };
+
+            try
+            {
+                _context.AuditLogs.Add(auditLog);
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                if (_context.Entry(auditLog).State != EntityState.Detached)
+                {
+                    _context.Entry(auditLog).State = EntityState.Detached;
+                }
+
+                System.Diagnostics.Debug.WriteLine(
+                    $"SOAP audit logging failed: {ex.Message}"
+                );
+            }
         }
     }
 }
