@@ -54,14 +54,21 @@ namespace SchulApp.Tests
             engine.SetBallSpeed(30);
             engine.Start(100, 120, 40, 40, directionX: 1);
 
-            Rectangle left = new Rectangle(0, 0, 1, 1);
-            Rectangle right = new Rectangle(99, 0, 1, 1);
+            Rectangle noLeftPaddle = new Rectangle(-200, -200, 1, 1);
+            Rectangle noRightPaddle = new Rectangle(300, -200, 1, 1);
 
             PingPongGameTickResult result = PingPongGameTickResult.None;
 
             for (int i = 0; i < 10 && !result.ScoreChanged; i++)
             {
-                result = engine.Tick(left, right, 100, 120, 40, 40);
+                result = engine.Tick(
+                    noLeftPaddle,
+                    noRightPaddle,
+                    100,
+                    120,
+                    40,
+                    40
+                );
             }
 
             Assert.True(result.ScoreChanged);
@@ -79,23 +86,23 @@ namespace SchulApp.Tests
             PingPongMultiplayerGameEngine engine =
                 new PingPongMultiplayerGameEngine();
 
-            Rectangle left = new Rectangle(0, 0, 1, 1);
-            Rectangle right = new Rectangle(99, 0, 1, 1);
+            Rectangle noLeftPaddle = new Rectangle(-200, -200, 1, 1);
+            Rectangle noRightPaddle = new Rectangle(300, -200, 1, 1);
             PingPongGameTickResult result = PingPongGameTickResult.None;
 
-            for (int score = 0; score < PingPongMultiplayerGameEngine.MaxScore; score++)
-            {
-                engine.SetBallSpeed(30);
-                if (!engine.IsRunning)
-                {
-                    engine.Start(100, 120, 40, 40, directionX: 1);
-                }
+            engine.SetBallSpeed(30);
+            engine.Start(100, 120, 40, 40, directionX: 1);
 
-                do
-                {
-                    result = engine.Tick(left, right, 100, 120, 40, 40);
-                }
-                while (!result.ScoreChanged);
+            while (engine.IsRunning)
+            {
+                result = engine.Tick(
+                    noLeftPaddle,
+                    noRightPaddle,
+                    100,
+                    120,
+                    40,
+                    40
+                );
             }
 
             Assert.True(result.GameEnded);
