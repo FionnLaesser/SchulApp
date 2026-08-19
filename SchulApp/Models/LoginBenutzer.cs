@@ -22,6 +22,8 @@ namespace SchulApp.Models
 
         public byte[]? Profilbild { get; set; }
 
+        public int? SchuelerId { get; set; }
+
         public DateTime ErstelltAm { get; set; }
     }
 }

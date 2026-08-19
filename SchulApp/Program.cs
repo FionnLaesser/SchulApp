@@ -1,3 +1,5 @@
+using SchulApp.Services;
+
 namespace SchulApp
 {
     internal static class Program
@@ -8,6 +10,11 @@ namespace SchulApp
             ApplicationConfiguration.Initialize();
             // Könnte optionale Einstellungen aus der .env Datei laden. Wird gerade nicht benutzt.
             // DotNetEnv.Env.TraversePath().Load();
+
+            StudentProfileDatabaseSetup
+                .SicherstellenAsync()
+                .GetAwaiter()
+                .GetResult();
 
             Icon? appIcon = Icon.ExtractAssociatedIcon(
                 Application.ExecutablePath
