@@ -1,4 +1,5 @@
 using SchulApp.Services;
+using System.Drawing;
 using Xunit;
 
 namespace SchulApp.Tests
