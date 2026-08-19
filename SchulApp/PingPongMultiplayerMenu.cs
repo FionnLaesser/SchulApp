@@ -146,7 +146,8 @@ namespace SchulApp
                 PingPongLobbyModel lobby =
                     await lobbyApiService.JoinLobbyAsync(
                         dialog.GameCode,
-                        BenutzerSession.BenutzerId
+                        BenutzerSession.BenutzerId,
+                        BenutzerSession.Benutzername
                     );
 
                 statusLabel.Text = "Verbunden mit " + baseAddress;
