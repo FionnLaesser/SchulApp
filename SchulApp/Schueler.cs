@@ -96,27 +96,25 @@ namespace SchulApp
                     .ToList();
 
                 studentGrid.DataSource = anzeige;
-
-                if (studentGrid.Columns.Contains("KlasseId"))
+                if (studentGrid.Columns["KlasseId"] is DataGridViewColumn klasseId)
                 {
-                    studentGrid.Columns["KlasseId"].Visible = false;
+                    klasseId.Visible = false;
                 }
 
-                if (studentGrid.Columns.Contains("SchuelerId"))
+                if (studentGrid.Columns["SchuelerId"] is DataGridViewColumn schuelerId)
                 {
-                    studentGrid.Columns["SchuelerId"].HeaderText = "ID";
-                    studentGrid.Columns["SchuelerId"].Width = 60;
+                    schuelerId.HeaderText = "ID";
+                    schuelerId.Width = 60;
                 }
 
-                if (studentGrid.Columns.Contains("Name"))
+                if (studentGrid.Columns["Name"] is DataGridViewColumn name)
                 {
-                    studentGrid.Columns["Name"].AutoSizeMode =
-                        DataGridViewAutoSizeColumnMode.Fill;
+                    name.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
                 }
 
-                if (studentGrid.Columns.Contains("Klasse"))
+                if (studentGrid.Columns["Klasse"] is DataGridViewColumn klasse)
                 {
-                    studentGrid.Columns["Klasse"].Width = 130;
+                    klasse.Width = 130;
                 }
 
                 studentGrid.ClearSelection();

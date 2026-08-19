@@ -46,26 +46,26 @@ namespace SchulApp
 
                 lehrerGrid.DataSource = lehrer;
 
-                if (lehrerGrid.Columns.Contains("LehrerId"))
+                if (lehrerGrid.Columns["LehrerId"] is DataGridViewColumn lehrerId)
                 {
-                    lehrerGrid.Columns["LehrerId"].HeaderText = "ID";
-                    lehrerGrid.Columns["LehrerId"].Width = 55;
+                    lehrerId.HeaderText = "ID";
+                    lehrerId.Width = 55;
                 }
 
-                if (lehrerGrid.Columns.Contains("Name"))
+                if (lehrerGrid.Columns["Name"] is DataGridViewColumn name)
                 {
-                    lehrerGrid.Columns["Name"].AutoSizeMode =
+                    name.AutoSizeMode =
                         DataGridViewAutoSizeColumnMode.Fill;
                 }
 
-                if (lehrerGrid.Columns.Contains("Email"))
+                if (lehrerGrid.Columns["Email"] is DataGridViewColumn email)
                 {
-                    lehrerGrid.Columns["Email"].Width = 190;
+                    email.Width = 190;
                 }
 
-                if (lehrerGrid.Columns.Contains("Telefon"))
+                if (lehrerGrid.Columns["Telefon"] is DataGridViewColumn telefon)
                 {
-                    lehrerGrid.Columns["Telefon"].Width = 115;
+                    telefon.Width = 115;
                 }
 
                 lehrerGrid.ClearSelection();
@@ -370,22 +370,20 @@ namespace SchulApp
 
                 if (lehrerInfoGrid.Columns.Contains(
                     "LehrerInformationId"))
+
+                if (lehrerInfoGrid.Columns["LehrerInformationId"] is DataGridViewColumn lehrerInformationId)
                 {
-                    lehrerInfoGrid
-                        .Columns["LehrerInformationId"]
-                        .Visible = false;
+                  lehrerInformationId.Visible = false;
                 }
 
-                if (lehrerInfoGrid.Columns.Contains("Titel"))
+                if (lehrerInfoGrid.Columns["Titel"] is DataGridViewColumn titel)
                 {
-                    lehrerInfoGrid.Columns["Titel"].Width = 150;
+                    titel.Width = 150;
                 }
 
-                if (lehrerInfoGrid.Columns.Contains("Information"))
+                if (lehrerInfoGrid.Columns["Information"] is DataGridViewColumn information)
                 {
-                    lehrerInfoGrid
-                        .Columns["Information"]
-                        .AutoSizeMode =
+                    information.AutoSizeMode =
                         DataGridViewAutoSizeColumnMode.Fill;
                 }
 

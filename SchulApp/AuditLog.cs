@@ -132,11 +132,11 @@ namespace SchulApp
                 }
 
                 if (sortColumn != null &&
-                    auditGrid.Columns.Contains(sortColumn.Name) &&
-                    sortOrder != SortOrder.None)
+    sortOrder != SortOrder.None &&
+    auditGrid.Columns[sortColumn.Name] is DataGridViewColumn column)
                 {
                     auditGrid.Sort(
-                        auditGrid.Columns[sortColumn.Name],
+                        column,
                         sortOrder == SortOrder.Descending
                             ? ListSortDirection.Descending
                             : ListSortDirection.Ascending

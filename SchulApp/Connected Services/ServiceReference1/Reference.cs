@@ -17,15 +17,10 @@ namespace ServiceReference1
     [System.Runtime.Serialization.DataContractAttribute(Name="SchuelerModel", Namespace="http://schemas.datacontract.org/2004/07/SchulAppSOAP.Models")]
     public partial class SchuelerModel : object
     {
-        
-        private string AuditUserNameField;
-        
-        private string AuditUserRoleField;
-        
+        private string AuditUserNameField = string.Empty;
+        private string AuditUserRoleField = string.Empty;
         private int KlasseIdField;
-        
-        private string NameField;
-        
+        private string NameField = string.Empty;
         private int SchuelerIdField;
         
         [System.Runtime.Serialization.DataMemberAttribute()]
