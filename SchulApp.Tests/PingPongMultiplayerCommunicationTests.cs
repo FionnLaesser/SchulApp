@@ -13,15 +13,20 @@ namespace SchulApp.Tests
         [InlineData(PingPongMultiplayerMessageTypes.Score)]
         [InlineData(PingPongMultiplayerMessageTypes.GameStart)]
         [InlineData(PingPongMultiplayerMessageTypes.GameEnd)]
+        [InlineData(PingPongMultiplayerMessageTypes.PauseRequest)]
+        [InlineData(PingPongMultiplayerMessageTypes.PauseState)]
         public void IsSupported_KnownMessageType_ReturnsTrue(string messageType)
         {
             Assert.True(PingPongMultiplayerMessageTypes.IsSupported(messageType));
         }
 
-        [Fact]
-        public void IsSupported_UnknownMessageType_ReturnsFalse()
+        [Theory]
+        [InlineData("Unknown")]
+        [InlineData("")]
+        [InlineData(null)]
+        public void IsSupported_UnknownMessageType_ReturnsFalse(string? messageType)
         {
-            Assert.False(PingPongMultiplayerMessageTypes.IsSupported("Unknown"));
+            Assert.False(PingPongMultiplayerMessageTypes.IsSupported(messageType));
         }
 
         [Fact]
@@ -53,6 +58,7 @@ namespace SchulApp.Tests
             Assert.Equal("192.168.1.42", uri.Host);
             Assert.Equal(63636, uri.Port);
             Assert.Equal("/ws/pingpong/LAN123", uri.AbsolutePath);
+            Assert.Equal("?userId=11", uri.Query);
         }
 
         [Fact]
@@ -69,6 +75,18 @@ namespace SchulApp.Tests
             Assert.Equal(7443, uri.Port);
             Assert.Equal("/api/ws/pingpong/ABC123", uri.AbsolutePath);
             Assert.Equal("?userId=7", uri.Query);
+        }
+
+        [Fact]
+        public void CreateWebSocketUri_UnsupportedScheme_Throws()
+        {
+            Assert.Throws<InvalidOperationException>(() =>
+                PingPongMultiplayerConnection.CreateWebSocketUri(
+                    "ABC123",
+                    7,
+                    "ftp://school.example:7443/"
+                )
+            );
         }
 
         [Theory]
@@ -93,6 +111,7 @@ namespace SchulApp.Tests
         [InlineData("")]
         [InlineData("   ")]
         [InlineData("ftp://192.168.1.42")]
+        [InlineData("http://")]
         public void TryNormalizeHost_InvalidInput_ReturnsFalse(string input)
         {
             Assert.False(
