@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using SchulApp.Data;
 using SchulApp.Models;
 using System.ComponentModel;
@@ -24,7 +24,6 @@ namespace SchulApp
             autoRefreshTimer.Tick += AutoRefreshTimer_Tick;
             FormClosed += AuditLog_FormClosed;
 
-            // Im Visual-Studio-Designer keine Session-/Admin-Prüfung ausführen
             if (LicenseManager.UsageMode == LicenseUsageMode.Designtime)
             {
                 return;
@@ -86,24 +85,26 @@ namespace SchulApp
             {
                 await using SchulAppContext db = new SchulAppContext();
 
-                List<AuditLogRow> rows =
-                    await db.AuditLogs
-                        .AsNoTracking()
-                        .OrderByDescending(x => x.TimestampUtc)
-                        .Take(500)
-                        .Select(x => new AuditLogRow
-                        {
-                            Id = x.Id,
-                            Zeit = x.TimestampUtc,
-                            Benutzer = x.UserName,
-                            Rolle = x.UserRole,
-                            Aktion = x.Action,
-                            Entitaet = x.EntityType,
-                            EntityId = x.EntityId,
-                            Quelle = x.Source,
-                            Changes = x.Changes
-                        })
-                        .ToListAsync();
+                var auditLogs = await db.AuditLogs
+                    .AsNoTracking()
+                    .OrderByDescending(x => x.TimestampUtc)
+                    .Take(500)
+                    .ToListAsync();
+
+                List<AuditLogRow> rows = auditLogs
+                    .Select(x => new AuditLogRow
+                    {
+                        Id = x.Id,
+                        Zeit = AlsLokaleZeit(x.TimestampUtc),
+                        Benutzer = x.UserName,
+                        Rolle = x.UserRole,
+                        Aktion = x.Action,
+                        Entitaet = x.EntityType,
+                        EntityId = x.EntityId,
+                        Quelle = x.Source,
+                        Changes = x.Changes
+                    })
+                    .ToList();
 
                 auditGrid.DataSource = rows;
 
@@ -123,6 +124,7 @@ namespace SchulApp
                     is DataGridViewColumn zeitColumn)
                 {
                     zeitColumn.FillWeight = 90;
+                    zeitColumn.DefaultCellStyle.Format = "dd.MM.yyyy HH:mm:ss";
                 }
 
                 if (sortColumn != null &&
@@ -175,6 +177,15 @@ namespace SchulApp
             }
         }
 
+        internal static DateTime AlsLokaleZeit(DateTime timestampUtc)
+        {
+            DateTime utc = timestampUtc.Kind == DateTimeKind.Utc
+                ? timestampUtc
+                : DateTime.SpecifyKind(timestampUtc, DateTimeKind.Utc);
+
+            return utc.ToLocalTime();
+        }
+
         private void auditGrid_SelectionChanged(
             object? sender,
             EventArgs e)
@@ -197,8 +208,7 @@ namespace SchulApp
 
             try
             {
-                using JsonDocument document =
-                    JsonDocument.Parse(json);
+                using JsonDocument document = JsonDocument.Parse(json);
 
                 return JsonSerializer.Serialize(
                     document.RootElement,
@@ -217,25 +227,13 @@ namespace SchulApp
         private sealed class AuditLogRow
         {
             public int Id { get; set; }
-
             public DateTime Zeit { get; set; }
-
-            public string Benutzer { get; set; } =
-                string.Empty;
-
+            public string Benutzer { get; set; } = string.Empty;
             public string? Rolle { get; set; }
-
-            public string Aktion { get; set; } =
-                string.Empty;
-
-            public string Entitaet { get; set; } =
-                string.Empty;
-
+            public string Aktion { get; set; } = string.Empty;
+            public string Entitaet { get; set; } = string.Empty;
             public string? EntityId { get; set; }
-
-            public string Quelle { get; set; } =
-                string.Empty;
-
+            public string Quelle { get; set; } = string.Empty;
             public string? Changes { get; set; }
         }
 
