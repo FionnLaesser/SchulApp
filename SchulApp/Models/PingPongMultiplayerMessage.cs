@@ -20,6 +20,8 @@ namespace SchulApp.Models
         public const string Score = "Score";
         public const string GameStart = "GameStart";
         public const string GameEnd = "GameEnd";
+        public const string PauseRequest = "PauseRequest";
+        public const string PauseState = "PauseState";
 
         public static bool IsSupported(string? messageType)
         {
@@ -28,7 +30,9 @@ namespace SchulApp.Models
                 messageType == BallState ||
                 messageType == Score ||
                 messageType == GameStart ||
-                messageType == GameEnd;
+                messageType == GameEnd ||
+                messageType == PauseRequest ||
+                messageType == PauseState;
         }
     }
 }
