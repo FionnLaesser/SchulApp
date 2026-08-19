@@ -1,7 +1,10 @@
+using System.Text.Json.Serialization;
+
 namespace SchulApp.Models
 {
     public sealed class PingPongPlayerMovementPayload
     {
+        [JsonPropertyName("normalizedTop")]
         public double NormalizedTop { get; set; }
     }
 
