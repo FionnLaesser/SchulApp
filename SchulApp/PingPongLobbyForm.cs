@@ -182,16 +182,19 @@ namespace SchulApp
             openGameButton.Enabled = false;
             refreshTimer.Stop();
 
+            Point lobbyLocation = Location;
+            Hide();
+
             try
             {
                 using PingPongMultiplayerGameForm gameForm =
                     new PingPongMultiplayerGameForm(currentLobby)
                     {
                         StartPosition = FormStartPosition.Manual,
-                        Location = Location
+                        Location = lobbyLocation
                     };
 
-                gameForm.ShowDialog(this);
+                gameForm.ShowDialog();
             }
             catch (Exception ex)
             {
@@ -208,6 +211,10 @@ namespace SchulApp
 
                 if (!IsDisposed && !cleanupStarted)
                 {
+                    Location = lobbyLocation;
+                    Show();
+                    Activate();
+
                     await RefreshLobbyAsync();
 
                     if (!IsDisposed && !cleanupStarted)
