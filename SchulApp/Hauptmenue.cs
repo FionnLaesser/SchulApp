@@ -17,7 +17,6 @@ namespace SchulApp
         public Hauptmenue(int benutzerId, string rolle)
         {
             this.benutzerId = benutzerId;
-
             this.rolle = rolle switch
             {
                 LoginBenutzer.RolleAdmin => LoginBenutzer.RolleAdmin,
@@ -35,24 +34,16 @@ namespace SchulApp
             DataTransferMenuErstellen();
         }
 
-        private bool IstAdmin =>
-            rolle == LoginBenutzer.RolleAdmin;
+        private bool IstAdmin => rolle == LoginBenutzer.RolleAdmin;
+        private bool IstLehrer => rolle == LoginBenutzer.RolleLehrer;
 
-        private bool IstLehrer =>
-            rolle == LoginBenutzer.RolleLehrer;
-
-        private async void Hauptmenue_Shown(object sender, EventArgs e)
-        {
-            await ProfilButtonBildLadenAsync();
-        }
+        private async void Hauptmenue_Shown(object sender, EventArgs e) => await ProfilButtonBildLadenAsync();
 
         private void RechteAnwenden()
         {
             if (IstAdmin)
             {
-                subtitleLabel.Text =
-                    "Admin: Vollzugriff auf die Schulverwaltung.";
-
+                subtitleLabel.Text = "Admin: Vollzugriff auf die Schulverwaltung.";
                 return;
             }
 
@@ -64,120 +55,67 @@ namespace SchulApp
 
             if (IstLehrer)
             {
-                subtitleLabel.Text =
-                    "Lehrer: Schüler verwalten und Stundenpläne bearbeiten.";
-
+                subtitleLabel.Text = "Lehrer: Schüler verwalten und Stundenpläne bearbeiten.";
                 schuelerPage.Location = new Point(338, 231);
                 stundenplanPage.Location = new Point(338, 290);
-
                 return;
             }
 
             schuelerPage.Visible = false;
-
-            subtitleLabel.Text =
-                "Schüler: Stundenplan ansehen.";
-
+            subtitleLabel.Text = "Schüler: Stundenplan ansehen.";
             stundenplanPage.Location = new Point(338, 260);
         }
 
         private void schuelerPage_Click(object sender, EventArgs e)
         {
-            if (!IstAdmin && !IstLehrer)
-            {
-                return;
-            }
-
+            if (!IstAdmin && !IstLehrer) return;
             OeffneBereich(new Schueler());
         }
 
         private void lehrerPage_Click(object sender, EventArgs e)
         {
-            if (!IstAdmin)
-            {
-                return;
-            }
-
+            if (!IstAdmin) return;
             OeffneBereich(new Lehrer());
         }
 
         private void klassenPage_Click(object sender, EventArgs e)
         {
-            if (!IstAdmin)
-            {
-                return;
-            }
-
+            if (!IstAdmin) return;
             OeffneBereich(new Klassen());
         }
 
         private void kursePage_Click(object sender, EventArgs e)
         {
-            if (!IstAdmin)
-            {
-                return;
-            }
-
+            if (!IstAdmin) return;
             OeffneBereich(new Kurse());
         }
 
-        private void stundenplanPage_Click(object sender, EventArgs e)
-        {
-            OeffneBereich(
-                new Stundenplan(
-                    darfBearbeiten: IstAdmin || IstLehrer
-                )
-            );
-        }
+        private void stundenplanPage_Click(object sender, EventArgs e) =>
+            OeffneBereich(new Stundenplan(darfBearbeiten: IstAdmin || IstLehrer));
 
         private void auditLogPage_Click(object sender, EventArgs e)
         {
-            if (!IstAdmin)
-            {
-                return;
-            }
-
+            if (!IstAdmin) return;
             OeffneBereich(new AuditLog());
         }
 
-        private void hauptbildLaden()
-        {
-            hauptbild.Image =
-                Image.FromFile("images/Hauptbild.png");
-        }
+        private void hauptbildLaden() => hauptbild.Image = Image.FromFile("images/Hauptbild.png");
 
         private async Task ProfilButtonBildLadenAsync()
         {
             try
             {
-                await using SchulAppContext db =
-                    new SchulAppContext();
-
-                byte[]? profilbild = await db.Benutzer
-                    .AsNoTracking()
-                    .Where(x => x.Id == benutzerId)
-                    .Select(x => x.Profilbild)
-                    .SingleOrDefaultAsync();
-
-                if (profilbild == null ||
-                    profilbild.Length == 0)
+                await using SchulAppContext db = new SchulAppContext();
+                byte[]? profilbild = await db.Benutzer.AsNoTracking().Where(x => x.Id == benutzerId).Select(x => x.Profilbild).SingleOrDefaultAsync();
+                if (profilbild == null || profilbild.Length == 0)
                 {
                     StandardProfilButtonBildLaden();
                     return;
                 }
 
-                using MemoryStream stream =
-                    new MemoryStream(profilbild);
-
-                using Image original =
-                    Image.FromStream(stream);
-
-                SetProfilButtonBild(
-                    new Bitmap(
-                        original,
-                        new Size(34, 34)
-                    )
-                );
+                using MemoryStream stream = new MemoryStream(profilbild);
+                using Image original = Image.FromStream(stream);
+                SetProfilButtonBild(new Bitmap(original, new Size(34, 34)));
             }
             catch (Exception)
             {
@@ -187,12 +125,7 @@ namespace SchulApp
 
         private void StandardProfilButtonBildLaden()
         {
-            string pfad = Path.Combine(
-                AppContext.BaseDirectory,
-                "images",
-                "profilePicture.png"
-            );
-
+            string pfad = Path.Combine(AppContext.BaseDirectory, "images", "profilePicture.png");
             if (!File.Exists(pfad))
             {
                 SetProfilButtonBild(null);
@@ -200,54 +133,27 @@ namespace SchulApp
                 return;
             }
 
-            using Image original =
-                Image.FromFile(pfad);
-
-            SetProfilButtonBild(
-                new Bitmap(
-                    original,
-                    new Size(30, 30)
-                )
-            );
+            using Image original = Image.FromFile(pfad);
+            SetProfilButtonBild(new Bitmap(original, new Size(30, 30)));
         }
 
         private void SetProfilButtonBild(Image? neuesBild)
         {
             Image? altesBild = profileBtn.Image;
-
             profileBtn.Image = neuesBild;
-            profileBtn.ImageAlign =
-                ContentAlignment.MiddleCenter;
-            profileBtn.Text =
-                neuesBild == null
-                    ? "Profil"
-                    : string.Empty;
-
+            profileBtn.ImageAlign = ContentAlignment.MiddleCenter;
+            profileBtn.Text = neuesBild == null ? "Profil" : string.Empty;
             altesBild?.Dispose();
         }
 
         private void DataTransferButtonBildLaden()
         {
-            string pfad = Path.Combine(
-                AppContext.BaseDirectory,
-                "images",
-                "CSVandPDFicon.png"
-            );
-
-            if (!File.Exists(pfad))
-            {
-                return;
-            }
-
+            string pfad = Path.Combine(AppContext.BaseDirectory, "images", "CSVandPDFicon.png");
+            if (!File.Exists(pfad)) return;
             using Image original = Image.FromFile(pfad);
-
-            dataTransferBtn.Image = new Bitmap(
-                original,
-                new Size(28, 28)
-            );
+            dataTransferBtn.Image = new Bitmap(original, new Size(28, 28));
             dataTransferBtn.ImageAlign = ContentAlignment.MiddleLeft;
-            dataTransferBtn.TextImageRelation =
-                TextImageRelation.ImageBeforeText;
+            dataTransferBtn.TextImageRelation = TextImageRelation.ImageBeforeText;
         }
 
         private void DataTransferMenuErstellen()
@@ -255,162 +161,118 @@ namespace SchulApp
             dataTransferMenu?.Dispose();
             dataTransferMenu = new ContextMenuStrip();
 
-            ToolStripMenuItem exportItem = new ToolStripMenuItem(
-                "Exportieren"
-            )
+            ToolStripMenuItem exportItem = new ToolStripMenuItem("Exportieren")
             {
                 Image = MenuBildLaden("export.png")
             };
 
-            exportItem.DropDownItems.Add(
-                ExportDatensatzMenuErstellen(
-                    "Schülerliste",
-                    ExportDataSet.Schueler
-                )
-            );
-            exportItem.DropDownItems.Add(
-                ExportDatensatzMenuErstellen(
-                    "Klassenliste",
-                    ExportDataSet.Klassen
-                )
-            );
-            exportItem.DropDownItems.Add(
-                ExportDatensatzMenuErstellen(
-                    "Stundenplan",
-                    ExportDataSet.Stundenplan
-                )
-            );
-            exportItem.DropDownItems.Add(
-                ExportDatensatzMenuErstellen(
-                    "Audit Log",
-                    ExportDataSet.AuditLog
-                )
-            );
+            exportItem.DropDownItems.Add(ExportDatensatzMenuErstellen("Schülerliste", ExportDataSet.Schueler));
+            exportItem.DropDownItems.Add(ExportDatensatzMenuErstellen("Klassenliste", ExportDataSet.Klassen));
+            exportItem.DropDownItems.Add(ExportDatensatzMenuErstellen("Stundenplan", ExportDataSet.Stundenplan));
+            exportItem.DropDownItems.Add(ExportDatensatzMenuErstellen("Audit Log", ExportDataSet.AuditLog));
 
-            ToolStripMenuItem importItem = new ToolStripMenuItem(
-                "Schüler aus CSV importieren"
-            )
+            ToolStripMenuItem importItem = new ToolStripMenuItem("Schüler aus CSV importieren")
             {
                 Image = MenuBildLaden("Import.png")
             };
+            importItem.Click += async (_, _) => await SchuelerImportierenAsync();
 
-            importItem.Click += async (_, _) =>
-                await SchuelerImportierenAsync();
+            ToolStripMenuItem templateItem = new ToolStripMenuItem("CSV-Importvorlage herunterladen");
+            templateItem.Click += async (_, _) => await SchuelerImportVorlageSpeichernAsync();
 
             dataTransferMenu.Items.Add(exportItem);
             dataTransferMenu.Items.Add(importItem);
+            dataTransferMenu.Items.Add(templateItem);
         }
 
-        private ToolStripMenuItem ExportDatensatzMenuErstellen(
-            string text,
-            ExportDataSet dataSet)
+        private ToolStripMenuItem ExportDatensatzMenuErstellen(string text, ExportDataSet dataSet)
         {
             ToolStripMenuItem item = new ToolStripMenuItem(text);
             ToolStripMenuItem csvItem = new ToolStripMenuItem("CSV");
             ToolStripMenuItem pdfItem = new ToolStripMenuItem("PDF");
-
-            csvItem.Click += async (_, _) =>
-                await ExportierenAsync(
-                    dataSet,
-                    ExportFileFormat.Csv
-                );
-
-            pdfItem.Click += async (_, _) =>
-                await ExportierenAsync(
-                    dataSet,
-                    ExportFileFormat.Pdf
-                );
-
+            csvItem.Click += async (_, _) => await ExportierenAsync(dataSet, ExportFileFormat.Csv);
+            pdfItem.Click += async (_, _) => await ExportierenAsync(dataSet, ExportFileFormat.Pdf);
             item.DropDownItems.Add(csvItem);
             item.DropDownItems.Add(pdfItem);
-
             return item;
         }
 
         private static Image? MenuBildLaden(string dateiname)
         {
-            string pfad = Path.Combine(
-                AppContext.BaseDirectory,
-                "images",
-                dateiname
-            );
-
-            if (!File.Exists(pfad))
-            {
-                return null;
-            }
-
+            string pfad = Path.Combine(AppContext.BaseDirectory, "images", dateiname);
+            if (!File.Exists(pfad)) return null;
             using Image original = Image.FromFile(pfad);
             return new Bitmap(original, new Size(20, 20));
         }
 
         private void dataTransferBtn_Click(object sender, EventArgs e)
         {
-            if (!IstAdmin || dataTransferMenu == null)
-            {
-                return;
-            }
-
-            dataTransferMenu.Show(
-                dataTransferBtn,
-                new Point(0, dataTransferBtn.Height)
-            );
+            if (!IstAdmin || dataTransferMenu == null) return;
+            dataTransferMenu.Show(dataTransferBtn, new Point(0, dataTransferBtn.Height));
         }
 
-        private async Task ExportierenAsync(
-            ExportDataSet dataSet,
-            ExportFileFormat format)
+        private async Task ExportierenAsync(ExportDataSet dataSet, ExportFileFormat format)
         {
-            string extension = format == ExportFileFormat.Csv
-                ? "csv"
-                : "pdf";
-
+            string extension = format == ExportFileFormat.Csv ? "csv" : "pdf";
             using SaveFileDialog dialog = new SaveFileDialog
             {
                 Title = "Daten exportieren",
-                Filter = format == ExportFileFormat.Csv
-                    ? "CSV-Datei (*.csv)|*.csv"
-                    : "PDF-Datei (*.pdf)|*.pdf",
+                Filter = format == ExportFileFormat.Csv ? "CSV-Datei (*.csv)|*.csv" : "PDF-Datei (*.pdf)|*.pdf",
                 DefaultExt = extension,
                 AddExtension = true,
                 RestoreDirectory = true,
-                FileName =
-                    $"{ExportDateiname(dataSet)}-{DateTime.Now:yyyyMMdd-HHmm}.{extension}"
+                FileName = $"{ExportDateiname(dataSet)}-{DateTime.Now:yyyyMMdd-HHmm}.{extension}"
             };
-
-            if (dialog.ShowDialog(this) != DialogResult.OK)
-            {
-                return;
-            }
+            if (dialog.ShowDialog(this) != DialogResult.OK) return;
 
             try
             {
                 Cursor = Cursors.WaitCursor;
                 dataTransferBtn.Enabled = false;
+                await DataTransferService.ExportAsync(dataSet, format, dialog.FileName);
+                MessageBox.Show(this, "Export erfolgreich abgeschlossen.", "Export", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception exception)
+            {
+                MessageBox.Show(this, $"Export fehlgeschlagen:{Environment.NewLine}{exception.Message}", "Exportfehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                dataTransferBtn.Enabled = true;
+                Cursor = Cursors.Default;
+            }
+        }
 
-                await DataTransferService.ExportAsync(
-                    dataSet,
-                    format,
-                    dialog.FileName
-                );
+        private async Task SchuelerImportVorlageSpeichernAsync()
+        {
+            using SaveFileDialog dialog = new SaveFileDialog
+            {
+                Title = "Schüler-Importvorlage speichern",
+                Filter = "CSV-Datei (*.csv)|*.csv",
+                DefaultExt = "csv",
+                AddExtension = true,
+                RestoreDirectory = true,
+                FileName = "schueler-import-vorlage.csv"
+            };
 
+            if (dialog.ShowDialog(this) != DialogResult.OK) return;
+
+            try
+            {
+                Cursor = Cursors.WaitCursor;
+                dataTransferBtn.Enabled = false;
+                await StudentImportTemplateService.SaveTemplateAsync(dialog.FileName);
                 MessageBox.Show(
                     this,
-                    "Export erfolgreich abgeschlossen.",
-                    "Export",
+                    "Die Importvorlage wurde gespeichert. Sie enthält die benötigten Spalten Name und KlasseId sowie eine Beispielzeile.",
+                    "Importvorlage",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Information
                 );
             }
             catch (Exception exception)
             {
-                MessageBox.Show(
-                    this,
-                    $"Export fehlgeschlagen:{Environment.NewLine}{exception.Message}",
-                    "Exportfehler",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error
-                );
+                MessageBox.Show(this, $"Vorlage konnte nicht gespeichert werden:{Environment.NewLine}{exception.Message}", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally
             {
@@ -423,73 +285,31 @@ namespace SchulApp
         {
             using OpenFileDialog dialog = new OpenFileDialog
             {
-                Title =
-                    "Schüler importieren - erforderliche Spalten: Name;KlasseId",
+                Title = "Schüler importieren - erforderliche Spalten: Name;KlasseId",
                 Filter = "CSV-Datei (*.csv)|*.csv",
                 CheckFileExists = true,
                 Multiselect = false,
                 RestoreDirectory = true
             };
-
-            if (dialog.ShowDialog(this) != DialogResult.OK)
-            {
-                return;
-            }
+            if (dialog.ShowDialog(this) != DialogResult.OK) return;
 
             try
             {
                 Cursor = Cursors.WaitCursor;
                 dataTransferBtn.Enabled = false;
-
-                CsvImportResult result =
-                    await DataTransferService.ImportStudentsAsync(
-                        dialog.FileName
-                    );
-
+                CsvImportResult result = await DataTransferService.ImportStudentsAsync(dialog.FileName);
                 if (result.Errors.Count > 0)
                 {
-                    string errorText = string.Join(
-                        Environment.NewLine,
-                        result.Errors.Take(15)
-                    );
-
-                    if (result.Errors.Count > 15)
-                    {
-                        errorText +=
-                            $"{Environment.NewLine}... und {result.Errors.Count - 15} weitere Fehler.";
-                    }
-
-                    MessageBox.Show(
-                        this,
-                        "Import abgebrochen. Es wurden keine Schüler gespeichert." +
-                        Environment.NewLine +
-                        Environment.NewLine +
-                        errorText,
-                        "CSV-Importfehler",
-                        MessageBoxButtons.OK,
-                        MessageBoxIcon.Warning
-                    );
-
+                    string errorText = string.Join(Environment.NewLine, result.Errors.Take(15));
+                    if (result.Errors.Count > 15) errorText += $"{Environment.NewLine}... und {result.Errors.Count - 15} weitere Fehler.";
+                    MessageBox.Show(this, "Import abgebrochen. Es wurden keine Schüler gespeichert." + Environment.NewLine + Environment.NewLine + errorText, "CSV-Importfehler", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
-
-                MessageBox.Show(
-                    this,
-                    $"{result.ImportedCount} Schüler wurden erfolgreich importiert.",
-                    "CSV-Import",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Information
-                );
+                MessageBox.Show(this, $"{result.ImportedCount} Schüler wurden erfolgreich importiert.", "CSV-Import", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception exception)
             {
-                MessageBox.Show(
-                    this,
-                    $"Import fehlgeschlagen:{Environment.NewLine}{exception.Message}",
-                    "Importfehler",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error
-                );
+                MessageBox.Show(this, $"Import fehlgeschlagen:{Environment.NewLine}{exception.Message}", "Importfehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally
             {
@@ -498,17 +318,14 @@ namespace SchulApp
             }
         }
 
-        private static string ExportDateiname(ExportDataSet dataSet)
+        private static string ExportDateiname(ExportDataSet dataSet) => dataSet switch
         {
-            return dataSet switch
-            {
-                ExportDataSet.Schueler => "schueler",
-                ExportDataSet.Klassen => "klassen",
-                ExportDataSet.Stundenplan => "stundenplan",
-                ExportDataSet.AuditLog => "audit-log",
-                _ => "export"
-            };
-        }
+            ExportDataSet.Schueler => "schueler",
+            ExportDataSet.Klassen => "klassen",
+            ExportDataSet.Stundenplan => "stundenplan",
+            ExportDataSet.AuditLog => "audit-log",
+            _ => "export"
+        };
 
         private void abmeldenBtn_Click(object sender, EventArgs e)
         {
@@ -516,10 +333,7 @@ namespace SchulApp
             Close();
         }
 
-        private void einstellungPage_Click(object sender, EventArgs e)
-        {
-            OeffneBereich(new Einstellungen());
-        }
+        private void einstellungPage_Click(object sender, EventArgs e) => OeffneBereich(new Einstellungen());
 
         private async void profileBtn_Click(object sender, EventArgs e)
         {
@@ -527,16 +341,7 @@ namespace SchulApp
             await ProfilButtonBildLadenAsync();
         }
 
-        private void pingPong_Click(object sender, EventArgs e)
-        {
-            OeffneBereich(new PingPong());
-        }
-
-        private void bestenlistePage_Click(
-            object sender,
-            EventArgs e)
-        {
-            OeffneBereich(new Bestenliste());
-        }
+        private void pingPong_Click(object sender, EventArgs e) => OeffneBereich(new PingPong());
+        private void bestenlistePage_Click(object sender, EventArgs e) => OeffneBereich(new Bestenliste());
     }
 }
