@@ -46,6 +46,15 @@ namespace SchulApp.Data.Configurations
 
             entity.HasIndex(x => x.Benutzername)
                 .IsUnique();
+
+            entity.HasIndex(x => x.SchuelerId)
+                .IsUnique()
+                .HasFilter("[SchuelerId] IS NOT NULL");
+
+            entity.HasOne<SchuelerModel>()
+                .WithOne()
+                .HasForeignKey<LoginBenutzer>(x => x.SchuelerId)
+                .OnDelete(DeleteBehavior.SetNull);
         }
     }
 }
