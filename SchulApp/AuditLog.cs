@@ -8,7 +8,7 @@ namespace SchulApp
 {
     public partial class AuditLog : CustomForm
     {
-        private const int AutoRefreshIntervalMilliseconds = 5000;
+        private const int AutoRefreshIntervalMilliseconds = 1000;
 
         private readonly System.Windows.Forms.Timer autoRefreshTimer;
         private bool wirdGeladen;
