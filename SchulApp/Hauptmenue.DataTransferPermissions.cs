@@ -24,9 +24,7 @@ namespace SchulApp
             dataTransferMenu?.Dispose();
             dataTransferMenu = new ContextMenuStrip();
 
-            ToolStripMenuItem exportItem = new ToolStripMenuItem(
-                "Exportieren"
-            )
+            ToolStripMenuItem exportItem = new ToolStripMenuItem("Export")
             {
                 Image = MenuBildLaden("export.png")
             };
@@ -88,36 +86,53 @@ namespace SchulApp
                 dataTransferMenu.Items.Add(exportItem);
             }
 
+            ToolStripMenuItem importItem = new ToolStripMenuItem("Import")
+            {
+                Image = MenuBildLaden("Import.png")
+            };
+
             if (DataTransferPermissionService.DarfSchuelerImportieren(rolle))
             {
                 ToolStripMenuItem importStudentsItem = new ToolStripMenuItem(
-                    "Schüler aus CSV importieren"
-                )
-                {
-                    Image = MenuBildLaden("Import.png")
-                };
+                    "Schüler"
+                );
                 importStudentsItem.Click += async (_, _) =>
                     await RoleBasedSchuelerImportierenAsync();
 
-                dataTransferMenu.Items.Add(importStudentsItem);
+                importItem.DropDownItems.Add(importStudentsItem);
+            }
 
+            if (DataTransferPermissionService.DarfStundenplanImportieren(rolle))
+            {
                 ToolStripMenuItem importTimetableItem = new ToolStripMenuItem(
-                    "Stundenplan aus CSV importieren"
-                )
-                {
-                    Image = MenuBildLaden("Import.png")
-                };
+                    "Stundenplan"
+                );
                 importTimetableItem.Click += async (_, _) =>
                     await RoleBasedStundenplanImportierenAsync();
 
-                dataTransferMenu.Items.Add(importTimetableItem);
+                importItem.DropDownItems.Add(importTimetableItem);
+            }
 
-                ToolStripMenuItem templateItem = new ToolStripMenuItem(
-                    "Schüler-CSV-Importvorlage herunterladen"
+            if (importItem.DropDownItems.Count > 0)
+            {
+                dataTransferMenu.Items.Add(importItem);
+            }
+
+            ToolStripMenuItem templateItem = new ToolStripMenuItem("Template");
+
+            if (DataTransferPermissionService.DarfSchuelerImportieren(rolle))
+            {
+                ToolStripMenuItem studentTemplateItem = new ToolStripMenuItem(
+                    "Schüler-CSV-Importvorlage"
                 );
-                templateItem.Click += async (_, _) =>
+                studentTemplateItem.Click += async (_, _) =>
                     await SchuelerImportVorlageSpeichernAsync();
 
+                templateItem.DropDownItems.Add(studentTemplateItem);
+            }
+
+            if (templateItem.DropDownItems.Count > 0)
+            {
                 dataTransferMenu.Items.Add(templateItem);
             }
         }
