@@ -200,11 +200,7 @@ namespace SchulApp.Services
             string? baseAddress = null)
         {
             string configuredBaseAddress = baseAddress ??
-                Environment.GetEnvironmentVariable(
-                    "SCHULAPP_MULTIPLAYER_BASE_URL"
-                ) ??
-                Environment.GetEnvironmentVariable("SCHULAPP_API_BASE_URL") ??
-                "http://localhost:63636/";
+                PingPongMultiplayerEndpoint.CurrentBaseAddress;
 
             if (!configuredBaseAddress.EndsWith('/'))
             {

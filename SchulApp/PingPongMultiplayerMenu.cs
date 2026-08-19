@@ -36,19 +36,19 @@ namespace SchulApp
                 Font = new Font("Segoe UI", 10F),
                 Location = new Point(70, 110),
                 Size = new Size(500, 45),
-                Text = "Erstelle ein neues Spiel oder tritt einem bestehenden Spiel bei.",
+                Text = "Erstelle ein neues Spiel oder tritt per Game Code und Host-IP bei.",
                 TextAlign = ContentAlignment.MiddleCenter
             };
 
             createGameButton = CreateActionButton(
                 "Create Game",
-                "Neue Lobby erstellen",
+                "Neue Lobby auf diesem PC erstellen",
                 new Point(95, 175)
             );
 
             joinGameButton = CreateActionButton(
                 "Join Game",
-                "Bestehender Lobby beitreten",
+                "Same PC oder LAN/IP",
                 new Point(335, 175)
             );
 
@@ -101,10 +101,12 @@ namespace SchulApp
 
         private async void CreateGameButton_Click(object? sender, EventArgs e)
         {
-            SetBusy(true, "Lobby wird erstellt...");
+            SetBusy(true, "Lokale Lobby wird erstellt...");
 
             try
             {
+                PingPongMultiplayerEndpoint.UseLocalhost();
+
                 PingPongLobbyModel lobby =
                     await lobbyApiService.CreateLobbyAsync(
                         BenutzerSession.BenutzerId
@@ -134,22 +136,31 @@ namespace SchulApp
                 return;
             }
 
-            SetBusy(true, "Lobby wird gesucht...");
+            SetBusy(true, "Lobby wird über den angegebenen Host gesucht...");
 
             try
             {
+                string baseAddress =
+                    PingPongMultiplayerEndpoint.ConfigureHost(dialog.HostAddress);
+
                 PingPongLobbyModel lobby =
                     await lobbyApiService.JoinLobbyAsync(
                         dialog.GameCode,
-                        BenutzerSession.BenutzerId
+                        BenutzerSession.BenutzerId,
+                        BenutzerSession.Benutzername
                     );
 
-                statusLabel.Text = string.Empty;
+                statusLabel.Text = "Verbunden mit " + baseAddress;
                 OeffneBereich(new PingPongLobbyForm(lobby, isHost: false));
             }
             catch (Exception ex)
             {
-                ShowLobbyError(ex.Message);
+                ShowLobbyError(
+                    ex.Message +
+                    Environment.NewLine +
+                    Environment.NewLine +
+                    "Prüfe Host-IP, Port 63636 und die Windows-Firewall des Hosts."
+                );
             }
             finally
             {

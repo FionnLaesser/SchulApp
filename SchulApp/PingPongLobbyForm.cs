@@ -36,8 +36,8 @@ namespace SchulApp
 
             Text = "SchulApp - Ping Pong Lobby";
             StartPosition = FormStartPosition.Manual;
-            ClientSize = new Size(680, 470);
-            MinimumSize = new Size(680, 470);
+            ClientSize = new Size(680, 490);
+            MinimumSize = new Size(680, 490);
 
             Label titleLabel = new Label
             {
@@ -89,16 +89,16 @@ namespace SchulApp
             informationLabel = new Label
             {
                 AutoSize = false,
-                Font = new Font("Segoe UI", 10F),
-                Location = new Point(95, 315),
-                Size = new Size(490, 55),
+                Font = new Font("Segoe UI", 9.5F),
+                Location = new Point(70, 305),
+                Size = new Size(540, 82),
                 TextAlign = ContentAlignment.MiddleCenter
             };
 
             openGameButton = new Button
             {
                 Enabled = lobby.IsReady,
-                Location = new Point(145, 395),
+                Location = new Point(145, 415),
                 Size = new Size(180, 40),
                 Text = "Multiplayer öffnen",
                 UseVisualStyleBackColor = true
@@ -106,7 +106,7 @@ namespace SchulApp
 
             backButton = new Button
             {
-                Location = new Point(355, 395),
+                Location = new Point(355, 415),
                 Size = new Size(180, 40),
                 Text = isHost ? "Lobby schliessen" : "Lobby verlassen",
                 UseVisualStyleBackColor = true
@@ -337,11 +337,38 @@ namespace SchulApp
             statusValueLabel.Text = lobby.IsReady ? "Ready" : "Waiting";
             openGameButton.Enabled = lobby.IsReady && !gameOpen && !cleanupStarted;
 
+            string connectionText = GetConnectionInformation();
+
             informationLabel.Text = lobby.IsReady
-                ? "Beide Spieler sind verbunden. Öffne den Multiplayer-Modus für die Paddle-Synchronisierung."
+                ? "Beide Spieler sind verbunden. Öffne den Multiplayer-Modus.\n" +
+                    connectionText
                 : isHost
-                    ? "Teile den Game Code mit Player 2 und warte auf den Beitritt."
-                    : "Die Lobby wartet auf einen zweiten Spieler.";
+                    ? "Teile Game Code und LAN-IP mit Player 2.\n" + connectionText
+                    : "Warte auf die Lobby.\n" + connectionText;
+        }
+
+        private string GetConnectionInformation()
+        {
+            if (!isHost)
+            {
+                return "Server: " + PingPongMultiplayerEndpoint.CurrentBaseAddress;
+            }
+
+            IReadOnlyList<string> addresses =
+                PingPongMultiplayerEndpoint.GetLocalIPv4Addresses();
+
+            if (addresses.Count == 0)
+            {
+                return $"Same PC: localhost | LAN-Port: {PingPongMultiplayerEndpoint.DefaultPort}";
+            }
+
+            return "LAN: " +
+                string.Join(
+                    " | ",
+                    addresses.Select(
+                        address => $"{address}:{PingPongMultiplayerEndpoint.DefaultPort}"
+                    )
+                );
         }
 
         private void PingPongLobbyForm_FormClosed(object? sender, FormClosedEventArgs e)
@@ -379,7 +406,6 @@ namespace SchulApp
             }
             catch
             {
-                // Die Lobby laeuft automatisch ab, falls das Aufraeumen nicht mehr moeglich ist.
             }
         }
     }
