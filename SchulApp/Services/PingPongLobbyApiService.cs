@@ -104,7 +104,9 @@ namespace SchulApp.Services
                 address => new HttpClient
                 {
                     BaseAddress = new Uri(address, UriKind.Absolute),
-                    Timeout = TimeSpan.FromSeconds(10)
+                    Timeout = TimeSpan.FromSeconds(
+                        PingPongMultiplayerError.ConnectionTimeoutSeconds
+                    )
                 }
             );
         }
