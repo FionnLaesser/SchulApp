@@ -1,4 +1,4 @@
-﻿using CoreWCF;
+using CoreWCF;
 using SchulAppSOAP.Models;
 
 namespace SchulAppSOAP.Contracts
@@ -20,5 +20,11 @@ namespace SchulAppSOAP.Contracts
 
         [OperationContract]
         Task<bool> DeleteSchueler(int id);
+
+        [OperationContract]
+        Task<bool> DeleteSchuelerMitAudit(
+            int id,
+            string? auditUserName,
+            string? auditUserRole);
     }
 }
