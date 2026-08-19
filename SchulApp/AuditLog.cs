@@ -8,9 +8,21 @@ namespace SchulApp
 {
     public partial class AuditLog : CustomForm
     {
+        private const int AutoRefreshIntervalMilliseconds = 5000;
+
+        private readonly System.Windows.Forms.Timer autoRefreshTimer;
+        private bool wirdGeladen;
+
         public AuditLog()
         {
             InitializeComponent();
+
+            autoRefreshTimer = new System.Windows.Forms.Timer
+            {
+                Interval = AutoRefreshIntervalMilliseconds
+            };
+            autoRefreshTimer.Tick += AutoRefreshTimer_Tick;
+            FormClosed += AuditLog_FormClosed;
 
             // Im Visual-Studio-Designer keine Session-/Admin-Prüfung ausführen
             if (LicenseManager.UsageMode == LicenseUsageMode.Designtime)
@@ -34,6 +46,7 @@ namespace SchulApp
         private async void AuditLog_Shown(object? sender, EventArgs e)
         {
             await AuditLogsLadenAsync();
+            autoRefreshTimer.Start();
         }
 
         private async void reloadButton_Click(object? sender, EventArgs e)
@@ -41,9 +54,33 @@ namespace SchulApp
             await AuditLogsLadenAsync();
         }
 
-        private async Task AuditLogsLadenAsync()
+        private async void AutoRefreshTimer_Tick(object? sender, EventArgs e)
         {
+            await AuditLogsLadenAsync(showError: false);
+        }
+
+        private void AuditLog_FormClosed(object? sender, FormClosedEventArgs e)
+        {
+            autoRefreshTimer.Stop();
+        }
+
+        private async Task AuditLogsLadenAsync(bool showError = true)
+        {
+            if (wirdGeladen)
+            {
+                return;
+            }
+
+            wirdGeladen = true;
             reloadButton.Enabled = false;
+
+            int? selectedId =
+                auditGrid.CurrentRow?.DataBoundItem is AuditLogRow selectedRow
+                    ? selectedRow.Id
+                    : null;
+
+            DataGridViewColumn? sortColumn = auditGrid.SortedColumn;
+            SortOrder sortOrder = auditGrid.SortOrder;
 
             try
             {
@@ -87,20 +124,54 @@ namespace SchulApp
                 {
                     zeitColumn.FillWeight = 90;
                 }
+
+                if (sortColumn != null &&
+                    auditGrid.Columns.Contains(sortColumn.Name) &&
+                    sortOrder != SortOrder.None)
+                {
+                    auditGrid.Sort(
+                        auditGrid.Columns[sortColumn.Name],
+                        sortOrder == SortOrder.Descending
+                            ? ListSortDirection.Descending
+                            : ListSortDirection.Ascending
+                    );
+                }
+
+                if (selectedId.HasValue)
+                {
+                    foreach (DataGridViewRow gridRow in auditGrid.Rows)
+                    {
+                        if (gridRow.DataBoundItem is AuditLogRow row &&
+                            row.Id == selectedId.Value)
+                        {
+                            gridRow.Selected = true;
+                            auditGrid.CurrentCell = gridRow.Cells[0];
+                            break;
+                        }
+                    }
+                }
             }
             catch (Exception ex)
             {
-                MessageBox.Show(
-                    "Das Audit Log konnte nicht geladen werden:\n" +
-                    ex.Message,
-                    "Audit Log",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error
-                );
+                if (showError)
+                {
+                    MessageBox.Show(
+                        "Das Audit Log konnte nicht geladen werden:\n" +
+                        ex.Message,
+                        "Audit Log",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error
+                    );
+                }
             }
             finally
             {
-                reloadButton.Enabled = true;
+                if (!IsDisposed)
+                {
+                    reloadButton.Enabled = true;
+                }
+
+                wirdGeladen = false;
             }
         }
 
@@ -167,7 +238,8 @@ namespace SchulApp
 
             public string? Changes { get; set; }
         }
-        public void backBtn_Click(object? sender, EventArgs e) 
+
+        public void backBtn_Click(object? sender, EventArgs e)
         {
             Close();
         }
