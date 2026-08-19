@@ -74,5 +74,19 @@ namespace SchulApp.Tests
             Assert.NotNull(payload);
             Assert.Equal(0.625, payload!.NormalizedTop, 6);
         }
+
+        [Fact]
+        public void Payload_SerializesUsingNetworkPropertyName()
+        {
+            string json = JsonSerializer.Serialize(
+                new PingPongPlayerMovementPayload
+                {
+                    NormalizedTop = 0.375
+                }
+            );
+
+            Assert.Contains("\"normalizedTop\":0.375", json);
+            Assert.DoesNotContain("\"NormalizedTop\"", json);
+        }
     }
 }
