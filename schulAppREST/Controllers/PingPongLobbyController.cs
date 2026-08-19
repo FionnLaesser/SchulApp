@@ -133,7 +133,7 @@ namespace schulAppREST.Controllers
             PingPongLobbyLeaveStatus result =
                 lobbyService.LeaveLobby(gameCode, request.UserId);
 
-            return result.Status switch
+            return result switch
             {
                 PingPongLobbyLeaveStatus.Success => NoContent(),
                 PingPongLobbyLeaveStatus.LobbyClosed => NoContent(),
