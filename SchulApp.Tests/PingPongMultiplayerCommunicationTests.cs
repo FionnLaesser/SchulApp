@@ -41,6 +41,21 @@ namespace SchulApp.Tests
         }
 
         [Fact]
+        public void CreateWebSocketUri_LanAddress_UsesRemoteHost()
+        {
+            Uri uri = PingPongMultiplayerConnection.CreateWebSocketUri(
+                "LAN123",
+                11,
+                "http://192.168.1.42:63636/"
+            );
+
+            Assert.Equal("ws", uri.Scheme);
+            Assert.Equal("192.168.1.42", uri.Host);
+            Assert.Equal(63636, uri.Port);
+            Assert.Equal("/ws/pingpong/LAN123", uri.AbsolutePath);
+        }
+
+        [Fact]
         public void CreateWebSocketUri_HttpsAddress_UsesSecureWebSocketScheme()
         {
             Uri uri = PingPongMultiplayerConnection.CreateWebSocketUri(
@@ -54,6 +69,35 @@ namespace SchulApp.Tests
             Assert.Equal(7443, uri.Port);
             Assert.Equal("/api/ws/pingpong/ABC123", uri.AbsolutePath);
             Assert.Equal("?userId=7", uri.Query);
+        }
+
+        [Theory]
+        [InlineData("localhost", "http://localhost:63636/")]
+        [InlineData("192.168.1.42", "http://192.168.1.42:63636/")]
+        [InlineData("192.168.1.42:7000", "http://192.168.1.42:7000/")]
+        [InlineData("http://school-pc:63636", "http://school-pc:63636/")]
+        public void TryNormalizeHost_ValidInput_ReturnsExpectedAddress(
+            string input,
+            string expected)
+        {
+            bool valid = PingPongMultiplayerEndpoint.TryNormalizeHost(
+                input,
+                out string normalized
+            );
+
+            Assert.True(valid);
+            Assert.Equal(expected, normalized);
+        }
+
+        [Theory]
+        [InlineData("")]
+        [InlineData("   ")]
+        [InlineData("ftp://192.168.1.42")]
+        public void TryNormalizeHost_InvalidInput_ReturnsFalse(string input)
+        {
+            Assert.False(
+                PingPongMultiplayerEndpoint.TryNormalizeHost(input, out _)
+            );
         }
     }
 }
