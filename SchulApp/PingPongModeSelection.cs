@@ -90,13 +90,7 @@ namespace SchulApp
 
         private void MultiplayerButton_Click(object? sender, EventArgs e)
         {
-            MessageBox.Show(
-                this,
-                "Der Multiplayer-Bereich wird mit dem nächsten Projektschritt ergänzt.",
-                "Ping Pong Multiplayer",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Information
-            );
+            OeffneBereich(new PingPongMultiplayerMenu());
         }
     }
 }
