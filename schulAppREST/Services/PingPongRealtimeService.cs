@@ -19,44 +19,59 @@ namespace schulAppREST.Services
                 "GameEnd"
             };
 
+        private static readonly HashSet<string> AuthoritativeMessageTypes =
+            new HashSet<string>(StringComparer.Ordinal)
+            {
+                "BallState",
+                "Score",
+                "GameStart",
+                "GameEnd"
+            };
+
         private static readonly JsonSerializerOptions JsonOptions =
             new JsonSerializerOptions(JsonSerializerDefaults.Web);
 
-        private readonly ConcurrentDictionary<
-            string,
-            ConcurrentDictionary<int, ClientConnection>> sessions = new(
-                StringComparer.OrdinalIgnoreCase
-            );
+        private readonly ConcurrentDictionary<string, RealtimeSession> sessions =
+            new(StringComparer.OrdinalIgnoreCase);
 
         public async Task HandleConnectionAsync(
             string gameCode,
             int userId,
+            int authoritativeUserId,
             WebSocket socket,
             CancellationToken cancellationToken)
         {
             string normalizedCode = NormalizeCode(gameCode);
-            ConcurrentDictionary<int, ClientConnection> session =
-                sessions.GetOrAdd(
-                    normalizedCode,
-                    _ => new ConcurrentDictionary<int, ClientConnection>()
-                );
+            RealtimeSession session = sessions.GetOrAdd(
+                normalizedCode,
+                _ => new RealtimeSession()
+            );
 
             ClientConnection connection = new ClientConnection(socket);
 
-            if (session.TryGetValue(userId, out ClientConnection? existingConnection))
+            if (session.Connections.TryGetValue(
+                userId,
+                out ClientConnection? existingConnection))
             {
-                session[userId] = connection;
+                session.Connections[userId] = connection;
                 await CloseConnectionQuietlyAsync(existingConnection);
             }
             else
             {
-                session.TryAdd(userId, connection);
+                session.Connections.TryAdd(userId, connection);
             }
 
             await BroadcastLobbyEventAsync(
                 normalizedCode,
+                session,
                 "PlayerConnected",
                 userId,
+                cancellationToken
+            );
+
+            await ReplayLatestGameStateAsync(
+                session,
+                connection,
                 cancellationToken
             );
 
@@ -74,7 +89,9 @@ namespace schulAppREST.Services
                         break;
                     }
 
-                    if (!IsValidIncomingMessage(message))
+                    bool isAuthoritative = userId == authoritativeUserId;
+
+                    if (!IsValidIncomingMessage(message, isAuthoritative))
                     {
                         continue;
                     }
@@ -84,8 +101,10 @@ namespace schulAppREST.Services
                     message.TimestampUnixMilliseconds =
                         DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
+                    StoreAuthoritativeState(session, message);
+
                     await BroadcastAsync(
-                        normalizedCode,
+                        session,
                         message,
                         excludedUserId: userId,
                         cancellationToken
@@ -94,24 +113,24 @@ namespace schulAppREST.Services
             }
             catch (OperationCanceledException)
             {
-                // The request or client connection was closed.
             }
             catch (WebSocketException)
             {
-                // Network disconnects are handled by removing the client below.
             }
             finally
             {
                 if (
-                    session.TryGetValue(userId, out ClientConnection? current) &&
+                    session.Connections.TryGetValue(
+                        userId,
+                        out ClientConnection? current) &&
                     ReferenceEquals(current, connection))
                 {
-                    session.TryRemove(userId, out _);
+                    session.Connections.TryRemove(userId, out _);
                 }
 
                 await CloseConnectionQuietlyAsync(connection);
 
-                if (session.IsEmpty)
+                if (session.Connections.IsEmpty)
                 {
                     sessions.TryRemove(normalizedCode, out _);
                 }
@@ -119,6 +138,7 @@ namespace schulAppREST.Services
                 {
                     await BroadcastLobbyEventAsync(
                         normalizedCode,
+                        session,
                         "PlayerDisconnected",
                         userId,
                         CancellationToken.None
@@ -182,21 +202,96 @@ namespace schulAppREST.Services
             }
         }
 
-        private static bool IsValidIncomingMessage(PingPongRealtimeMessage message)
+        private static bool IsValidIncomingMessage(
+            PingPongRealtimeMessage message,
+            bool isAuthoritative)
         {
             if (
                 string.IsNullOrWhiteSpace(message.Type) ||
                 !AllowedMessageTypes.Contains(message.Type) ||
-                message.Sequence < 0)
+                message.Sequence < 0 ||
+                message.Payload.ValueKind != JsonValueKind.Object)
             {
                 return false;
             }
 
-            return message.Payload.ValueKind == JsonValueKind.Object;
+            if (message.Type == "Lobby")
+            {
+                return false;
+            }
+
+            if (AuthoritativeMessageTypes.Contains(message.Type) &&
+                !isAuthoritative)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        private static void StoreAuthoritativeState(
+            RealtimeSession session,
+            PingPongRealtimeMessage message)
+        {
+            switch (message.Type)
+            {
+                case "GameStart":
+                    session.LatestGameStart = message;
+                    session.LatestGameEnd = null;
+                    session.LatestBallState = null;
+                    session.LatestScore = null;
+                    break;
+
+                case "BallState":
+                    session.LatestBallState = message;
+                    break;
+
+                case "Score":
+                    session.LatestScore = message;
+                    break;
+
+                case "GameEnd":
+                    session.LatestGameEnd = message;
+                    break;
+            }
+        }
+
+        private static async Task ReplayLatestGameStateAsync(
+            RealtimeSession session,
+            ClientConnection connection,
+            CancellationToken cancellationToken)
+        {
+            PingPongRealtimeMessage?[] messages =
+            {
+                session.LatestGameStart,
+                session.LatestScore,
+                session.LatestBallState,
+                session.LatestGameEnd
+            };
+
+            foreach (PingPongRealtimeMessage? message in messages)
+            {
+                if (message == null)
+                {
+                    continue;
+                }
+
+                byte[] data = JsonSerializer.SerializeToUtf8Bytes(
+                    message,
+                    JsonOptions
+                );
+
+                await SendQuietlyAsync(
+                    connection,
+                    data,
+                    cancellationToken
+                );
+            }
         }
 
         private async Task BroadcastLobbyEventAsync(
             string gameCode,
+            RealtimeSession session,
             string eventName,
             int userId,
             CancellationToken cancellationToken)
@@ -220,27 +315,23 @@ namespace schulAppREST.Services
             };
 
             await BroadcastAsync(
-                gameCode,
+                session,
                 message,
                 excludedUserId: null,
                 cancellationToken
             );
         }
 
-        private async Task BroadcastAsync(
-            string gameCode,
+        private static async Task BroadcastAsync(
+            RealtimeSession session,
             PingPongRealtimeMessage message,
             int? excludedUserId,
             CancellationToken cancellationToken)
         {
-            if (!sessions.TryGetValue(gameCode, out var session))
-            {
-                return;
-            }
-
             byte[] data = JsonSerializer.SerializeToUtf8Bytes(message, JsonOptions);
 
-            foreach ((int userId, ClientConnection connection) in session)
+            foreach ((int userId, ClientConnection connection) in
+                     session.Connections)
             {
                 if (excludedUserId.HasValue && userId == excludedUserId.Value)
                 {
@@ -279,11 +370,9 @@ namespace schulAppREST.Services
             }
             catch (OperationCanceledException)
             {
-                // A cancelled send is treated as a disconnected client.
             }
             catch (WebSocketException)
             {
-                // The receive loop will clean up the disconnected client.
             }
             finally
             {
@@ -320,6 +409,17 @@ namespace schulAppREST.Services
         private static string NormalizeCode(string gameCode)
         {
             return (gameCode ?? string.Empty).Trim().ToUpperInvariant();
+        }
+
+        private sealed class RealtimeSession
+        {
+            public ConcurrentDictionary<int, ClientConnection> Connections { get; } =
+                new ConcurrentDictionary<int, ClientConnection>();
+
+            public PingPongRealtimeMessage? LatestGameStart { get; set; }
+            public PingPongRealtimeMessage? LatestBallState { get; set; }
+            public PingPongRealtimeMessage? LatestScore { get; set; }
+            public PingPongRealtimeMessage? LatestGameEnd { get; set; }
         }
 
         private sealed class ClientConnection

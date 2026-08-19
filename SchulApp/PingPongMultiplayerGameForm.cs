@@ -7,18 +7,26 @@ namespace SchulApp
     public sealed class PingPongMultiplayerGameForm : CustomForm
     {
         private const int PaddleSpeed = 7;
+        private const int BallSize = 40;
 
         private readonly PingPongLobbyModel lobby;
         private readonly PingPongMultiplayerConnection connection =
             new PingPongMultiplayerConnection();
         private readonly PingPongBackgroundKeyboardInput backgroundInput;
+        private readonly PingPongMultiplayerGameEngine gameEngine =
+            new PingPongMultiplayerGameEngine();
+        private readonly PingPongApiService pingPongApiService =
+            new PingPongApiService();
         private readonly System.Windows.Forms.Timer movementTimer;
+        private readonly System.Windows.Forms.Timer gameTimer;
         private readonly Panel playfield;
         private readonly Panel playerOnePaddle;
         private readonly Panel playerTwoPaddle;
         private readonly Panel centerLine;
+        private readonly Panel ball;
         private readonly Panel localPaddle;
         private readonly Panel remotePaddle;
+        private readonly Label scoreLabel;
         private readonly Label statusLabel;
         private readonly bool isPlayerOne;
         private readonly int remoteUserId;
@@ -26,11 +34,21 @@ namespace SchulApp
         private bool moveUpPressed;
         private bool moveDownPressed;
         private bool movementPending;
-        private bool sendLoopRunning;
+        private bool movementSendLoopRunning;
+        private bool ballSendRunning;
         private bool communicationAvailable;
+        private bool gameRunning;
+        private bool resultSaved;
         private double pendingNormalizedTop;
         private long localSequence;
-        private long lastRemoteSequence = -1;
+        private long lastRemoteMovementSequence = -1;
+        private long lastBallSequence = -1;
+        private long lastScoreSequence = -1;
+        private long lastStartSequence = -1;
+        private long lastEndSequence = -1;
+        private int playerOneScore;
+        private int playerTwoScore;
+        private int authoritativeTickCounter;
 
         public PingPongMultiplayerGameForm(PingPongLobbyModel lobby)
         {
@@ -106,11 +124,22 @@ namespace SchulApp
                 TextAlign = ContentAlignment.MiddleRight
             };
 
+            scoreLabel = new Label
+            {
+                Anchor = AnchorStyles.Top,
+                AutoSize = false,
+                Font = new Font("Segoe UI", 24F, FontStyle.Bold),
+                Location = new Point(520, 32),
+                Size = new Size(160, 50),
+                Text = "0 : 0",
+                TextAlign = ContentAlignment.MiddleCenter
+            };
+
             statusLabel = new Label
             {
                 AutoSize = false,
                 Location = new Point(20, 82),
-                Size = new Size(760, 20),
+                Size = new Size(800, 20),
                 Text = "Multiplayer-Verbindung wird hergestellt...",
                 TextAlign = ContentAlignment.MiddleLeft
             };
@@ -153,7 +182,14 @@ namespace SchulApp
                 Size = new Size(4, 645)
             };
 
+            ball = new Panel
+            {
+                Location = new Point(580, 302),
+                Size = new Size(BallSize, BallSize)
+            };
+
             playfield.Controls.Add(centerLine);
+            playfield.Controls.Add(ball);
             playfield.Controls.Add(playerOnePaddle);
             playfield.Controls.Add(playerTwoPaddle);
 
@@ -167,6 +203,7 @@ namespace SchulApp
             Controls.Add(controlsLabel);
             Controls.Add(playerOneLabel);
             Controls.Add(playerTwoLabel);
+            Controls.Add(scoreLabel);
             Controls.Add(statusLabel);
             Controls.Add(backButton);
             Controls.Add(playfield);
@@ -176,6 +213,12 @@ namespace SchulApp
                 Interval = 16
             };
             movementTimer.Tick += MovementTimer_Tick;
+
+            gameTimer = new System.Windows.Forms.Timer
+            {
+                Interval = 16
+            };
+            gameTimer.Tick += GameTimer_Tick;
 
             KeyDown += PingPongMultiplayerGameForm_KeyDown;
             KeyUp += PingPongMultiplayerGameForm_KeyUp;
@@ -192,9 +235,10 @@ namespace SchulApp
             playfield.BackColor = Color.White;
             playerOnePaddle.BackColor = Color.Black;
             playerTwoPaddle.BackColor = Color.Black;
+            ball.BackColor = Color.Black;
             centerLine.BackColor = Color.LightGray;
 
-            CenterPaddles();
+            CenterGameObjects();
         }
 
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
@@ -244,14 +288,21 @@ namespace SchulApp
                 try
                 {
                     backgroundInput.Start();
-                    statusLabel.Text =
-                        "Paddle-Synchronisierung aktiv. Steuerung funktioniert auch ohne Fensterfokus.";
                 }
                 catch (Exception ex)
                 {
                     statusLabel.Text =
-                        "Paddle-Synchronisierung aktiv. Hintergrund-Steuerung nicht verfügbar: " +
-                        ex.Message;
+                        "Hintergrund-Steuerung nicht verfügbar: " + ex.Message;
+                }
+
+                if (isPlayerOne)
+                {
+                    await StartAuthoritativeGameAsync();
+                }
+                else
+                {
+                    statusLabel.Text =
+                        "Verbunden. Warte auf den synchronisierten Spielstart von Player 1...";
                 }
 
                 ActiveControl = null;
@@ -263,6 +314,207 @@ namespace SchulApp
                 statusLabel.Text =
                     "Multiplayer-Verbindung fehlgeschlagen: " + ex.Message;
             }
+        }
+
+        private async Task StartAuthoritativeGameAsync()
+        {
+            gameEngine.Start(
+                playfield.ClientSize.Width,
+                playfield.ClientSize.Height,
+                ball.Width,
+                ball.Height
+            );
+
+            playerOneScore = 0;
+            playerTwoScore = 0;
+            resultSaved = false;
+            gameRunning = true;
+            authoritativeTickCounter = 0;
+            UpdateScoreDisplay();
+            ApplyEngineBallPosition();
+
+            statusLabel.Text =
+                "Spiel läuft. Player 1 berechnet den offiziellen Ball und Score.";
+
+            await connection.SendAsync(
+                PingPongMultiplayerMessageTypes.GameStart,
+                new PingPongGameStartPayload
+                {
+                    PlayerOneScore = 0,
+                    PlayerTwoScore = 0
+                },
+                ++localSequence
+            );
+
+            await SendScoreAsync();
+            await SendBallStateAsync();
+            gameTimer.Start();
+        }
+
+        private void GameTimer_Tick(object? sender, EventArgs e)
+        {
+            if (!isPlayerOne || !communicationAvailable || !gameRunning)
+            {
+                return;
+            }
+
+            PingPongGameTickResult result = gameEngine.Tick(
+                playerOnePaddle.Bounds,
+                playerTwoPaddle.Bounds,
+                playfield.ClientSize.Width,
+                playfield.ClientSize.Height,
+                ball.Width,
+                ball.Height
+            );
+
+            ApplyEngineBallPosition();
+
+            if (result.ScoreChanged)
+            {
+                playerOneScore = gameEngine.PlayerOneScore;
+                playerTwoScore = gameEngine.PlayerTwoScore;
+                UpdateScoreDisplay();
+                _ = SendScoreAsync();
+            }
+
+            if (result.GameEnded)
+            {
+                gameRunning = false;
+                gameTimer.Stop();
+                _ = FinishAuthoritativeGameAsync(result.WinnerPlayer);
+                return;
+            }
+
+            authoritativeTickCounter++;
+
+            if (result.BallReset || authoritativeTickCounter % 2 == 0)
+            {
+                _ = SendBallStateAsync();
+            }
+        }
+
+        private async Task SendBallStateAsync()
+        {
+            if (!isPlayerOne || !communicationAvailable || ballSendRunning)
+            {
+                return;
+            }
+
+            ballSendRunning = true;
+
+            try
+            {
+                int maxLeft = Math.Max(0, playfield.ClientSize.Width - ball.Width);
+                int maxTop = Math.Max(0, playfield.ClientSize.Height - ball.Height);
+
+                await connection.SendAsync(
+                    PingPongMultiplayerMessageTypes.BallState,
+                    new PingPongBallStatePayload
+                    {
+                        NormalizedLeft = PingPongBallStatePosition.Normalize(
+                            ball.Left,
+                            maxLeft
+                        ),
+                        NormalizedTop = PingPongBallStatePosition.Normalize(
+                            ball.Top,
+                            maxTop
+                        ),
+                        DirectionX = gameEngine.DirectionX,
+                        DirectionY = gameEngine.DirectionY
+                    },
+                    ++localSequence
+                );
+            }
+            catch (Exception ex)
+            {
+                StopCommunication("Ball-Synchronisierung gestoppt: " + ex.Message);
+            }
+            finally
+            {
+                ballSendRunning = false;
+            }
+        }
+
+        private async Task SendScoreAsync()
+        {
+            if (!isPlayerOne || !communicationAvailable)
+            {
+                return;
+            }
+
+            try
+            {
+                await connection.SendAsync(
+                    PingPongMultiplayerMessageTypes.Score,
+                    new PingPongScorePayload
+                    {
+                        PlayerOneScore = playerOneScore,
+                        PlayerTwoScore = playerTwoScore
+                    },
+                    ++localSequence
+                );
+            }
+            catch (Exception ex)
+            {
+                StopCommunication("Score-Synchronisierung gestoppt: " + ex.Message);
+            }
+        }
+
+        private async Task FinishAuthoritativeGameAsync(int winnerPlayer)
+        {
+            int winnerUserId = winnerPlayer == 1
+                ? lobby.HostUserId
+                : lobby.GuestUserId!.Value;
+
+            try
+            {
+                await SendScoreAsync();
+                await connection.SendAsync(
+                    PingPongMultiplayerMessageTypes.GameEnd,
+                    new PingPongGameEndPayload
+                    {
+                        WinnerUserId = winnerUserId,
+                        PlayerOneScore = playerOneScore,
+                        PlayerTwoScore = playerTwoScore
+                    },
+                    ++localSequence
+                );
+            }
+            catch (Exception ex)
+            {
+                StopCommunication("Spielende konnte nicht synchronisiert werden: " + ex.Message);
+                return;
+            }
+
+            ShowWinner(winnerUserId);
+
+            if (resultSaved)
+            {
+                return;
+            }
+
+            resultSaved = true;
+
+            try
+            {
+                await pingPongApiService.SpielSpeichernAsync(
+                    lobby.HostUserId,
+                    lobby.GuestUserId!.Value,
+                    playerOneScore,
+                    playerTwoScore
+                );
+                statusLabel.Text += " Ergebnis gespeichert.";
+            }
+            catch
+            {
+                statusLabel.Text += " Ergebnis konnte nicht gespeichert werden.";
+            }
+        }
+
+        private void ApplyEngineBallPosition()
+        {
+            ball.Left = gameEngine.BallLeft;
+            ball.Top = gameEngine.BallTop;
         }
 
         private void Playfield_Resize(object? sender, EventArgs e)
@@ -278,22 +530,29 @@ namespace SchulApp
             );
             centerLine.Height = playfield.ClientSize.Height;
 
-            int maxTop = Math.Max(
+            int paddleMaxTop = Math.Max(
                 0,
                 playfield.ClientSize.Height - playerOnePaddle.Height
             );
-            playerOnePaddle.Top = Math.Clamp(playerOnePaddle.Top, 0, maxTop);
-            playerTwoPaddle.Top = Math.Clamp(playerTwoPaddle.Top, 0, maxTop);
+            playerOnePaddle.Top = Math.Clamp(playerOnePaddle.Top, 0, paddleMaxTop);
+            playerTwoPaddle.Top = Math.Clamp(playerTwoPaddle.Top, 0, paddleMaxTop);
+
+            int ballMaxLeft = Math.Max(0, playfield.ClientSize.Width - ball.Width);
+            int ballMaxTop = Math.Max(0, playfield.ClientSize.Height - ball.Height);
+            ball.Left = Math.Clamp(ball.Left, 0, ballMaxLeft);
+            ball.Top = Math.Clamp(ball.Top, 0, ballMaxTop);
         }
 
-        private void CenterPaddles()
+        private void CenterGameObjects()
         {
-            int top = Math.Max(
+            int paddleTop = Math.Max(
                 0,
                 (playfield.ClientSize.Height - playerOnePaddle.Height) / 2
             );
-            playerOnePaddle.Top = top;
-            playerTwoPaddle.Top = top;
+            playerOnePaddle.Top = paddleTop;
+            playerTwoPaddle.Top = paddleTop;
+            ball.Left = Math.Max(0, (playfield.ClientSize.Width - ball.Width) / 2);
+            ball.Top = Math.Max(0, (playfield.ClientSize.Height - ball.Height) / 2);
             Playfield_Resize(this, EventArgs.Empty);
         }
 
@@ -370,7 +629,7 @@ namespace SchulApp
             );
             movementPending = true;
 
-            if (!sendLoopRunning)
+            if (!movementSendLoopRunning)
             {
                 _ = SendPendingMovementsAsync();
             }
@@ -378,12 +637,12 @@ namespace SchulApp
 
         private async Task SendPendingMovementsAsync()
         {
-            if (sendLoopRunning)
+            if (movementSendLoopRunning)
             {
                 return;
             }
 
-            sendLoopRunning = true;
+            movementSendLoopRunning = true;
 
             try
             {
@@ -391,7 +650,6 @@ namespace SchulApp
                 {
                     movementPending = false;
                     double normalizedTop = pendingNormalizedTop;
-                    long sequence = ++localSequence;
 
                     await connection.SendAsync(
                         PingPongMultiplayerMessageTypes.PlayerMovement,
@@ -399,26 +657,19 @@ namespace SchulApp
                         {
                             NormalizedTop = normalizedTop
                         },
-                        sequence
+                        ++localSequence
                     );
                 }
             }
             catch (Exception ex)
             {
-                communicationAvailable = false;
-                movementTimer.Stop();
-                moveUpPressed = false;
-                moveDownPressed = false;
-
-                if (!IsDisposed)
-                {
-                    statusLabel.Text =
-                        "Paddle-Synchronisierung gestoppt: " + ex.Message;
-                }
+                StopCommunication(
+                    "Paddle-Synchronisierung gestoppt: " + ex.Message
+                );
             }
             finally
             {
-                sendLoopRunning = false;
+                movementSendLoopRunning = false;
             }
         }
 
@@ -426,9 +677,34 @@ namespace SchulApp
             object? sender,
             PingPongMultiplayerMessage message)
         {
-            if (message.Type != PingPongMultiplayerMessageTypes.PlayerMovement ||
-                message.SenderUserId != remoteUserId ||
-                message.Sequence <= lastRemoteSequence)
+            switch (message.Type)
+            {
+                case PingPongMultiplayerMessageTypes.PlayerMovement:
+                    HandleRemoteMovement(message);
+                    break;
+
+                case PingPongMultiplayerMessageTypes.GameStart:
+                    HandleGameStart(message);
+                    break;
+
+                case PingPongMultiplayerMessageTypes.BallState:
+                    HandleBallState(message);
+                    break;
+
+                case PingPongMultiplayerMessageTypes.Score:
+                    HandleScore(message);
+                    break;
+
+                case PingPongMultiplayerMessageTypes.GameEnd:
+                    HandleGameEnd(message);
+                    break;
+            }
+        }
+
+        private void HandleRemoteMovement(PingPongMultiplayerMessage message)
+        {
+            if (message.SenderUserId != remoteUserId ||
+                message.Sequence <= lastRemoteMovementSequence)
             {
                 return;
             }
@@ -462,8 +738,181 @@ namespace SchulApp
                 return;
             }
 
-            lastRemoteSequence = message.Sequence;
+            lastRemoteMovementSequence = message.Sequence;
+            InvokeUi(() => remotePaddle.Top = remoteTop);
+        }
 
+        private void HandleGameStart(PingPongMultiplayerMessage message)
+        {
+            if (isPlayerOne ||
+                message.SenderUserId != lobby.HostUserId ||
+                message.Sequence <= lastStartSequence)
+            {
+                return;
+            }
+
+            PingPongGameStartPayload? payload = TryDeserialize<PingPongGameStartPayload>(
+                message
+            );
+
+            if (payload == null || !IsValidScore(
+                payload.PlayerOneScore,
+                payload.PlayerTwoScore))
+            {
+                return;
+            }
+
+            lastStartSequence = message.Sequence;
+
+            InvokeUi(() =>
+            {
+                playerOneScore = payload.PlayerOneScore;
+                playerTwoScore = payload.PlayerTwoScore;
+                gameRunning = true;
+                UpdateScoreDisplay();
+                statusLabel.Text = "Spiel läuft. Ball und Score werden von Player 1 synchronisiert.";
+            });
+        }
+
+        private void HandleBallState(PingPongMultiplayerMessage message)
+        {
+            if (isPlayerOne ||
+                message.SenderUserId != lobby.HostUserId ||
+                message.Sequence <= lastBallSequence)
+            {
+                return;
+            }
+
+            PingPongBallStatePayload? payload = TryDeserialize<PingPongBallStatePayload>(
+                message
+            );
+
+            if (payload == null ||
+                Math.Abs(payload.DirectionX) != 1 ||
+                Math.Abs(payload.DirectionY) != 1)
+            {
+                return;
+            }
+
+            int maxLeft = Math.Max(0, playfield.ClientSize.Width - ball.Width);
+            int maxTop = Math.Max(0, playfield.ClientSize.Height - ball.Height);
+
+            if (!PingPongBallStatePosition.TryDenormalize(
+                    payload.NormalizedLeft,
+                    maxLeft,
+                    out int left) ||
+                !PingPongBallStatePosition.TryDenormalize(
+                    payload.NormalizedTop,
+                    maxTop,
+                    out int top))
+            {
+                return;
+            }
+
+            lastBallSequence = message.Sequence;
+            InvokeUi(() =>
+            {
+                ball.Left = left;
+                ball.Top = top;
+            });
+        }
+
+        private void HandleScore(PingPongMultiplayerMessage message)
+        {
+            if (isPlayerOne ||
+                message.SenderUserId != lobby.HostUserId ||
+                message.Sequence <= lastScoreSequence)
+            {
+                return;
+            }
+
+            PingPongScorePayload? payload = TryDeserialize<PingPongScorePayload>(message);
+
+            if (payload == null || !IsValidScore(
+                payload.PlayerOneScore,
+                payload.PlayerTwoScore))
+            {
+                return;
+            }
+
+            lastScoreSequence = message.Sequence;
+            InvokeUi(() =>
+            {
+                playerOneScore = payload.PlayerOneScore;
+                playerTwoScore = payload.PlayerTwoScore;
+                UpdateScoreDisplay();
+            });
+        }
+
+        private void HandleGameEnd(PingPongMultiplayerMessage message)
+        {
+            if (isPlayerOne ||
+                message.SenderUserId != lobby.HostUserId ||
+                message.Sequence <= lastEndSequence)
+            {
+                return;
+            }
+
+            PingPongGameEndPayload? payload = TryDeserialize<PingPongGameEndPayload>(message);
+
+            if (payload == null ||
+                !IsValidScore(payload.PlayerOneScore, payload.PlayerTwoScore) ||
+                (payload.WinnerUserId != lobby.HostUserId &&
+                 payload.WinnerUserId != lobby.GuestUserId))
+            {
+                return;
+            }
+
+            lastEndSequence = message.Sequence;
+            InvokeUi(() =>
+            {
+                gameRunning = false;
+                playerOneScore = payload.PlayerOneScore;
+                playerTwoScore = payload.PlayerTwoScore;
+                UpdateScoreDisplay();
+                ShowWinner(payload.WinnerUserId);
+            });
+        }
+
+        private static TPayload? TryDeserialize<TPayload>(
+            PingPongMultiplayerMessage message)
+            where TPayload : class
+        {
+            try
+            {
+                return message.Payload.Deserialize<TPayload>();
+            }
+            catch (JsonException)
+            {
+                return null;
+            }
+        }
+
+        private static bool IsValidScore(int playerOne, int playerTwo)
+        {
+            return playerOne >= 0 &&
+                playerTwo >= 0 &&
+                playerOne <= PingPongMultiplayerGameEngine.MaxScore &&
+                playerTwo <= PingPongMultiplayerGameEngine.MaxScore;
+        }
+
+        private void UpdateScoreDisplay()
+        {
+            scoreLabel.Text = $"{playerOneScore} : {playerTwoScore}";
+        }
+
+        private void ShowWinner(int winnerUserId)
+        {
+            string winner = winnerUserId == lobby.HostUserId
+                ? lobby.HostUsername
+                : lobby.GuestUsername ?? "Player 2";
+
+            statusLabel.Text =
+                $"Spiel beendet. Gewinner: {winner}. Ergebnis: {playerOneScore} : {playerTwoScore}.";
+        }
+
+        private void InvokeUi(Action action)
+        {
             if (IsDisposed || !IsHandleCreated)
             {
                 return;
@@ -473,32 +922,31 @@ namespace SchulApp
             {
                 if (!IsDisposed)
                 {
-                    remotePaddle.Top = remoteTop;
+                    action();
                 }
             }));
         }
 
-        private void Connection_Disconnected(object? sender, EventArgs e)
+        private void StopCommunication(string message)
         {
             communicationAvailable = false;
+            gameRunning = false;
             movementPending = false;
             moveUpPressed = false;
             moveDownPressed = false;
             backgroundInput.Stop();
 
-            if (IsDisposed || !IsHandleCreated)
+            InvokeUi(() =>
             {
-                return;
-            }
+                movementTimer.Stop();
+                gameTimer.Stop();
+                statusLabel.Text = message;
+            });
+        }
 
-            BeginInvoke(new Action(() =>
-            {
-                if (!IsDisposed)
-                {
-                    movementTimer.Stop();
-                    statusLabel.Text = "Multiplayer-Verbindung wurde getrennt.";
-                }
-            }));
+        private void Connection_Disconnected(object? sender, EventArgs e)
+        {
+            StopCommunication("Multiplayer-Verbindung wurde getrennt.");
         }
 
         private void PingPongMultiplayerGameForm_PreviewKeyDown(
@@ -547,11 +995,14 @@ namespace SchulApp
             FormClosedEventArgs e)
         {
             communicationAvailable = false;
+            gameRunning = false;
             movementPending = false;
             moveUpPressed = false;
             moveDownPressed = false;
             movementTimer.Stop();
+            gameTimer.Stop();
             movementTimer.Dispose();
+            gameTimer.Dispose();
 
             backgroundInput.KeyStateChanged -= BackgroundInput_KeyStateChanged;
             backgroundInput.Dispose();
@@ -565,7 +1016,6 @@ namespace SchulApp
             }
             catch
             {
-                // A closing multiplayer window must not affect the rest of SchulApp.
             }
         }
     }
