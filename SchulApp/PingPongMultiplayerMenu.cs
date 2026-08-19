@@ -1,18 +1,24 @@
+using SchulApp.Models;
+using SchulApp.Services;
+
 namespace SchulApp
 {
     public sealed class PingPongMultiplayerMenu : CustomForm
     {
+        private readonly PingPongLobbyApiService lobbyApiService =
+            new PingPongLobbyApiService();
+
         private readonly Button createGameButton;
         private readonly Button joinGameButton;
         private readonly Button backButton;
+        private readonly Label statusLabel;
 
         public PingPongMultiplayerMenu()
         {
             Text = "SchulApp - Ping Pong Multiplayer";
             StartPosition = FormStartPosition.Manual;
-            ClientSize = new Size(640, 390);
-            MinimumSize = new Size(640, 390);
-            MaximumSize = new Size(640, 390);
+            ClientSize = new Size(640, 420);
+            MinimumSize = new Size(640, 420);
 
             Label titleLabel = new Label
             {
@@ -46,9 +52,18 @@ namespace SchulApp
                 new Point(335, 175)
             );
 
+            statusLabel = new Label
+            {
+                AutoSize = false,
+                Location = new Point(70, 295),
+                Size = new Size(500, 35),
+                Text = string.Empty,
+                TextAlign = ContentAlignment.MiddleCenter
+            };
+
             backButton = new Button
             {
-                Location = new Point(245, 315),
+                Location = new Point(245, 345),
                 Size = new Size(150, 38),
                 Text = "Zurück",
                 UseVisualStyleBackColor = true
@@ -62,6 +77,7 @@ namespace SchulApp
             Controls.Add(descriptionLabel);
             Controls.Add(createGameButton);
             Controls.Add(joinGameButton);
+            Controls.Add(statusLabel);
             Controls.Add(backButton);
 
             ThemeManager.Anwenden(this);
@@ -83,25 +99,83 @@ namespace SchulApp
             };
         }
 
-        private void CreateGameButton_Click(object? sender, EventArgs e)
+        private async void CreateGameButton_Click(object? sender, EventArgs e)
         {
-            MessageBox.Show(
-                this,
-                "Die Lobby-Erstellung wird im nächsten Projektschritt ergänzt.",
-                "Create Game",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Information
-            );
+            SetBusy(true, "Lobby wird erstellt...");
+
+            try
+            {
+                PingPongLobbyModel lobby =
+                    await lobbyApiService.CreateLobbyAsync(
+                        BenutzerSession.BenutzerId
+                    );
+
+                statusLabel.Text = string.Empty;
+                OeffneBereich(new PingPongLobbyForm(lobby, isHost: true));
+            }
+            catch (Exception ex)
+            {
+                ShowLobbyError(ex.Message);
+            }
+            finally
+            {
+                SetBusy(false, statusLabel.Text);
+            }
         }
 
-        private void JoinGameButton_Click(object? sender, EventArgs e)
+        private async void JoinGameButton_Click(object? sender, EventArgs e)
         {
+            PingPongJoinGameDialog dialog = new PingPongJoinGameDialog();
+            OeffneBereich(dialog);
+
+            if (dialog.DialogResult != DialogResult.OK ||
+                string.IsNullOrWhiteSpace(dialog.GameCode))
+            {
+                return;
+            }
+
+            SetBusy(true, "Lobby wird gesucht...");
+
+            try
+            {
+                PingPongLobbyModel lobby =
+                    await lobbyApiService.JoinLobbyAsync(
+                        dialog.GameCode,
+                        BenutzerSession.BenutzerId
+                    );
+
+                statusLabel.Text = string.Empty;
+                OeffneBereich(new PingPongLobbyForm(lobby, isHost: false));
+            }
+            catch (Exception ex)
+            {
+                ShowLobbyError(ex.Message);
+            }
+            finally
+            {
+                SetBusy(false, statusLabel.Text);
+            }
+        }
+
+        private void SetBusy(bool busy, string text)
+        {
+            createGameButton.Enabled = !busy;
+            joinGameButton.Enabled = !busy;
+            backButton.Enabled = !busy;
+            statusLabel.Text = text;
+            Cursor = busy ? Cursors.WaitCursor : Cursors.Default;
+        }
+
+        private void ShowLobbyError(string message)
+        {
+            statusLabel.Text = "Lobby-Aktion fehlgeschlagen.";
+
             MessageBox.Show(
                 this,
-                "Das Beitreten zu einer Lobby wird im nächsten Projektschritt ergänzt.",
-                "Join Game",
+                message,
+                "Ping Pong Multiplayer",
                 MessageBoxButtons.OK,
-                MessageBoxIcon.Information
+                MessageBoxIcon.Warning
             );
         }
     }
