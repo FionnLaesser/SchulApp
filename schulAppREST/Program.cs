@@ -51,11 +51,13 @@ app.UseWebSockets();
 // Unerwartete API-Fehler zentral behandeln und als einheitliche JSON-Antwort zurückgeben.
 app.UseMiddleware<GlobalExceptionMiddleware>();
 
-// /metrics und der Multiplayer-WebSocket müssen über HTTP erreichbar bleiben.
+// Multiplayer-Lobby und WebSocket bleiben über den klar definierten HTTP-Port 63636
+// erreichbar, damit Clients im gleichen LAN keine lokale HTTPS-Entwicklerzertifikate benötigen.
 app.UseWhen(
     context =>
         !context.Request.Path.StartsWithSegments("/metrics") &&
-        !context.Request.Path.StartsWithSegments("/ws/pingpong"),
+        !context.Request.Path.StartsWithSegments("/ws/pingpong") &&
+        !context.Request.Path.StartsWithSegments("/api/PingPong/lobby"),
     branch => branch.UseHttpsRedirection()
 );
 
