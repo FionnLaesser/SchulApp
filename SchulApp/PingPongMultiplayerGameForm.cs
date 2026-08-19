@@ -514,6 +514,13 @@ namespace SchulApp
             e.Handled = true;
         }
 
+        protected override void OnDeactivate(EventArgs e)
+        {
+            moveUpPressed = false;
+            moveDownPressed = false;
+            base.OnDeactivate(e);
+        }
+
         private async void PingPongMultiplayerGameForm_FormClosed(
             object? sender,
             FormClosedEventArgs e)
