@@ -17,6 +17,7 @@ namespace SchulApp
         private readonly Label playerTwoValueLabel;
         private readonly Label statusValueLabel;
         private readonly Label informationLabel;
+        private readonly Button copyGameCodeButton;
         private readonly Button openGameButton;
         private readonly Button backButton;
 
@@ -62,10 +63,19 @@ namespace SchulApp
                 AutoSize = false,
                 Font = new Font("Segoe UI", 18F, FontStyle.Bold),
                 Location = new Point(300, 120),
-                Size = new Size(260, 40),
+                Size = new Size(165, 40),
                 Text = lobby.Code,
                 TextAlign = ContentAlignment.MiddleLeft
             };
+
+            copyGameCodeButton = new Button
+            {
+                Location = new Point(475, 120),
+                Size = new Size(105, 36),
+                Text = "Kopieren",
+                UseVisualStyleBackColor = true
+            };
+            copyGameCodeButton.Click += CopyGameCodeButton_Click;
 
             Label playerOneLabel = CreateCaptionLabel("Player 1:", 185);
             playerOneValueLabel = CreateValueLabel(185);
@@ -108,6 +118,7 @@ namespace SchulApp
             Controls.Add(titleLabel);
             Controls.Add(gameCodeLabel);
             Controls.Add(gameCodeValueLabel);
+            Controls.Add(copyGameCodeButton);
             Controls.Add(playerOneLabel);
             Controls.Add(playerOneValueLabel);
             Controls.Add(playerTwoLabel);
@@ -154,6 +165,43 @@ namespace SchulApp
                 Size = new Size(260, 30),
                 TextAlign = ContentAlignment.MiddleLeft
             };
+        }
+
+        private async void CopyGameCodeButton_Click(object? sender, EventArgs e)
+        {
+            string code = gameCodeValueLabel.Text.Trim();
+
+            if (string.IsNullOrWhiteSpace(code))
+            {
+                return;
+            }
+
+            try
+            {
+                Clipboard.SetText(code);
+                copyGameCodeButton.Enabled = false;
+                copyGameCodeButton.Text = "Kopiert";
+
+                await Task.Delay(1200);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    this,
+                    "Der Game Code konnte nicht kopiert werden.\n\n" + ex.Message,
+                    "Game Code kopieren",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error
+                );
+            }
+            finally
+            {
+                if (!IsDisposed)
+                {
+                    copyGameCodeButton.Text = "Kopieren";
+                    copyGameCodeButton.Enabled = true;
+                }
+            }
         }
 
         private async void PingPongLobbyForm_Shown(object? sender, EventArgs e)
@@ -281,6 +329,7 @@ namespace SchulApp
         {
             currentLobby = lobby;
             gameCodeValueLabel.Text = lobby.Code;
+            copyGameCodeButton.Enabled = !string.IsNullOrWhiteSpace(lobby.Code);
             playerOneValueLabel.Text = lobby.HostUsername;
             playerTwoValueLabel.Text = string.IsNullOrWhiteSpace(lobby.GuestUsername)
                 ? "Waiting for Player 2..."
