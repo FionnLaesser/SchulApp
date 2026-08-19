@@ -14,7 +14,6 @@ namespace SchulApp
             StartPosition = FormStartPosition.Manual;
             ClientSize = new Size(520, 280);
             MinimumSize = new Size(520, 280);
-            MaximumSize = new Size(520, 280);
 
             Label titleLabel = new Label
             {
