@@ -1,4 +1,5 @@
 using SchulApp.Models;
+using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Http.Json;
 
@@ -6,28 +7,13 @@ namespace SchulApp.Services
 {
     public sealed class PingPongLobbyApiService
     {
-        private static readonly HttpClient httpClient = CreateHttpClient();
-
-        private static HttpClient CreateHttpClient()
-        {
-            string baseAddress =
-                Environment.GetEnvironmentVariable("SCHULAPP_API_BASE_URL")
-                ?? "https://localhost:63635/";
-
-            if (!baseAddress.EndsWith('/'))
-            {
-                baseAddress += "/";
-            }
-
-            return new HttpClient
-            {
-                BaseAddress = new Uri(baseAddress),
-                Timeout = TimeSpan.FromSeconds(10)
-            };
-        }
+        private static readonly ConcurrentDictionary<string, HttpClient> Clients =
+            new(StringComparer.OrdinalIgnoreCase);
 
         public async Task<PingPongLobbyModel> CreateLobbyAsync(int hostUserId)
         {
+            HttpClient httpClient = GetHttpClient();
+
             using HttpResponseMessage response = await httpClient.PostAsJsonAsync(
                 "api/PingPong/lobby",
                 new PingPongLobbyCreateRequest { HostUserId = hostUserId }
@@ -40,6 +26,7 @@ namespace SchulApp.Services
             string gameCode,
             int userId)
         {
+            HttpClient httpClient = GetHttpClient();
             string code = EncodeCode(gameCode);
 
             using HttpResponseMessage response = await httpClient.PostAsJsonAsync(
@@ -52,6 +39,7 @@ namespace SchulApp.Services
 
         public async Task<PingPongLobbyModel?> GetLobbyAsync(string gameCode)
         {
+            HttpClient httpClient = GetHttpClient();
             string code = EncodeCode(gameCode);
 
             using HttpResponseMessage response =
@@ -69,6 +57,7 @@ namespace SchulApp.Services
 
         public async Task CloseLobbyAsync(string gameCode, int hostUserId)
         {
+            HttpClient httpClient = GetHttpClient();
             string code = EncodeCode(gameCode);
 
             using HttpResponseMessage response = await httpClient.DeleteAsync(
@@ -85,6 +74,7 @@ namespace SchulApp.Services
 
         public async Task LeaveLobbyAsync(string gameCode, int userId)
         {
+            HttpClient httpClient = GetHttpClient();
             string code = EncodeCode(gameCode);
 
             using HttpResponseMessage response = await httpClient.PostAsJsonAsync(
@@ -98,6 +88,20 @@ namespace SchulApp.Services
             }
 
             await EnsureSuccessAsync(response);
+        }
+
+        private static HttpClient GetHttpClient()
+        {
+            string baseAddress = PingPongMultiplayerEndpoint.CurrentBaseAddress;
+
+            return Clients.GetOrAdd(
+                baseAddress,
+                address => new HttpClient
+                {
+                    BaseAddress = new Uri(address, UriKind.Absolute),
+                    Timeout = TimeSpan.FromSeconds(10)
+                }
+            );
         }
 
         private static async Task<PingPongLobbyModel> ReadRequiredLobbyAsync(
