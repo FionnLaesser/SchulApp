@@ -154,11 +154,10 @@ namespace SchulApp
                 TextAlign = ContentAlignment.MiddleLeft
             };
 
-            Button backButton = new Button
+            NoFocusButton backButton = new NoFocusButton
             {
                 Location = new Point(650, 540),
                 Size = new Size(160, 42),
-                TabStop = false,
                 Text = "Zurück",
                 UseVisualStyleBackColor = true
             };
@@ -213,6 +212,8 @@ namespace SchulApp
                 statusLabel.Text =
                     "Paddle-Synchronisierung aktiv. Ball und Score folgen in #60.";
                 movementTimer.Start();
+
+                ActiveControl = null;
                 Focus();
             }
             catch (Exception ex)
@@ -354,7 +355,7 @@ namespace SchulApp
                 return;
             }
 
-            BeginInvoke(new Action(() =>
+            BeginInvoke((Action)(() =>
             {
                 if (!IsDisposed)
                 {
@@ -375,7 +376,7 @@ namespace SchulApp
                 return;
             }
 
-            BeginInvoke(new Action(() =>
+            BeginInvoke((Action)(() =>
             {
                 if (!IsDisposed)
                 {
