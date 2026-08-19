@@ -16,7 +16,9 @@ namespace schulAppREST.Services
                 "BallState",
                 "Score",
                 "GameStart",
-                "GameEnd"
+                "GameEnd",
+                "PauseRequest",
+                "PauseState"
             };
 
         private static readonly HashSet<string> AuthoritativeMessageTypes =
@@ -25,7 +27,8 @@ namespace schulAppREST.Services
                 "BallState",
                 "Score",
                 "GameStart",
-                "GameEnd"
+                "GameEnd",
+                "PauseState"
             };
 
         private static readonly JsonSerializerOptions JsonOptions =
@@ -240,6 +243,7 @@ namespace schulAppREST.Services
                     session.LatestGameEnd = null;
                     session.LatestBallState = null;
                     session.LatestScore = null;
+                    session.LatestPauseState = null;
                     break;
 
                 case "BallState":
@@ -248,6 +252,10 @@ namespace schulAppREST.Services
 
                 case "Score":
                     session.LatestScore = message;
+                    break;
+
+                case "PauseState":
+                    session.LatestPauseState = message;
                     break;
 
                 case "GameEnd":
@@ -266,6 +274,7 @@ namespace schulAppREST.Services
                 session.LatestGameStart,
                 session.LatestScore,
                 session.LatestBallState,
+                session.LatestPauseState,
                 session.LatestGameEnd
             };
 
@@ -419,6 +428,7 @@ namespace schulAppREST.Services
             public PingPongRealtimeMessage? LatestGameStart { get; set; }
             public PingPongRealtimeMessage? LatestBallState { get; set; }
             public PingPongRealtimeMessage? LatestScore { get; set; }
+            public PingPongRealtimeMessage? LatestPauseState { get; set; }
             public PingPongRealtimeMessage? LatestGameEnd { get; set; }
         }
 
