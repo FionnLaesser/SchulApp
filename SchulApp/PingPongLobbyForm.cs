@@ -33,7 +33,6 @@ namespace SchulApp
             StartPosition = FormStartPosition.Manual;
             ClientSize = new Size(680, 470);
             MinimumSize = new Size(680, 470);
-            MaximumSize = new Size(680, 470);
 
             Label titleLabel = new Label
             {
@@ -90,7 +89,7 @@ namespace SchulApp
                 UseVisualStyleBackColor = true
             };
 
-            backButton.Click += (_, _) => Close();
+            backButton.Click += BackButton_Click;
 
             Controls.Add(titleLabel);
             Controls.Add(gameCodeLabel);
@@ -155,6 +154,16 @@ namespace SchulApp
         private async void RefreshTimer_Tick(object? sender, EventArgs e)
         {
             await RefreshLobbyAsync();
+        }
+
+        private async void BackButton_Click(object? sender, EventArgs e)
+        {
+            backButton.Enabled = false;
+            refreshTimer.Stop();
+
+            await CleanupLobbyAsync();
+
+            Close();
         }
 
         private async Task RefreshLobbyAsync()
