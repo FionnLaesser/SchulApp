@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using SchulAppSOAP.Contracts;
 using SchulAppSOAP.Data;
 using SchulAppSOAP.Models;
@@ -31,11 +31,13 @@ namespace SchulAppSOAP.Services
 
         public async Task<bool> AddSchueler(SchuelerModel schueler)
         {
-            if (schueler == null ||
-                string.IsNullOrWhiteSpace(schueler.Name))
+            if (schueler == null || string.IsNullOrWhiteSpace(schueler.Name))
             {
                 return false;
             }
+
+            string? auditUserName = schueler.AuditUserName;
+            string? auditUserRole = schueler.AuditUserRole;
 
             bool klasseExistiert = await _context.Klassen
                 .AnyAsync(k => k.KlassenId == schueler.KlasseId);
@@ -46,19 +48,18 @@ namespace SchulAppSOAP.Services
             }
 
             schueler.Name = schueler.Name.Trim();
+            schueler.AuditUserName = null;
+            schueler.AuditUserRole = null;
 
             _context.Schueler.Add(schueler);
-
             await _context.SaveChangesAsync();
 
             await AuditLogSicherSpeichernAsync(
                 "CREATE",
                 schueler.SchuelerId,
-                new
-                {
-                    schueler.Name,
-                    schueler.KlasseId
-                }
+                new { schueler.Name, schueler.KlasseId },
+                auditUserName,
+                auditUserRole
             );
 
             return true;
@@ -72,6 +73,9 @@ namespace SchulAppSOAP.Services
             {
                 return false;
             }
+
+            string? auditUserName = schueler.AuditUserName;
+            string? auditUserRole = schueler.AuditUserRole;
 
             var vorhandenerSchueler = await _context.Schueler
                 .FindAsync(schueler.SchuelerId);
@@ -93,19 +97,11 @@ namespace SchulAppSOAP.Services
             int alteKlasseId = vorhandenerSchueler.KlasseId;
             string neuerName = schueler.Name.Trim();
 
-            Dictionary<string, object?> changes =
-                new Dictionary<string, object?>();
+            Dictionary<string, object?> changes = new();
 
-            if (!string.Equals(
-                    alterName,
-                    neuerName,
-                    StringComparison.Ordinal))
+            if (!string.Equals(alterName, neuerName, StringComparison.Ordinal))
             {
-                changes["Name"] = new
-                {
-                    Old = alterName,
-                    New = neuerName
-                };
+                changes["Name"] = new { Old = alterName, New = neuerName };
             }
 
             if (alteKlasseId != schueler.KlasseId)
@@ -127,7 +123,9 @@ namespace SchulAppSOAP.Services
                 await AuditLogSicherSpeichernAsync(
                     "UPDATE",
                     vorhandenerSchueler.SchuelerId,
-                    changes
+                    changes,
+                    auditUserName,
+                    auditUserRole
                 );
             }
 
@@ -135,6 +133,26 @@ namespace SchulAppSOAP.Services
         }
 
         public async Task<bool> DeleteSchueler(int id)
+        {
+            return await DeleteSchuelerInternal(id, null, null);
+        }
+
+        public async Task<bool> DeleteSchuelerMitAudit(
+            int id,
+            string? auditUserName,
+            string? auditUserRole)
+        {
+            return await DeleteSchuelerInternal(
+                id,
+                auditUserName,
+                auditUserRole
+            );
+        }
+
+        private async Task<bool> DeleteSchuelerInternal(
+            int id,
+            string? auditUserName,
+            string? auditUserRole)
         {
             var schueler = await _context.Schueler.FindAsync(id);
 
@@ -147,17 +165,14 @@ namespace SchulAppSOAP.Services
             int klasseId = schueler.KlasseId;
 
             _context.Schueler.Remove(schueler);
-
             await _context.SaveChangesAsync();
 
             await AuditLogSicherSpeichernAsync(
                 "DELETE",
                 id,
-                new
-                {
-                    Name = name,
-                    KlasseId = klasseId
-                }
+                new { Name = name, KlasseId = klasseId },
+                auditUserName,
+                auditUserRole
             );
 
             return true;
@@ -166,13 +181,23 @@ namespace SchulAppSOAP.Services
         private async Task AuditLogSicherSpeichernAsync(
             string action,
             int schuelerId,
-            object? changes)
+            object? changes,
+            string? auditUserName,
+            string? auditUserRole)
         {
+            string userName = string.IsNullOrWhiteSpace(auditUserName)
+                ? "System"
+                : auditUserName.Trim();
+
+            string userRole = string.IsNullOrWhiteSpace(auditUserRole)
+                ? "System"
+                : auditUserRole.Trim();
+
             AuditLogModel auditLog = new AuditLogModel
             {
                 TimestampUtc = DateTime.UtcNow,
-                UserName = "System",
-                UserRole = "System",
+                UserName = userName,
+                UserRole = userRole,
                 Action = action,
                 EntityType = "Schueler",
                 EntityId = $"SchuelerId={schuelerId}",
