@@ -80,16 +80,20 @@ namespace SchulApp.Services
                 receiveCancellation = null;
 
                 throw new TimeoutException(
-                    $"Die Multiplayer-Verbindung konnte innerhalb von {PingPongMultiplayerError.ConnectionTimeoutSeconds} Sekunden nicht hergestellt werden."
+                    "Die Multiplayer-Verbindung hat zu lange gedauert. Prüfe Host-IP, Port 63636 und Netzwerkverbindung."
                 );
             }
-            catch
+            catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
             {
                 socket.Dispose();
                 socket = null;
                 receiveCancellation.Dispose();
                 receiveCancellation = null;
-                throw;
+
+                throw new InvalidOperationException(
+                    PingPongMultiplayerError.GetUserMessage(ex),
+                    ex
+                );
             }
 
             receiveTask = ReceiveLoopAsync(receiveCancellation.Token);
