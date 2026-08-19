@@ -27,6 +27,7 @@ builder.Services.AddHttpClient();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<AuditLogService>();
 builder.Services.AddSingleton<PingPongLobbyService>();
+builder.Services.AddSingleton<PingPongRealtimeService>();
 
 // Swagger
 builder.Services.AddEndpointsApiExplorer();
@@ -45,13 +46,16 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseRouting();
+app.UseWebSockets();
 
 // Unerwartete API-Fehler zentral behandeln und als einheitliche JSON-Antwort zurückgeben.
 app.UseMiddleware<GlobalExceptionMiddleware>();
 
-// /metrics muss über HTTP erreichbar bleiben, damit Prometheus aus Docker scrapen kann.
+// /metrics und der Multiplayer-WebSocket müssen über HTTP erreichbar bleiben.
 app.UseWhen(
-    context => !context.Request.Path.StartsWithSegments("/metrics"),
+    context =>
+        !context.Request.Path.StartsWithSegments("/metrics") &&
+        !context.Request.Path.StartsWithSegments("/ws/pingpong"),
     branch => branch.UseHttpsRedirection()
 );
 
@@ -68,6 +72,57 @@ app.UseWhen(
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.MapGet(
+    "/ws/pingpong/{gameCode}",
+    async (
+        HttpContext context,
+        string gameCode,
+        int userId,
+        PingPongLobbyService lobbyService,
+        PingPongRealtimeService realtimeService) =>
+    {
+        if (!context.WebSockets.IsWebSocketRequest)
+        {
+            return Results.BadRequest(
+                "Für die Multiplayer-Kommunikation ist eine WebSocket-Verbindung erforderlich."
+            );
+        }
+
+        if (userId <= 0)
+        {
+            return Results.BadRequest("Eine gültige Benutzer-ID ist erforderlich.");
+        }
+
+        PingPongLobbySession? lobby = lobbyService.GetLobby(gameCode);
+
+        if (lobby == null)
+        {
+            return Results.NotFound("Die PingPong-Lobby wurde nicht gefunden.");
+        }
+
+        bool isLobbyMember =
+            lobby.HostUserId == userId ||
+            lobby.GuestUserId == userId;
+
+        if (!isLobbyMember)
+        {
+            return Results.StatusCode(StatusCodes.Status403Forbidden);
+        }
+
+        using var socket = await context.WebSockets.AcceptWebSocketAsync();
+
+        await realtimeService.HandleConnectionAsync(
+            lobby.Code,
+            userId,
+            socket,
+            context.RequestAborted
+        );
+
+        return Results.Empty;
+    }
+);
+
 app.MapMetrics();
 
 app.Run();
