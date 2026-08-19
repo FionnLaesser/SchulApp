@@ -24,14 +24,19 @@ namespace SchulApp.Services
 
         public async Task<PingPongLobbyModel> JoinLobbyAsync(
             string gameCode,
-            int userId)
+            int userId,
+            string? username = null)
         {
             HttpClient httpClient = GetHttpClient();
             string code = EncodeCode(gameCode);
 
             using HttpResponseMessage response = await httpClient.PostAsJsonAsync(
                 $"api/PingPong/lobby/{code}/join",
-                new PingPongLobbyUserRequest { UserId = userId }
+                new PingPongLobbyUserRequest
+                {
+                    UserId = userId,
+                    Username = username
+                }
             );
 
             return await ReadRequiredLobbyAsync(response);
@@ -157,6 +162,7 @@ namespace SchulApp.Services
         private sealed class PingPongLobbyUserRequest
         {
             public int UserId { get; set; }
+            public string? Username { get; set; }
         }
     }
 }
