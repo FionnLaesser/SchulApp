@@ -205,7 +205,7 @@ namespace SchulApp
             return new Bitmap(original, new Size(20, 20));
         }
 
-        private void dataTransferBtn_Click(object sender, EventArgs e)
+        private void dataTransferBtn_Click(object? sender, EventArgs e)
         {
             if (!IstAdmin || dataTransferMenu == null) return;
             dataTransferMenu.Show(dataTransferBtn, new Point(0, dataTransferBtn.Height));
