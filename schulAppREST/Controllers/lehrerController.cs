@@ -1,8 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SchulApp.Models;
 using SchulApp.Data;
-using Microsoft.Identity.Client.NativeInterop;
+using schulAppREST.Services;
 
 namespace schulAppREST.Controllers
 {
@@ -11,85 +11,69 @@ namespace schulAppREST.Controllers
     public class LehrerController : ControllerBase
     {
         private readonly SchulAppContext _context;
+        private readonly AuditLogService _auditLog;
 
-        public LehrerController(SchulAppContext context)
+        public LehrerController(SchulAppContext context, AuditLogService auditLog)
         {
             _context = context;
+            _auditLog = auditLog;
         }
 
-        //GetTeachers
         [HttpGet]
         public async Task<IActionResult> GetLehrer()
         {
-            var lehrer = await _context.Lehrer.ToListAsync();
-
-            return Ok(lehrer);
+            return Ok(await _context.Lehrer.ToListAsync());
         }
 
-        //GetTeachersWithID
         [HttpGet("{id}")]
         public async Task<IActionResult> GetLehrerById(int id)
         {
             var lehrer = await _context.Lehrer.FindAsync(id);
-
-            if (lehrer == null)
-            {
-                return NotFound();
-            }
-
-            return Ok(lehrer);
+            return lehrer == null ? NotFound() : Ok(lehrer);
         }
 
-        // AddTeacher
         [HttpPost]
         public async Task<IActionResult> AddLehrer([FromBody] LehrerModel lehrer)
         {
             _context.Lehrer.Add(lehrer);
-
             await _context.SaveChangesAsync();
-
+            await _auditLog.WriteAsync(
+                "CREATE", "Lehrer", $"LehrerId={lehrer.LehrerId}",
+                new { lehrer.Name, lehrer.Email, lehrer.Telefon });
             return Ok(lehrer);
         }
-        // UpdateTeacher
-        // UpdateTeacher
+
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateTeacher(
-            int id,
-            [FromBody] LehrerModel lehrer)
+        public async Task<IActionResult> UpdateTeacher(int id, [FromBody] LehrerModel lehrer)
         {
-            var lehrer1 = await _context.Lehrer.FindAsync(id);
+            var existing = await _context.Lehrer.FindAsync(id);
+            if (existing == null) return NotFound();
 
-            if (lehrer1 == null)
+            var changes = new
             {
-                return NotFound();
-            }
+                Name = new { Old = existing.Name, New = lehrer.Name },
+                Email = new { Old = existing.Email, New = lehrer.Email },
+                Telefon = new { Old = existing.Telefon, New = lehrer.Telefon }
+            };
 
-            // Primary Key darf nicht geändert werden
-            lehrer.LehrerId = lehrer1.LehrerId;
-
-            // Restliche Werte überschreiben
-            _context.Entry(lehrer1).CurrentValues.SetValues(lehrer);
-
+            lehrer.LehrerId = existing.LehrerId;
+            _context.Entry(existing).CurrentValues.SetValues(lehrer);
             await _context.SaveChangesAsync();
-
-            return Ok(lehrer1);
+            await _auditLog.WriteAsync("UPDATE", "Lehrer", $"LehrerId={id}", changes);
+            return Ok(existing);
         }
 
-        //DeleteTeacher
         [HttpDelete("{id}")]
         public async Task<IActionResult> DelTeacher(int id)
         {
             var lehrer = await _context.Lehrer.FindAsync(id);
+            if (lehrer == null) return NotFound();
 
-            if (lehrer == null)
-            {
-                return NotFound();
-            }
-
+            var deleted = new { lehrer.Name, lehrer.Email, lehrer.Telefon };
             _context.Lehrer.Remove(lehrer);
             await _context.SaveChangesAsync();
-
+            await _auditLog.WriteAsync("DELETE", "Lehrer", $"LehrerId={id}", deleted);
             return Ok(lehrer);
         }
     }
- }
+}
