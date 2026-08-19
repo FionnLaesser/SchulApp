@@ -26,6 +26,7 @@ builder.Services.AddControllers();
 builder.Services.AddHttpClient();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<AuditLogService>();
+builder.Services.AddSingleton<PingPongLobbyService>();
 
 // Swagger
 builder.Services.AddEndpointsApiExplorer();
