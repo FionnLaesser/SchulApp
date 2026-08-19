@@ -154,11 +154,10 @@ namespace SchulApp
                 TextAlign = ContentAlignment.MiddleLeft
             };
 
-            Button backButton = new Button
+            NoFocusButton backButton = new NoFocusButton
             {
                 Location = new Point(650, 540),
                 Size = new Size(160, 42),
-                TabStop = false,
                 Text = "Zurück",
                 UseVisualStyleBackColor = true
             };
@@ -180,6 +179,7 @@ namespace SchulApp
 
             KeyDown += PingPongMultiplayerGameForm_KeyDown;
             KeyUp += PingPongMultiplayerGameForm_KeyUp;
+            PreviewKeyDown += PingPongMultiplayerGameForm_PreviewKeyDown;
             Shown += PingPongMultiplayerGameForm_Shown;
             FormClosed += PingPongMultiplayerGameForm_FormClosed;
 
@@ -191,6 +191,56 @@ namespace SchulApp
             playerOnePaddle.BackColor = Color.Black;
             playerTwoPaddle.BackColor = Color.Black;
             centerLine.BackColor = Color.LightGray;
+        }
+
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            Keys keyCode = keyData & Keys.KeyCode;
+
+            if (
+                keyCode == Keys.W ||
+                keyCode == Keys.S ||
+                keyCode == Keys.Up ||
+                keyCode == Keys.Down)
+            {
+                if (!communicationAvailable)
+                {
+                    return true;
+                }
+
+                if (isPlayerOne)
+                {
+                    if (keyCode == Keys.W)
+                    {
+                        moveUpPressed = true;
+                        return true;
+                    }
+
+                    if (keyCode == Keys.S)
+                    {
+                        moveDownPressed = true;
+                        return true;
+                    }
+                }
+                else
+                {
+                    if (keyCode == Keys.Up)
+                    {
+                        moveUpPressed = true;
+                        return true;
+                    }
+
+                    if (keyCode == Keys.Down)
+                    {
+                        moveDownPressed = true;
+                        return true;
+                    }
+                }
+
+                return true;
+            }
+
+            return base.ProcessCmdKey(ref msg, keyData);
         }
 
         private async void PingPongMultiplayerGameForm_Shown(
@@ -213,6 +263,8 @@ namespace SchulApp
                 statusLabel.Text =
                     "Paddle-Synchronisierung aktiv. Ball und Score folgen in #60.";
                 movementTimer.Start();
+
+                ActiveControl = null;
                 Focus();
             }
             catch (Exception ex)
@@ -385,6 +437,20 @@ namespace SchulApp
             }));
         }
 
+        private void PingPongMultiplayerGameForm_PreviewKeyDown(
+            object? sender,
+            PreviewKeyDownEventArgs e)
+        {
+            if (
+                e.KeyCode == Keys.W ||
+                e.KeyCode == Keys.S ||
+                e.KeyCode == Keys.Up ||
+                e.KeyCode == Keys.Down)
+            {
+                e.IsInputKey = true;
+            }
+        }
+
         private void PingPongMultiplayerGameForm_KeyDown(
             object? sender,
             KeyEventArgs e)
@@ -446,6 +512,13 @@ namespace SchulApp
 
             e.SuppressKeyPress = true;
             e.Handled = true;
+        }
+
+        protected override void OnDeactivate(EventArgs e)
+        {
+            moveUpPressed = false;
+            moveDownPressed = false;
+            base.OnDeactivate(e);
         }
 
         private async void PingPongMultiplayerGameForm_FormClosed(
