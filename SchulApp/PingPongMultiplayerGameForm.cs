@@ -179,6 +179,7 @@ namespace SchulApp
 
             KeyDown += PingPongMultiplayerGameForm_KeyDown;
             KeyUp += PingPongMultiplayerGameForm_KeyUp;
+            PreviewKeyDown += PingPongMultiplayerGameForm_PreviewKeyDown;
             Shown += PingPongMultiplayerGameForm_Shown;
             FormClosed += PingPongMultiplayerGameForm_FormClosed;
 
@@ -190,6 +191,56 @@ namespace SchulApp
             playerOnePaddle.BackColor = Color.Black;
             playerTwoPaddle.BackColor = Color.Black;
             centerLine.BackColor = Color.LightGray;
+        }
+
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            Keys keyCode = keyData & Keys.KeyCode;
+
+            if (
+                keyCode == Keys.W ||
+                keyCode == Keys.S ||
+                keyCode == Keys.Up ||
+                keyCode == Keys.Down)
+            {
+                if (!communicationAvailable)
+                {
+                    return true;
+                }
+
+                if (isPlayerOne)
+                {
+                    if (keyCode == Keys.W)
+                    {
+                        moveUpPressed = true;
+                        return true;
+                    }
+
+                    if (keyCode == Keys.S)
+                    {
+                        moveDownPressed = true;
+                        return true;
+                    }
+                }
+                else
+                {
+                    if (keyCode == Keys.Up)
+                    {
+                        moveUpPressed = true;
+                        return true;
+                    }
+
+                    if (keyCode == Keys.Down)
+                    {
+                        moveDownPressed = true;
+                        return true;
+                    }
+                }
+
+                return true;
+            }
+
+            return base.ProcessCmdKey(ref msg, keyData);
         }
 
         private async void PingPongMultiplayerGameForm_Shown(
@@ -384,6 +435,20 @@ namespace SchulApp
                     statusLabel.Text = "Multiplayer-Verbindung wurde getrennt.";
                 }
             }));
+        }
+
+        private void PingPongMultiplayerGameForm_PreviewKeyDown(
+            object? sender,
+            PreviewKeyDownEventArgs e)
+        {
+            if (
+                e.KeyCode == Keys.W ||
+                e.KeyCode == Keys.S ||
+                e.KeyCode == Keys.Up ||
+                e.KeyCode == Keys.Down)
+            {
+                e.IsInputKey = true;
+            }
         }
 
         private void PingPongMultiplayerGameForm_KeyDown(
