@@ -1,11 +1,15 @@
 using Microsoft.EntityFrameworkCore;
 using SchulApp.Data;
 using SchulApp.Models;
+using SchulApp.Services;
 
 namespace SchulApp
 {
     public partial class Lehrer : CustomForm
     {
+        private readonly LehrerApiService lehrerApiService =
+            new LehrerApiService();
+
         private int? ausgewaehlteLehrerId = null;
 
         public Lehrer()
@@ -81,7 +85,7 @@ namespace SchulApp
         // NEUEN LEHRER ERSTELLEN
         // =========================================================
 
-        private void OKnewTeacherBtn_Click(
+        private async void OKnewTeacherBtn_Click(
             object sender,
             EventArgs e)
         {
@@ -100,8 +104,6 @@ namespace SchulApp
 
             try
             {
-                using SchulAppContext context = new SchulAppContext();
-
                 // Erstellt ein neues Lehrer-Objekt
                 LehrerModel neuerLehrer = new LehrerModel
                 {
@@ -113,11 +115,8 @@ namespace SchulApp
                     Telefon = telefon == "" ? null : telefon
                 };
 
-                // Markiert den Lehrer zum Einfügen
-                context.Lehrer.Add(neuerLehrer);
-
-                // Entity Framework erstellt INSERT automatisch
-                context.SaveChanges();
+                // Speichert den Lehrer über die REST API
+                await lehrerApiService.ErstellenAsync(neuerLehrer);
 
                 newTeacherName.Text = "";
                 newTeacherEmail.Text = "";
@@ -129,7 +128,7 @@ namespace SchulApp
                     "Lehrer wurde gespeichert."
                 );
             }
-            catch (DbUpdateException ex)
+            catch (Exception ex)
             {
                 MessageBox.Show(
                     "Der Lehrer konnte nicht gespeichert werden.\n\n" +
@@ -194,7 +193,7 @@ namespace SchulApp
         // LEHRER BEARBEITEN
         // =========================================================
 
-        private void OKchangeTeacherBtn_Click(
+        private async void OKchangeTeacherBtn_Click(
             object sender,
             EventArgs e)
         {
@@ -222,16 +221,22 @@ namespace SchulApp
 
             try
             {
-                using SchulAppContext context = new SchulAppContext();
+                LehrerModel lehrer = new LehrerModel
+                {
+                    LehrerId = ausgewaehlteLehrerId.Value,
+                    Name = name,
+                    Email = email == "" ? null : email,
+                    Telefon = telefon == "" ? null : telefon
+                };
 
-                // Sucht den Lehrer anhand der ID.
-                // EF erstellt das SELECT automatisch.
-                LehrerModel? lehrer =
-                    context.Lehrer.Find(
-                        ausgewaehlteLehrerId.Value
+                // Ändert den Lehrer über die REST API
+                bool bearbeitet =
+                    await lehrerApiService.BearbeitenAsync(
+                        ausgewaehlteLehrerId.Value,
+                        lehrer
                     );
 
-                if (lehrer == null)
+                if (!bearbeitet)
                 {
                     MessageBox.Show(
                         "Der Lehrer wurde nicht gefunden."
@@ -242,25 +247,13 @@ namespace SchulApp
                     return;
                 }
 
-                // Ändert die Eigenschaften des geladenen Objekts
-                lehrer.Name = name;
-
-                lehrer.Email =
-                    email == "" ? null : email;
-
-                lehrer.Telefon =
-                    telefon == "" ? null : telefon;
-
-                // EF erkennt die Änderungen und erstellt UPDATE
-                context.SaveChanges();
-
                 LehrerListeAktualisieren();
 
                 MessageBox.Show(
                     "Lehrer wurde bearbeitet."
                 );
             }
-            catch (DbUpdateException ex)
+            catch (Exception ex)
             {
                 MessageBox.Show(
                     "Der Lehrer konnte nicht bearbeitet werden.\n\n" +
@@ -273,7 +266,7 @@ namespace SchulApp
         // LEHRER LÖSCHEN
         // =========================================================
 
-        private void OKdeleteTeacherBtn_Click(
+        private async void OKdeleteTeacherBtn_Click(
             object sender,
             EventArgs e)
         {
@@ -303,15 +296,13 @@ namespace SchulApp
 
             try
             {
-                using SchulAppContext context = new SchulAppContext();
-
-                // Sucht den Lehrer zuerst anhand seiner ID
-                LehrerModel? lehrer =
-                    context.Lehrer.Find(
+                // Löscht den Lehrer über die REST API
+                bool geloescht =
+                    await lehrerApiService.LoeschenAsync(
                         ausgewaehlteLehrerId.Value
                     );
 
-                if (lehrer == null)
+                if (!geloescht)
                 {
                     MessageBox.Show(
                         "Der Lehrer wurde nicht gefunden."
@@ -322,19 +313,13 @@ namespace SchulApp
                     return;
                 }
 
-                // Markiert den Lehrer zum Löschen
-                context.Lehrer.Remove(lehrer);
-
-                // Entity Framework erstellt DELETE automatisch
-                context.SaveChanges();
-
                 LehrerListeAktualisieren();
 
                 MessageBox.Show(
                     "Lehrer wurde gelöscht."
                 );
             }
-            catch (DbUpdateException)
+            catch (Exception)
             {
                 // Wird zum Beispiel ausgelöst, wenn der Lehrer
                 // noch mit einer Klasse oder einem Kurs verbunden ist
