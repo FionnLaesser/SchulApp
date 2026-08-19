@@ -15,7 +15,7 @@ namespace SchulApp
             Shown += LoadingScreen_Shown;
         }
 
-        private async void LoadingScreen_Shown(object sender, EventArgs e)
+        private async void LoadingScreen_Shown(object? sender, EventArgs e)
         {
             try
             {

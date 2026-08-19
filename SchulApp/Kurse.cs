@@ -125,36 +125,36 @@ namespace SchulApp
 
                 kurseGrid.DataSource = kurse;
 
-                if (kurseGrid.Columns.Contains("KursId"))
+                if (kurseGrid.Columns["KursId"] is DataGridViewColumn kursId)
                 {
-                    kurseGrid.Columns["KursId"].HeaderText = "ID";
-                    kurseGrid.Columns["KursId"].Width = 50;
+                    kursId.HeaderText = "ID";
+                    kursId.Width = 50;
                 }
 
-                if (kurseGrid.Columns.Contains("KlasseId"))
+                if (kurseGrid.Columns["KlasseId"] is DataGridViewColumn klasseId)
                 {
-                    kurseGrid.Columns["KlasseId"].Visible = false;
+                    klasseId.Visible = false;
                 }
 
-                if (kurseGrid.Columns.Contains("LehrerId"))
+                if (kurseGrid.Columns["LehrerId"] is DataGridViewColumn lehrerId)
                 {
-                    kurseGrid.Columns["LehrerId"].Visible = false;
+                    lehrerId.Visible = false;
                 }
 
-                if (kurseGrid.Columns.Contains("Name"))
+                if (kurseGrid.Columns["Name"] is DataGridViewColumn name)
                 {
-                    kurseGrid.Columns["Name"].AutoSizeMode =
+                    name.AutoSizeMode =
                         DataGridViewAutoSizeColumnMode.Fill;
                 }
 
-                if (kurseGrid.Columns.Contains("Klasse"))
+                if (kurseGrid.Columns["Klasse"] is DataGridViewColumn klasse)
                 {
-                    kurseGrid.Columns["Klasse"].Width = 100;
+                    klasse.Width = 100;
                 }
 
-                if (kurseGrid.Columns.Contains("Lehrer"))
+                if (kurseGrid.Columns["Lehrer"] is DataGridViewColumn lehrer)
                 {
-                    kurseGrid.Columns["Lehrer"].Width = 180;
+                    lehrer.Width = 180;
                 }
 
                 kurseGrid.ClearSelection();

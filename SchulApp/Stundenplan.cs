@@ -191,79 +191,59 @@ namespace SchulApp
 
                 stundenplanGrid.DataSource = plan;
 
-                if (stundenplanGrid.Columns.Contains("StundenplanId"))
+                if (stundenplanGrid.Columns["StundenplanId"] is DataGridViewColumn stundenplanId)
                 {
-                    stundenplanGrid.Columns["StundenplanId"].HeaderText =
-                        "ID";
-
-                    stundenplanGrid.Columns["StundenplanId"].Width =
-                        45;
+                    stundenplanId.HeaderText = "ID";
+                    stundenplanId.Width = 45;
                 }
 
-                if (stundenplanGrid.Columns.Contains("KursId"))
+                if (stundenplanGrid.Columns["KursId"] is DataGridViewColumn kursId)
                 {
-                    stundenplanGrid.Columns["KursId"].Visible =
-                        false;
+                    kursId.Visible = false;
                 }
 
-                if (stundenplanGrid.Columns.Contains("WochentagNr"))
+                if (stundenplanGrid.Columns["WochentagNr"] is DataGridViewColumn wochentagNr)
                 {
-                    stundenplanGrid.Columns["WochentagNr"].Visible =
-                        false;
+                    wochentagNr.Visible = false;
                 }
 
-                if (stundenplanGrid.Columns.Contains("Wochentag"))
+                if (stundenplanGrid.Columns["Wochentag"] is DataGridViewColumn wochentag)
                 {
-                    stundenplanGrid.Columns["Wochentag"].Width =
-                        90;
+                    wochentag.Width = 90;
                 }
 
-                if (stundenplanGrid.Columns.Contains("Startzeit"))
+                if (stundenplanGrid.Columns["Startzeit"] is DataGridViewColumn startzeit)
                 {
-                    stundenplanGrid.Columns["Startzeit"].HeaderText =
-                        "Von";
-
-                    stundenplanGrid.Columns["Startzeit"]
-                        .DefaultCellStyle.Format = @"hh\:mm";
-
-                    stundenplanGrid.Columns["Startzeit"].Width =
-                        60;
+                    startzeit.HeaderText = "Von";
+                    startzeit.DefaultCellStyle.Format = @"hh\:mm";
+                    startzeit.Width = 60;
                 }
 
-                if (stundenplanGrid.Columns.Contains("Endzeit"))
+                if (stundenplanGrid.Columns["Endzeit"] is DataGridViewColumn endzeit)
                 {
-                    stundenplanGrid.Columns["Endzeit"].HeaderText =
-                        "Bis";
-
-                    stundenplanGrid.Columns["Endzeit"]
-                        .DefaultCellStyle.Format = @"hh\:mm";
-
-                    stundenplanGrid.Columns["Endzeit"].Width =
-                        60;
+                    endzeit.HeaderText = "Bis";
+                    endzeit.DefaultCellStyle.Format = @"hh\:mm";
+                    endzeit.Width = 60;
                 }
 
-                if (stundenplanGrid.Columns.Contains("Kurs"))
+                if (stundenplanGrid.Columns["Kurs"] is DataGridViewColumn kurs)
                 {
-                    stundenplanGrid.Columns["Kurs"].AutoSizeMode =
-                        DataGridViewAutoSizeColumnMode.Fill;
+                    kurs.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
                 }
 
-                if (stundenplanGrid.Columns.Contains("Klasse"))
+                if (stundenplanGrid.Columns["Klasse"] is DataGridViewColumn klasse)
                 {
-                    stundenplanGrid.Columns["Klasse"].Width =
-                        75;
+                    klasse.Width = 75;
                 }
 
-                if (stundenplanGrid.Columns.Contains("Lehrer"))
+                if (stundenplanGrid.Columns["Lehrer"] is DataGridViewColumn lehrer)
                 {
-                    stundenplanGrid.Columns["Lehrer"].Width =
-                        140;
+                    lehrer.Width = 140;
                 }
 
-                if (stundenplanGrid.Columns.Contains("Raum"))
+                if (stundenplanGrid.Columns["Raum"] is DataGridViewColumn raum)
                 {
-                    stundenplanGrid.Columns["Raum"].Width =
-                        60;
+                    raum.Width = 60;
                 }
 
                 stundenplanGrid.ClearSelection();
@@ -445,11 +425,11 @@ namespace SchulApp
                     row.Cells["WochentagNr"].Value
                 );
 
-            TimeSpan start =
-                (TimeSpan)row.Cells["Startzeit"].Value;
-
-            TimeSpan ende =
-                (TimeSpan)row.Cells["Endzeit"].Value;
+            if (row.Cells["Startzeit"].Value is not TimeSpan start ||
+            row.Cells["Endzeit"].Value is not TimeSpan ende)
+            {
+                return;
+            }
 
             editStartzeit.Value =
                 DateTime.Today.Add(start);

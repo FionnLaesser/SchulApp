@@ -101,33 +101,33 @@ namespace SchulApp
 
                 klassenGrid.DataSource = klassen;
 
-                if (klassenGrid.Columns.Contains("KlassenId"))
+                if (klassenGrid.Columns["KlassenId"] is DataGridViewColumn klassenId)
                 {
-                    klassenGrid.Columns["KlassenId"].HeaderText = "ID";
-                    klassenGrid.Columns["KlassenId"].Width = 55;
+                    klassenId.HeaderText = "ID";
+                    klassenId.Width = 55;
                 }
 
-                if (klassenGrid.Columns.Contains("KlassenlehrerId"))
+                if (klassenGrid.Columns["KlassenlehrerId"] is DataGridViewColumn klassenlehrerId)
                 {
-                    klassenGrid.Columns["KlassenlehrerId"].Visible = false;
+                    klassenlehrerId.Visible = false;
                 }
 
-                if (klassenGrid.Columns.Contains("Bezeichnung"))
+                if (klassenGrid.Columns["Bezeichnung"] is DataGridViewColumn bezeichnung)
                 {
-                    klassenGrid.Columns["Bezeichnung"].HeaderText = "Klasse";
-                    klassenGrid.Columns["Bezeichnung"].Width = 130;
+                    bezeichnung.HeaderText = "Klasse";
+                    bezeichnung.Width = 130;
                 }
 
-                if (klassenGrid.Columns.Contains("Klassenlehrer"))
+                if (klassenGrid.Columns["Klassenlehrer"] is DataGridViewColumn klassenlehrer)
                 {
-                    klassenGrid.Columns["Klassenlehrer"].AutoSizeMode =
+                    klassenlehrer.AutoSizeMode =
                         DataGridViewAutoSizeColumnMode.Fill;
                 }
 
-                if (klassenGrid.Columns.Contains("AnzahlSchueler"))
+                if (klassenGrid.Columns["AnzahlSchueler"] is DataGridViewColumn anzahlSchueler)
                 {
-                    klassenGrid.Columns["AnzahlSchueler"].HeaderText = "Schüler";
-                    klassenGrid.Columns["AnzahlSchueler"].Width = 70;
+                    anzahlSchueler.HeaderText = "Schüler";
+                    anzahlSchueler.Width = 70;
                 }
 
                 klassenGrid.ClearSelection();
@@ -459,18 +459,15 @@ namespace SchulApp
                 klassenSchuelerGrid.DataSource =
                     schueler;
 
-                if (klassenSchuelerGrid.Columns.Contains("SchuelerId"))
+                if (klassenSchuelerGrid.Columns["SchuelerId"] is DataGridViewColumn schuelerId)
                 {
-                    klassenSchuelerGrid.Columns["SchuelerId"].HeaderText =
-                        "ID";
-
-                    klassenSchuelerGrid.Columns["SchuelerId"].Width =
-                        55;
+                    schuelerId.HeaderText = "ID";
+                    schuelerId.Width = 55;
                 }
 
-                if (klassenSchuelerGrid.Columns.Contains("Name"))
+                if (klassenSchuelerGrid.Columns["Name"] is DataGridViewColumn name)
                 {
-                    klassenSchuelerGrid.Columns["Name"].AutoSizeMode =
+                    name.AutoSizeMode =
                         DataGridViewAutoSizeColumnMode.Fill;
                 }
             }
