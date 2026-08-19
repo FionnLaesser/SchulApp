@@ -51,20 +51,35 @@ namespace schulAppREST.Controllers
             string gameCode,
             [FromBody] PingPongLobbyJoinRequest request)
         {
-            if (request.UserId <= 0)
+            if (request.UserId <= 0 && string.IsNullOrWhiteSpace(request.Username))
             {
                 return BadRequest("Ungültiger Benutzer.");
             }
 
-            var user = await context.Benutzer
-                .AsNoTracking()
-                .Where(x => x.Id == request.UserId)
-                .Select(x => new { x.Id, x.Benutzername })
-                .SingleOrDefaultAsync();
+            string username = (request.Username ?? string.Empty).Trim();
+
+            var user = !string.IsNullOrWhiteSpace(username)
+                ? await context.Benutzer
+                    .AsNoTracking()
+                    .Where(x => x.Benutzername == username)
+                    .Select(x => new { x.Id, x.Benutzername })
+                    .SingleOrDefaultAsync()
+                : null;
+
+            if (user == null && request.UserId > 0)
+            {
+                user = await context.Benutzer
+                    .AsNoTracking()
+                    .Where(x => x.Id == request.UserId)
+                    .Select(x => new { x.Id, x.Benutzername })
+                    .SingleOrDefaultAsync();
+            }
 
             if (user == null)
             {
-                return NotFound("Der Benutzer wurde nicht gefunden.");
+                return NotFound(
+                    "Der Benutzer wurde auf dem Host nicht gefunden. Für LAN-Spiele muss der Benutzername in der Host-Datenbank vorhanden sein."
+                );
             }
 
             PingPongLobbyJoinResult result =
@@ -118,7 +133,7 @@ namespace schulAppREST.Controllers
             PingPongLobbyLeaveStatus result =
                 lobbyService.LeaveLobby(gameCode, request.UserId);
 
-            return result switch
+            return result.Status switch
             {
                 PingPongLobbyLeaveStatus.Success => NoContent(),
                 PingPongLobbyLeaveStatus.LobbyClosed => NoContent(),
@@ -137,6 +152,7 @@ namespace schulAppREST.Controllers
     public sealed class PingPongLobbyJoinRequest
     {
         public int UserId { get; set; }
+        public string? Username { get; set; }
     }
 
     public sealed class PingPongLobbyLeaveRequest
