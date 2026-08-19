@@ -47,6 +47,18 @@ namespace SchulApp.Models
         public int PlayerTwoScore { get; set; }
     }
 
+    public sealed class PingPongPauseRequestPayload
+    {
+        [JsonPropertyName("isPaused")]
+        public bool IsPaused { get; set; }
+    }
+
+    public sealed class PingPongPauseStatePayload
+    {
+        [JsonPropertyName("isPaused")]
+        public bool IsPaused { get; set; }
+    }
+
     public static class PingPongBallStatePosition
     {
         public static double Normalize(int value, int maxValue)
