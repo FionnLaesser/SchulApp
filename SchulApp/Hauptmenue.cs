@@ -341,7 +341,7 @@ namespace SchulApp
             await ProfilButtonBildLadenAsync();
         }
 
-        private void pingPong_Click(object sender, EventArgs e) => OeffneBereich(new PingPong());
+        private void pingPong_Click(object sender, EventArgs e) => OeffneBereich(new PingPongModeSelection());
         private void bestenlistePage_Click(object sender, EventArgs e) => OeffneBereich(new Bestenliste());
     }
 }
