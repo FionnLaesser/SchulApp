@@ -23,11 +23,16 @@ namespace SchulApp
         private readonly Panel playerOnePaddle;
         private readonly Panel playerTwoPaddle;
         private readonly Panel centerLine;
-        private readonly Panel ball;
+        private readonly PictureBox ball;
         private readonly Panel localPaddle;
         private readonly Panel remotePaddle;
         private readonly Label scoreLabel;
         private readonly Label statusLabel;
+        private readonly NoFocusButton pauseButton;
+        private readonly Panel pausePanel;
+        private readonly Label pauseTextLabel;
+        private readonly Button continueButton;
+        private readonly Button leaveButton;
         private readonly bool isPlayerOne;
         private readonly int remoteUserId;
 
@@ -39,6 +44,8 @@ namespace SchulApp
         private bool communicationAvailable;
         private bool gameRunning;
         private bool resultSaved;
+        private bool isPaused;
+        private bool pauseRequestPending;
         private double pendingNormalizedTop;
         private long localSequence;
         private long lastRemoteMovementSequence = -1;
@@ -46,6 +53,8 @@ namespace SchulApp
         private long lastScoreSequence = -1;
         private long lastStartSequence = -1;
         private long lastEndSequence = -1;
+        private long lastPauseRequestSequence = -1;
+        private long lastPauseStateSequence = -1;
         private int playerOneScore;
         private int playerTwoScore;
         private int authoritativeTickCounter;
@@ -98,8 +107,8 @@ namespace SchulApp
                 Location = new Point(20, 18),
                 Size = new Size(500, 24),
                 Text = isPlayerOne
-                    ? "Player 1: W / S | Steuerung auch ohne Fensterfokus"
-                    : "Player 2: Pfeil hoch / Pfeil runter | Steuerung auch ohne Fensterfokus",
+                    ? "Player 1: W / S | Pause: Q"
+                    : "Player 2: Pfeil hoch / Pfeil runter | Pause: Q",
                 TextAlign = ContentAlignment.MiddleLeft
             };
 
@@ -144,6 +153,17 @@ namespace SchulApp
                 TextAlign = ContentAlignment.MiddleLeft
             };
 
+            pauseButton = new NoFocusButton
+            {
+                Anchor = AnchorStyles.Top | AnchorStyles.Right,
+                Location = new Point(980, 48),
+                Size = new Size(95, 23),
+                Text = "Pause",
+                TabStop = false,
+                UseVisualStyleBackColor = true
+            };
+            pauseButton.Click += (_, _) => _ = RequestPauseChangeAsync(!isPaused);
+
             NoFocusButton backButton = new NoFocusButton
             {
                 Anchor = AnchorStyles.Top | AnchorStyles.Right,
@@ -182,11 +202,15 @@ namespace SchulApp
                 Size = new Size(4, 645)
             };
 
-            ball = new Panel
+            ball = new PictureBox
             {
+                BackColor = Color.Transparent,
                 Location = new Point(580, 302),
-                Size = new Size(BallSize, BallSize)
+                Size = new Size(BallSize, BallSize),
+                SizeMode = PictureBoxSizeMode.Zoom,
+                TabStop = false
             };
+            LoadBallImage();
 
             playfield.Controls.Add(centerLine);
             playfield.Controls.Add(ball);
@@ -200,13 +224,65 @@ namespace SchulApp
                 ? playerTwoPaddle
                 : playerOnePaddle;
 
+            pausePanel = new Panel
+            {
+                BorderStyle = BorderStyle.FixedSingle,
+                Size = new Size(430, 260),
+                Visible = false
+            };
+
+            Label pauseTitleLabel = new Label
+            {
+                AutoSize = false,
+                Font = new Font("Segoe UI", 22F, FontStyle.Bold),
+                Location = new Point(35, 28),
+                Size = new Size(360, 48),
+                Text = "Spiel pausiert",
+                TextAlign = ContentAlignment.MiddleCenter
+            };
+
+            pauseTextLabel = new Label
+            {
+                AutoSize = false,
+                Font = new Font("Segoe UI", 10F),
+                Location = new Point(40, 85),
+                Size = new Size(350, 55),
+                Text = "Das Multiplayer-Spiel ist für beide Spieler pausiert.",
+                TextAlign = ContentAlignment.MiddleCenter
+            };
+
+            continueButton = new Button
+            {
+                Location = new Point(45, 175),
+                Size = new Size(155, 42),
+                Text = "Fortsetzen",
+                UseVisualStyleBackColor = true
+            };
+            continueButton.Click += (_, _) => _ = RequestPauseChangeAsync(false);
+
+            leaveButton = new Button
+            {
+                Location = new Point(230, 175),
+                Size = new Size(155, 42),
+                Text = "Spiel verlassen",
+                UseVisualStyleBackColor = true
+            };
+            leaveButton.Click += (_, _) => Close();
+
+            pausePanel.Controls.Add(pauseTitleLabel);
+            pausePanel.Controls.Add(pauseTextLabel);
+            pausePanel.Controls.Add(continueButton);
+            pausePanel.Controls.Add(leaveButton);
+
             Controls.Add(controlsLabel);
             Controls.Add(playerOneLabel);
             Controls.Add(playerTwoLabel);
             Controls.Add(scoreLabel);
             Controls.Add(statusLabel);
+            Controls.Add(pauseButton);
             Controls.Add(backButton);
             Controls.Add(playfield);
+            Controls.Add(pausePanel);
 
             movementTimer = new System.Windows.Forms.Timer
             {
@@ -225,6 +301,7 @@ namespace SchulApp
             PreviewKeyDown += PingPongMultiplayerGameForm_PreviewKeyDown;
             Shown += PingPongMultiplayerGameForm_Shown;
             FormClosed += PingPongMultiplayerGameForm_FormClosed;
+            Resize += PingPongMultiplayerGameForm_Resize;
             playfield.Resize += Playfield_Resize;
 
             backgroundInput.KeyStateChanged += BackgroundInput_KeyStateChanged;
@@ -235,19 +312,47 @@ namespace SchulApp
             playfield.BackColor = Color.White;
             playerOnePaddle.BackColor = Color.Black;
             playerTwoPaddle.BackColor = Color.Black;
-            ball.BackColor = Color.Black;
             centerLine.BackColor = Color.LightGray;
 
             CenterGameObjects();
+            PositionPausePanel();
+        }
+
+        private void LoadBallImage()
+        {
+            string imagePath = Path.Combine(
+                AppContext.BaseDirectory,
+                "images",
+                "ball.png"
+            );
+
+            if (!File.Exists(imagePath))
+            {
+                ball.BackColor = Color.Black;
+                return;
+            }
+
+            using Image source = Image.FromFile(imagePath);
+            ball.Image = new Bitmap(source);
         }
 
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
             Keys keyCode = keyData & Keys.KeyCode;
 
+            if (keyCode == Keys.Q)
+            {
+                if (communicationAvailable && gameRunning && !pauseRequestPending)
+                {
+                    _ = RequestPauseChangeAsync(!isPaused);
+                }
+
+                return true;
+            }
+
             if (IsAssignedMovementKey(keyCode))
             {
-                if (communicationAvailable)
+                if (communicationAvailable && !isPaused)
                 {
                     SetMovementKeyState(keyCode, true);
                 }
@@ -329,9 +434,11 @@ namespace SchulApp
             playerTwoScore = 0;
             resultSaved = false;
             gameRunning = true;
+            isPaused = false;
             authoritativeTickCounter = 0;
             UpdateScoreDisplay();
             ApplyEngineBallPosition();
+            ApplyPauseVisualState(false);
 
             statusLabel.Text =
                 "Spiel läuft. Player 1 berechnet den offiziellen Ball und Score.";
@@ -348,12 +455,16 @@ namespace SchulApp
 
             await SendScoreAsync();
             await SendBallStateAsync();
+            await SendPauseStateAsync(false);
             gameTimer.Start();
         }
 
         private void GameTimer_Tick(object? sender, EventArgs e)
         {
-            if (!isPlayerOne || !communicationAvailable || !gameRunning)
+            if (!isPlayerOne ||
+                !communicationAvailable ||
+                !gameRunning ||
+                isPaused)
             {
                 return;
             }
@@ -381,6 +492,8 @@ namespace SchulApp
             {
                 gameRunning = false;
                 gameTimer.Stop();
+                pauseButton.Enabled = false;
+                ApplyPauseVisualState(false);
                 _ = FinishAuthoritativeGameAsync(result.WinnerPlayer);
                 return;
             }
@@ -395,7 +508,10 @@ namespace SchulApp
 
         private async Task SendBallStateAsync()
         {
-            if (!isPlayerOne || !communicationAvailable || ballSendRunning)
+            if (!isPlayerOne ||
+                !communicationAvailable ||
+                ballSendRunning ||
+                isPaused)
             {
                 return;
             }
@@ -460,6 +576,124 @@ namespace SchulApp
             }
         }
 
+        private async Task RequestPauseChangeAsync(bool shouldPause)
+        {
+            if (!communicationAvailable || !gameRunning || pauseRequestPending)
+            {
+                return;
+            }
+
+            pauseRequestPending = true;
+
+            try
+            {
+                if (isPlayerOne)
+                {
+                    ApplyPauseState(shouldPause);
+                    await SendPauseStateAsync(shouldPause);
+                    pauseRequestPending = false;
+                    return;
+                }
+
+                await connection.SendAsync(
+                    PingPongMultiplayerMessageTypes.PauseRequest,
+                    new PingPongPauseRequestPayload
+                    {
+                        IsPaused = shouldPause
+                    },
+                    ++localSequence
+                );
+
+                statusLabel.Text = shouldPause
+                    ? "Pause wird angefordert..."
+                    : "Fortsetzen wird angefordert...";
+            }
+            catch (Exception ex)
+            {
+                pauseRequestPending = false;
+                StopCommunication("Pause-Anfrage fehlgeschlagen: " + ex.Message);
+            }
+        }
+
+        private async Task SendPauseStateAsync(bool paused)
+        {
+            if (!isPlayerOne || !communicationAvailable)
+            {
+                return;
+            }
+
+            try
+            {
+                await connection.SendAsync(
+                    PingPongMultiplayerMessageTypes.PauseState,
+                    new PingPongPauseStatePayload
+                    {
+                        IsPaused = paused
+                    },
+                    ++localSequence
+                );
+            }
+            catch (Exception ex)
+            {
+                StopCommunication("Pause-Synchronisierung gestoppt: " + ex.Message);
+            }
+        }
+
+        private void ApplyPauseState(bool paused)
+        {
+            if (!gameRunning)
+            {
+                return;
+            }
+
+            isPaused = paused;
+            pauseRequestPending = false;
+            moveUpPressed = false;
+            moveDownPressed = false;
+            movementPending = false;
+
+            if (paused)
+            {
+                movementTimer.Stop();
+                gameTimer.Stop();
+            }
+            else
+            {
+                movementTimer.Start();
+
+                if (isPlayerOne)
+                {
+                    gameTimer.Start();
+                }
+            }
+
+            ApplyPauseVisualState(paused);
+        }
+
+        private void ApplyPauseVisualState(bool paused)
+        {
+            pausePanel.Visible = paused;
+            pauseButton.Text = paused ? "Pausiert" : "Pause";
+            pauseButton.Enabled = gameRunning && communicationAvailable && !paused;
+
+            if (paused)
+            {
+                pauseTextLabel.Text =
+                    "Das Multiplayer-Spiel ist für beide Spieler pausiert.\nBall, Schläger und Score bleiben unverändert.";
+                continueButton.Enabled = communicationAvailable;
+                pausePanel.BringToFront();
+                statusLabel.Text = "Spiel pausiert.";
+            }
+            else if (gameRunning && communicationAvailable)
+            {
+                statusLabel.Text = isPlayerOne
+                    ? "Spiel läuft. Player 1 berechnet den offiziellen Ball und Score."
+                    : "Spiel läuft. Ball und Score werden von Player 1 synchronisiert.";
+                ActiveControl = null;
+                Focus();
+            }
+        }
+
         private async Task FinishAuthoritativeGameAsync(int winnerPlayer)
         {
             int winnerUserId = winnerPlayer == 1
@@ -517,6 +751,17 @@ namespace SchulApp
             ball.Top = gameEngine.BallTop;
         }
 
+        private void PingPongMultiplayerGameForm_Resize(object? sender, EventArgs e)
+        {
+            PositionPausePanel();
+        }
+
+        private void PositionPausePanel()
+        {
+            pausePanel.Left = Math.Max(0, (ClientSize.Width - pausePanel.Width) / 2);
+            pausePanel.Top = Math.Max(105, (ClientSize.Height - pausePanel.Height) / 2);
+        }
+
         private void Playfield_Resize(object? sender, EventArgs e)
         {
             playerOnePaddle.Left = 0;
@@ -560,7 +805,7 @@ namespace SchulApp
             object? sender,
             PingPongBackgroundKeyEventArgs e)
         {
-            if (!communicationAvailable || IsDisposed)
+            if (!communicationAvailable || IsDisposed || isPaused)
             {
                 return;
             }
@@ -594,7 +839,7 @@ namespace SchulApp
 
         private void MovementTimer_Tick(object? sender, EventArgs e)
         {
-            if (!communicationAvailable)
+            if (!communicationAvailable || isPaused)
             {
                 return;
             }
@@ -646,7 +891,7 @@ namespace SchulApp
 
             try
             {
-                while (movementPending && communicationAvailable)
+                while (movementPending && communicationAvailable && !isPaused)
                 {
                     movementPending = false;
                     double normalizedTop = pendingNormalizedTop;
@@ -698,27 +943,28 @@ namespace SchulApp
                 case PingPongMultiplayerMessageTypes.GameEnd:
                     HandleGameEnd(message);
                     break;
+
+                case PingPongMultiplayerMessageTypes.PauseRequest:
+                    HandlePauseRequest(message);
+                    break;
+
+                case PingPongMultiplayerMessageTypes.PauseState:
+                    HandlePauseState(message);
+                    break;
             }
         }
 
         private void HandleRemoteMovement(PingPongMultiplayerMessage message)
         {
-            if (message.SenderUserId != remoteUserId ||
+            if (isPaused ||
+                message.SenderUserId != remoteUserId ||
                 message.Sequence <= lastRemoteMovementSequence)
             {
                 return;
             }
 
-            PingPongPlayerMovementPayload? payload;
-
-            try
-            {
-                payload = message.Payload.Deserialize<PingPongPlayerMovementPayload>();
-            }
-            catch (JsonException)
-            {
-                return;
-            }
+            PingPongPlayerMovementPayload? payload =
+                TryDeserialize<PingPongPlayerMovementPayload>(message);
 
             if (payload == null)
             {
@@ -751,9 +997,8 @@ namespace SchulApp
                 return;
             }
 
-            PingPongGameStartPayload? payload = TryDeserialize<PingPongGameStartPayload>(
-                message
-            );
+            PingPongGameStartPayload? payload =
+                TryDeserialize<PingPongGameStartPayload>(message);
 
             if (payload == null || !IsValidScore(
                 payload.PlayerOneScore,
@@ -769,8 +1014,11 @@ namespace SchulApp
                 playerOneScore = payload.PlayerOneScore;
                 playerTwoScore = payload.PlayerTwoScore;
                 gameRunning = true;
+                isPaused = false;
+                pauseButton.Enabled = true;
+                movementTimer.Start();
                 UpdateScoreDisplay();
-                statusLabel.Text = "Spiel läuft. Ball und Score werden von Player 1 synchronisiert.";
+                ApplyPauseVisualState(false);
             });
         }
 
@@ -783,9 +1031,8 @@ namespace SchulApp
                 return;
             }
 
-            PingPongBallStatePayload? payload = TryDeserialize<PingPongBallStatePayload>(
-                message
-            );
+            PingPongBallStatePayload? payload =
+                TryDeserialize<PingPongBallStatePayload>(message);
 
             if (payload == null ||
                 Math.Abs(payload.DirectionX) != 1 ||
@@ -812,8 +1059,11 @@ namespace SchulApp
             lastBallSequence = message.Sequence;
             InvokeUi(() =>
             {
-                ball.Left = left;
-                ball.Top = top;
+                if (!isPaused)
+                {
+                    ball.Left = left;
+                    ball.Top = top;
+                }
             });
         }
 
@@ -826,7 +1076,8 @@ namespace SchulApp
                 return;
             }
 
-            PingPongScorePayload? payload = TryDeserialize<PingPongScorePayload>(message);
+            PingPongScorePayload? payload =
+                TryDeserialize<PingPongScorePayload>(message);
 
             if (payload == null || !IsValidScore(
                 payload.PlayerOneScore,
@@ -844,6 +1095,55 @@ namespace SchulApp
             });
         }
 
+        private void HandlePauseRequest(PingPongMultiplayerMessage message)
+        {
+            if (!isPlayerOne ||
+                !gameRunning ||
+                message.SenderUserId != remoteUserId ||
+                message.Sequence <= lastPauseRequestSequence)
+            {
+                return;
+            }
+
+            PingPongPauseRequestPayload? payload =
+                TryDeserialize<PingPongPauseRequestPayload>(message);
+
+            if (payload == null)
+            {
+                return;
+            }
+
+            lastPauseRequestSequence = message.Sequence;
+
+            InvokeUi(() =>
+            {
+                ApplyPauseState(payload.IsPaused);
+                _ = SendPauseStateAsync(payload.IsPaused);
+            });
+        }
+
+        private void HandlePauseState(PingPongMultiplayerMessage message)
+        {
+            if (isPlayerOne ||
+                !gameRunning ||
+                message.SenderUserId != lobby.HostUserId ||
+                message.Sequence <= lastPauseStateSequence)
+            {
+                return;
+            }
+
+            PingPongPauseStatePayload? payload =
+                TryDeserialize<PingPongPauseStatePayload>(message);
+
+            if (payload == null)
+            {
+                return;
+            }
+
+            lastPauseStateSequence = message.Sequence;
+            InvokeUi(() => ApplyPauseState(payload.IsPaused));
+        }
+
         private void HandleGameEnd(PingPongMultiplayerMessage message)
         {
             if (isPlayerOne ||
@@ -853,7 +1153,8 @@ namespace SchulApp
                 return;
             }
 
-            PingPongGameEndPayload? payload = TryDeserialize<PingPongGameEndPayload>(message);
+            PingPongGameEndPayload? payload =
+                TryDeserialize<PingPongGameEndPayload>(message);
 
             if (payload == null ||
                 !IsValidScore(payload.PlayerOneScore, payload.PlayerTwoScore) ||
@@ -867,6 +1168,10 @@ namespace SchulApp
             InvokeUi(() =>
             {
                 gameRunning = false;
+                isPaused = false;
+                movementTimer.Stop();
+                pauseButton.Enabled = false;
+                ApplyPauseVisualState(false);
                 playerOneScore = payload.PlayerOneScore;
                 playerTwoScore = payload.PlayerTwoScore;
                 UpdateScoreDisplay();
@@ -931,6 +1236,8 @@ namespace SchulApp
         {
             communicationAvailable = false;
             gameRunning = false;
+            isPaused = false;
+            pauseRequestPending = false;
             movementPending = false;
             moveUpPressed = false;
             moveDownPressed = false;
@@ -940,20 +1247,26 @@ namespace SchulApp
             {
                 movementTimer.Stop();
                 gameTimer.Stop();
+                pauseButton.Enabled = false;
+                continueButton.Enabled = false;
+                pausePanel.Visible = false;
                 statusLabel.Text = message;
             });
         }
 
         private void Connection_Disconnected(object? sender, EventArgs e)
         {
-            StopCommunication("Multiplayer-Verbindung wurde getrennt.");
+            StopCommunication(
+                PingPongMultiplayerError.GetDisconnectMessage(false)
+            );
         }
 
         private void PingPongMultiplayerGameForm_PreviewKeyDown(
             object? sender,
             PreviewKeyDownEventArgs e)
         {
-            if (e.KeyCode == Keys.W ||
+            if (e.KeyCode == Keys.Q ||
+                e.KeyCode == Keys.W ||
                 e.KeyCode == Keys.S ||
                 e.KeyCode == Keys.Up ||
                 e.KeyCode == Keys.Down)
@@ -966,7 +1279,21 @@ namespace SchulApp
             object? sender,
             KeyEventArgs e)
         {
-            if (!communicationAvailable || !IsAssignedMovementKey(e.KeyCode))
+            if (e.KeyCode == Keys.Q)
+            {
+                if (communicationAvailable && gameRunning && !pauseRequestPending)
+                {
+                    _ = RequestPauseChangeAsync(!isPaused);
+                }
+
+                e.SuppressKeyPress = true;
+                e.Handled = true;
+                return;
+            }
+
+            if (!communicationAvailable ||
+                isPaused ||
+                !IsAssignedMovementKey(e.KeyCode))
             {
                 return;
             }
@@ -996,6 +1323,7 @@ namespace SchulApp
         {
             communicationAvailable = false;
             gameRunning = false;
+            isPaused = false;
             movementPending = false;
             moveUpPressed = false;
             moveDownPressed = false;
@@ -1009,6 +1337,8 @@ namespace SchulApp
 
             connection.MessageReceived -= Connection_MessageReceived;
             connection.Disconnected -= Connection_Disconnected;
+
+            ball.Image?.Dispose();
 
             try
             {
