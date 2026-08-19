@@ -11,10 +11,12 @@ namespace SchulApp
         private readonly PingPongLobbyModel lobby;
         private readonly PingPongMultiplayerConnection connection =
             new PingPongMultiplayerConnection();
+        private readonly PingPongBackgroundKeyboardInput backgroundInput;
         private readonly System.Windows.Forms.Timer movementTimer;
         private readonly Panel playfield;
         private readonly Panel playerOnePaddle;
         private readonly Panel playerTwoPaddle;
+        private readonly Panel centerLine;
         private readonly Panel localPaddle;
         private readonly Panel remotePaddle;
         private readonly Label statusLabel;
@@ -60,65 +62,95 @@ namespace SchulApp
                 );
             }
 
+            backgroundInput = new PingPongBackgroundKeyboardInput(
+                isPlayerOne
+                    ? new[] { Keys.W, Keys.S }
+                    : new[] { Keys.Up, Keys.Down }
+            );
+
             Text = "SchulApp - Ping Pong Multiplayer";
             StartPosition = FormStartPosition.Manual;
-            ClientSize = new Size(840, 620);
-            MinimumSize = new Size(840, 620);
+            ClientSize = new Size(1200, 750);
+            MinimumSize = new Size(900, 600);
             KeyPreview = true;
 
-            Label titleLabel = new Label
+            Label controlsLabel = new Label
             {
                 AutoSize = false,
-                Font = new Font("Segoe UI", 20F, FontStyle.Bold),
-                Location = new Point(40, 48),
-                Size = new Size(760, 45),
-                Text = "Ping Pong Multiplayer",
-                TextAlign = ContentAlignment.MiddleCenter
+                Location = new Point(20, 18),
+                Size = new Size(500, 24),
+                Text = isPlayerOne
+                    ? "Player 1: W / S | Steuerung auch ohne Fensterfokus"
+                    : "Player 2: Pfeil hoch / Pfeil runter | Steuerung auch ohne Fensterfokus",
+                TextAlign = ContentAlignment.MiddleLeft
             };
 
             Label playerOneLabel = new Label
             {
                 AutoSize = false,
-                Font = new Font("Segoe UI", 10F, FontStyle.Bold),
-                Location = new Point(30, 92),
-                Size = new Size(330, 28),
+                Font = new Font("Segoe UI", 11F, FontStyle.Bold),
+                Location = new Point(20, 55),
+                Size = new Size(330, 24),
                 Text = "Player 1: " + lobby.HostUsername,
                 TextAlign = ContentAlignment.MiddleLeft
             };
 
             Label playerTwoLabel = new Label
             {
+                Anchor = AnchorStyles.Top | AnchorStyles.Right,
                 AutoSize = false,
-                Font = new Font("Segoe UI", 10F, FontStyle.Bold),
-                Location = new Point(480, 92),
-                Size = new Size(330, 28),
+                Font = new Font("Segoe UI", 11F, FontStyle.Bold),
+                Location = new Point(850, 55),
+                Size = new Size(330, 24),
                 Text = "Player 2: " + lobby.GuestUsername,
                 TextAlign = ContentAlignment.MiddleRight
             };
 
+            statusLabel = new Label
+            {
+                AutoSize = false,
+                Location = new Point(20, 82),
+                Size = new Size(760, 20),
+                Text = "Multiplayer-Verbindung wird hergestellt...",
+                TextAlign = ContentAlignment.MiddleLeft
+            };
+
+            NoFocusButton backButton = new NoFocusButton
+            {
+                Anchor = AnchorStyles.Top | AnchorStyles.Right,
+                Location = new Point(1085, 48),
+                Size = new Size(95, 23),
+                Text = "Zurück",
+                TabStop = false,
+                UseVisualStyleBackColor = true
+            };
+            backButton.Click += (_, _) => Close();
+
             playfield = new Panel
             {
-                BorderStyle = BorderStyle.FixedSingle,
-                Location = new Point(30, 125),
-                Size = new Size(780, 390)
+                Anchor = AnchorStyles.Top | AnchorStyles.Bottom |
+                    AnchorStyles.Left | AnchorStyles.Right,
+                BorderStyle = BorderStyle.None,
+                Location = new Point(0, 105),
+                Size = new Size(1200, 645)
             };
 
             playerOnePaddle = new Panel
             {
-                Location = new Point(18, 145),
-                Size = new Size(16, 100)
+                Location = new Point(0, 224),
+                Size = new Size(34, 196)
             };
 
             playerTwoPaddle = new Panel
             {
-                Location = new Point(744, 145),
-                Size = new Size(16, 100)
+                Location = new Point(1166, 224),
+                Size = new Size(34, 196)
             };
 
-            Panel centerLine = new Panel
+            centerLine = new Panel
             {
-                Location = new Point(387, 0),
-                Size = new Size(4, 390)
+                Location = new Point(598, 0),
+                Size = new Size(4, 645)
             };
 
             playfield.Controls.Add(centerLine);
@@ -132,44 +164,12 @@ namespace SchulApp
                 ? playerTwoPaddle
                 : playerOnePaddle;
 
-            string controlsText = isPlayerOne
-                ? "Du bist Player 1. Steuerung: W / S"
-                : "Du bist Player 2. Steuerung: Pfeil hoch / Pfeil runter";
-
-            Label controlsLabel = new Label
-            {
-                AutoSize = false,
-                Location = new Point(30, 525),
-                Size = new Size(500, 28),
-                Text = controlsText,
-                TextAlign = ContentAlignment.MiddleLeft
-            };
-
-            statusLabel = new Label
-            {
-                AutoSize = false,
-                Location = new Point(30, 553),
-                Size = new Size(600, 28),
-                Text = "Multiplayer-Verbindung wird hergestellt...",
-                TextAlign = ContentAlignment.MiddleLeft
-            };
-
-            NoFocusButton backButton = new NoFocusButton
-            {
-                Location = new Point(650, 540),
-                Size = new Size(160, 42),
-                Text = "Zurück",
-                UseVisualStyleBackColor = true
-            };
-            backButton.Click += (_, _) => Close();
-
-            Controls.Add(titleLabel);
+            Controls.Add(controlsLabel);
             Controls.Add(playerOneLabel);
             Controls.Add(playerTwoLabel);
-            Controls.Add(playfield);
-            Controls.Add(controlsLabel);
             Controls.Add(statusLabel);
             Controls.Add(backButton);
+            Controls.Add(playfield);
 
             movementTimer = new System.Windows.Forms.Timer
             {
@@ -182,7 +182,9 @@ namespace SchulApp
             PreviewKeyDown += PingPongMultiplayerGameForm_PreviewKeyDown;
             Shown += PingPongMultiplayerGameForm_Shown;
             FormClosed += PingPongMultiplayerGameForm_FormClosed;
+            playfield.Resize += Playfield_Resize;
 
+            backgroundInput.KeyStateChanged += BackgroundInput_KeyStateChanged;
             connection.MessageReceived += Connection_MessageReceived;
             connection.Disconnected += Connection_Disconnected;
 
@@ -191,52 +193,29 @@ namespace SchulApp
             playerOnePaddle.BackColor = Color.Black;
             playerTwoPaddle.BackColor = Color.Black;
             centerLine.BackColor = Color.LightGray;
+
+            CenterPaddles();
         }
 
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
             Keys keyCode = keyData & Keys.KeyCode;
 
-            if (
-                keyCode == Keys.W ||
+            if (IsAssignedMovementKey(keyCode))
+            {
+                if (communicationAvailable)
+                {
+                    SetMovementKeyState(keyCode, true);
+                }
+
+                return true;
+            }
+
+            if (keyCode == Keys.W ||
                 keyCode == Keys.S ||
                 keyCode == Keys.Up ||
                 keyCode == Keys.Down)
             {
-                if (!communicationAvailable)
-                {
-                    return true;
-                }
-
-                if (isPlayerOne)
-                {
-                    if (keyCode == Keys.W)
-                    {
-                        moveUpPressed = true;
-                        return true;
-                    }
-
-                    if (keyCode == Keys.S)
-                    {
-                        moveDownPressed = true;
-                        return true;
-                    }
-                }
-                else
-                {
-                    if (keyCode == Keys.Up)
-                    {
-                        moveUpPressed = true;
-                        return true;
-                    }
-
-                    if (keyCode == Keys.Down)
-                    {
-                        moveDownPressed = true;
-                        return true;
-                    }
-                }
-
                 return true;
             }
 
@@ -260,9 +239,20 @@ namespace SchulApp
                 }
 
                 communicationAvailable = true;
-                statusLabel.Text =
-                    "Paddle-Synchronisierung aktiv. Ball und Score folgen in #60.";
                 movementTimer.Start();
+
+                try
+                {
+                    backgroundInput.Start();
+                    statusLabel.Text =
+                        "Paddle-Synchronisierung aktiv. Steuerung funktioniert auch ohne Fensterfokus.";
+                }
+                catch (Exception ex)
+                {
+                    statusLabel.Text =
+                        "Paddle-Synchronisierung aktiv. Hintergrund-Steuerung nicht verfügbar: " +
+                        ex.Message;
+                }
 
                 ActiveControl = null;
                 Focus();
@@ -275,6 +265,74 @@ namespace SchulApp
             }
         }
 
+        private void Playfield_Resize(object? sender, EventArgs e)
+        {
+            playerOnePaddle.Left = 0;
+            playerTwoPaddle.Left = Math.Max(
+                0,
+                playfield.ClientSize.Width - playerTwoPaddle.Width
+            );
+            centerLine.Left = Math.Max(
+                0,
+                (playfield.ClientSize.Width - centerLine.Width) / 2
+            );
+            centerLine.Height = playfield.ClientSize.Height;
+
+            int maxTop = Math.Max(
+                0,
+                playfield.ClientSize.Height - playerOnePaddle.Height
+            );
+            playerOnePaddle.Top = Math.Clamp(playerOnePaddle.Top, 0, maxTop);
+            playerTwoPaddle.Top = Math.Clamp(playerTwoPaddle.Top, 0, maxTop);
+        }
+
+        private void CenterPaddles()
+        {
+            int top = Math.Max(
+                0,
+                (playfield.ClientSize.Height - playerOnePaddle.Height) / 2
+            );
+            playerOnePaddle.Top = top;
+            playerTwoPaddle.Top = top;
+            Playfield_Resize(this, EventArgs.Empty);
+        }
+
+        private void BackgroundInput_KeyStateChanged(
+            object? sender,
+            PingPongBackgroundKeyEventArgs e)
+        {
+            if (!communicationAvailable || IsDisposed)
+            {
+                return;
+            }
+
+            SetMovementKeyState(e.Key, e.IsDown);
+        }
+
+        private bool IsAssignedMovementKey(Keys key)
+        {
+            return isPlayerOne
+                ? key == Keys.W || key == Keys.S
+                : key == Keys.Up || key == Keys.Down;
+        }
+
+        private void SetMovementKeyState(Keys key, bool isDown)
+        {
+            if (!IsAssignedMovementKey(key))
+            {
+                return;
+            }
+
+            if (key == Keys.W || key == Keys.Up)
+            {
+                moveUpPressed = isDown;
+            }
+            else if (key == Keys.S || key == Keys.Down)
+            {
+                moveDownPressed = isDown;
+            }
+        }
+
         private void MovementTimer_Tick(object? sender, EventArgs e)
         {
             if (!communicationAvailable)
@@ -283,7 +341,10 @@ namespace SchulApp
             }
 
             int oldTop = localPaddle.Top;
-            int maxTop = playfield.ClientSize.Height - localPaddle.Height;
+            int maxTop = Math.Max(
+                0,
+                playfield.ClientSize.Height - localPaddle.Height
+            );
 
             if (moveUpPressed)
             {
@@ -365,8 +426,7 @@ namespace SchulApp
             object? sender,
             PingPongMultiplayerMessage message)
         {
-            if (
-                message.Type != PingPongMultiplayerMessageTypes.PlayerMovement ||
+            if (message.Type != PingPongMultiplayerMessageTypes.PlayerMovement ||
                 message.SenderUserId != remoteUserId ||
                 message.Sequence <= lastRemoteSequence)
             {
@@ -389,7 +449,10 @@ namespace SchulApp
                 return;
             }
 
-            int maxTop = playfield.ClientSize.Height - remotePaddle.Height;
+            int maxTop = Math.Max(
+                0,
+                playfield.ClientSize.Height - remotePaddle.Height
+            );
 
             if (!PingPongPlayerMovementPosition.TryDenormalize(
                 payload.NormalizedTop,
@@ -421,6 +484,7 @@ namespace SchulApp
             movementPending = false;
             moveUpPressed = false;
             moveDownPressed = false;
+            backgroundInput.Stop();
 
             if (IsDisposed || !IsHandleCreated)
             {
@@ -441,8 +505,7 @@ namespace SchulApp
             object? sender,
             PreviewKeyDownEventArgs e)
         {
-            if (
-                e.KeyCode == Keys.W ||
+            if (e.KeyCode == Keys.W ||
                 e.KeyCode == Keys.S ||
                 e.KeyCode == Keys.Up ||
                 e.KeyCode == Keys.Down)
@@ -455,32 +518,12 @@ namespace SchulApp
             object? sender,
             KeyEventArgs e)
         {
-            if (!communicationAvailable)
+            if (!communicationAvailable || !IsAssignedMovementKey(e.KeyCode))
             {
                 return;
             }
 
-            if (isPlayerOne && e.KeyCode == Keys.W)
-            {
-                moveUpPressed = true;
-            }
-            else if (isPlayerOne && e.KeyCode == Keys.S)
-            {
-                moveDownPressed = true;
-            }
-            else if (!isPlayerOne && e.KeyCode == Keys.Up)
-            {
-                moveUpPressed = true;
-            }
-            else if (!isPlayerOne && e.KeyCode == Keys.Down)
-            {
-                moveDownPressed = true;
-            }
-            else
-            {
-                return;
-            }
-
+            SetMovementKeyState(e.KeyCode, true);
             e.SuppressKeyPress = true;
             e.Handled = true;
         }
@@ -489,36 +532,14 @@ namespace SchulApp
             object? sender,
             KeyEventArgs e)
         {
-            if (isPlayerOne && e.KeyCode == Keys.W)
-            {
-                moveUpPressed = false;
-            }
-            else if (isPlayerOne && e.KeyCode == Keys.S)
-            {
-                moveDownPressed = false;
-            }
-            else if (!isPlayerOne && e.KeyCode == Keys.Up)
-            {
-                moveUpPressed = false;
-            }
-            else if (!isPlayerOne && e.KeyCode == Keys.Down)
-            {
-                moveDownPressed = false;
-            }
-            else
+            if (!IsAssignedMovementKey(e.KeyCode))
             {
                 return;
             }
 
+            SetMovementKeyState(e.KeyCode, false);
             e.SuppressKeyPress = true;
             e.Handled = true;
-        }
-
-        protected override void OnDeactivate(EventArgs e)
-        {
-            moveUpPressed = false;
-            moveDownPressed = false;
-            base.OnDeactivate(e);
         }
 
         private async void PingPongMultiplayerGameForm_FormClosed(
@@ -527,8 +548,13 @@ namespace SchulApp
         {
             communicationAvailable = false;
             movementPending = false;
+            moveUpPressed = false;
+            moveDownPressed = false;
             movementTimer.Stop();
             movementTimer.Dispose();
+
+            backgroundInput.KeyStateChanged -= BackgroundInput_KeyStateChanged;
+            backgroundInput.Dispose();
 
             connection.MessageReceived -= Connection_MessageReceived;
             connection.Disconnected -= Connection_Disconnected;
