@@ -354,13 +354,13 @@ namespace SchulApp
                 return;
             }
 
-            BeginInvoke(() =>
+            BeginInvoke(new Action(() =>
             {
                 if (!IsDisposed)
                 {
                     remotePaddle.Top = remoteTop;
                 }
-            });
+            }));
         }
 
         private void Connection_Disconnected(object? sender, EventArgs e)
@@ -375,14 +375,14 @@ namespace SchulApp
                 return;
             }
 
-            BeginInvoke(() =>
+            BeginInvoke(new Action(() =>
             {
                 if (!IsDisposed)
                 {
                     movementTimer.Stop();
                     statusLabel.Text = "Multiplayer-Verbindung wurde getrennt.";
                 }
-            });
+            }));
         }
 
         private void PingPongMultiplayerGameForm_KeyDown(
