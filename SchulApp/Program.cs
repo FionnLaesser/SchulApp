@@ -30,6 +30,8 @@ namespace SchulApp
                 Application.Run(loadingScreen);
             }
 
+            Point? letzteFensterPosition = null;
+
             while (true)
             {
                 using Login login = new Login
@@ -37,10 +39,18 @@ namespace SchulApp
                     Icon = appIcon
                 };
 
+                if (letzteFensterPosition.HasValue)
+                {
+                    login.StartPosition = FormStartPosition.Manual;
+                    login.Location = letzteFensterPosition.Value;
+                }
+
                 if (login.ShowDialog() != DialogResult.OK)
                 {
                     return;
                 }
+
+                letzteFensterPosition = login.Location;
 
                 ThemeManager.Laden(login.AngemeldeteBenutzerId);
 
@@ -49,10 +59,14 @@ namespace SchulApp
                     login.AngemeldeteRolle
                 )
                 {
-                    Icon = appIcon
+                    Icon = appIcon,
+                    StartPosition = FormStartPosition.Manual,
+                    Location = letzteFensterPosition.Value
                 };
 
                 Application.Run(hauptmenue);
+
+                letzteFensterPosition = hauptmenue.Location;
 
                 if (!hauptmenue.AbmeldenAngefordert)
                 {
