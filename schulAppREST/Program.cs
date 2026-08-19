@@ -115,6 +115,7 @@ app.MapGet(
         await realtimeService.HandleConnectionAsync(
             lobby.Code,
             userId,
+            lobby.HostUserId,
             socket,
             context.RequestAborted
         );
