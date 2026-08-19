@@ -17,10 +17,13 @@ namespace SchulApp
         private readonly Label playerTwoValueLabel;
         private readonly Label statusValueLabel;
         private readonly Label informationLabel;
+        private readonly Button openGameButton;
         private readonly Button backButton;
 
+        private PingPongLobbyModel currentLobby;
         private bool refreshRunning;
         private bool cleanupStarted;
+        private bool gameOpen;
 
         public PingPongLobbyForm(PingPongLobbyModel lobby, bool isHost)
         {
@@ -28,6 +31,7 @@ namespace SchulApp
 
             this.isHost = isHost;
             gameCode = lobby.Code;
+            currentLobby = lobby;
 
             Text = "SchulApp - Ping Pong Lobby";
             StartPosition = FormStartPosition.Manual;
@@ -81,14 +85,24 @@ namespace SchulApp
                 TextAlign = ContentAlignment.MiddleCenter
             };
 
+            openGameButton = new Button
+            {
+                Enabled = lobby.IsReady,
+                Location = new Point(145, 395),
+                Size = new Size(180, 40),
+                Text = "Multiplayer öffnen",
+                UseVisualStyleBackColor = true
+            };
+
             backButton = new Button
             {
-                Location = new Point(250, 395),
+                Location = new Point(355, 395),
                 Size = new Size(180, 40),
                 Text = isHost ? "Lobby schliessen" : "Lobby verlassen",
                 UseVisualStyleBackColor = true
             };
 
+            openGameButton.Click += OpenGameButton_Click;
             backButton.Click += BackButton_Click;
 
             Controls.Add(titleLabel);
@@ -101,6 +115,7 @@ namespace SchulApp
             Controls.Add(statusLabel);
             Controls.Add(statusValueLabel);
             Controls.Add(informationLabel);
+            Controls.Add(openGameButton);
             Controls.Add(backButton);
 
             refreshTimer = new System.Windows.Forms.Timer
@@ -145,7 +160,7 @@ namespace SchulApp
         {
             await RefreshLobbyAsync();
 
-            if (!IsDisposed)
+            if (!IsDisposed && !gameOpen)
             {
                 refreshTimer.Start();
             }
@@ -156,9 +171,57 @@ namespace SchulApp
             await RefreshLobbyAsync();
         }
 
+        private async void OpenGameButton_Click(object? sender, EventArgs e)
+        {
+            if (!currentLobby.IsReady || gameOpen || cleanupStarted)
+            {
+                return;
+            }
+
+            gameOpen = true;
+            openGameButton.Enabled = false;
+            refreshTimer.Stop();
+
+            try
+            {
+                using PingPongMultiplayerGameForm gameForm =
+                    new PingPongMultiplayerGameForm(currentLobby)
+                    {
+                        StartPosition = FormStartPosition.Manual,
+                        Location = Location
+                    };
+
+                gameForm.ShowDialog(this);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    ex.Message,
+                    "Ping Pong Multiplayer",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error
+                );
+            }
+            finally
+            {
+                gameOpen = false;
+
+                if (!IsDisposed && !cleanupStarted)
+                {
+                    await RefreshLobbyAsync();
+
+                    if (!IsDisposed && !cleanupStarted)
+                    {
+                        refreshTimer.Start();
+                    }
+                }
+            }
+        }
+
         private async void BackButton_Click(object? sender, EventArgs e)
         {
             backButton.Enabled = false;
+            openGameButton.Enabled = false;
             refreshTimer.Stop();
 
             await CleanupLobbyAsync();
@@ -168,7 +231,7 @@ namespace SchulApp
 
         private async Task RefreshLobbyAsync()
         {
-            if (refreshRunning || cleanupStarted || IsDisposed)
+            if (refreshRunning || cleanupStarted || gameOpen || IsDisposed)
             {
                 return;
             }
@@ -183,6 +246,7 @@ namespace SchulApp
                 if (lobby == null)
                 {
                     refreshTimer.Stop();
+                    openGameButton.Enabled = false;
                     statusValueLabel.Text = "Closed";
                     informationLabel.Text =
                         "Die Lobby wurde geschlossen oder ist abgelaufen.";
@@ -195,6 +259,7 @@ namespace SchulApp
             catch (Exception ex)
             {
                 refreshTimer.Stop();
+                openGameButton.Enabled = false;
                 statusValueLabel.Text = "Connection error";
                 informationLabel.Text =
                     "Lobby konnte nicht aktualisiert werden: " + ex.Message;
@@ -207,15 +272,17 @@ namespace SchulApp
 
         private void ApplyLobby(PingPongLobbyModel lobby)
         {
+            currentLobby = lobby;
             gameCodeValueLabel.Text = lobby.Code;
             playerOneValueLabel.Text = lobby.HostUsername;
             playerTwoValueLabel.Text = string.IsNullOrWhiteSpace(lobby.GuestUsername)
                 ? "Waiting for Player 2..."
                 : lobby.GuestUsername;
             statusValueLabel.Text = lobby.IsReady ? "Ready" : "Waiting";
+            openGameButton.Enabled = lobby.IsReady && !gameOpen && !cleanupStarted;
 
             informationLabel.Text = lobby.IsReady
-                ? "Beide Spieler sind verbunden. Die Lobby ist bereit für den nächsten Multiplayer-Schritt."
+                ? "Beide Spieler sind verbunden. Öffne den Multiplayer-Modus für die Paddle-Synchronisierung."
                 : isHost
                     ? "Teile den Game Code mit Player 2 und warte auf den Beitritt."
                     : "Die Lobby wartet auf einen zweiten Spieler.";
