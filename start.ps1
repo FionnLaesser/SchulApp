@@ -110,6 +110,11 @@ try {
         -Url "http://localhost:5210/metrics" `
         -TimeoutSeconds 30
 
+    Write-Host ""
+    Write-Host "Weitere SchulApp-Clients können jetzt in einem zweiten PowerShell-Fenster gestartet werden:"
+    Write-Host ".\start-client.ps1"
+    Write-Host ""
+
     # SchulApp starten
     Set-Location "$PSScriptRoot\SchulApp"
     dotnet run --project SchulApp.csproj
