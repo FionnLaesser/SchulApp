@@ -19,6 +19,15 @@ namespace schulAppREST.Services
                 "GameEnd"
             };
 
+        private static readonly HashSet<string> AuthoritativeMessageTypes =
+            new HashSet<string>(StringComparer.Ordinal)
+            {
+                "BallState",
+                "Score",
+                "GameStart",
+                "GameEnd"
+            };
+
         private static readonly JsonSerializerOptions JsonOptions =
             new JsonSerializerOptions(JsonSerializerDefaults.Web);
 
@@ -31,6 +40,7 @@ namespace schulAppREST.Services
         public async Task HandleConnectionAsync(
             string gameCode,
             int userId,
+            int authoritativeUserId,
             WebSocket socket,
             CancellationToken cancellationToken)
         {
@@ -74,7 +84,9 @@ namespace schulAppREST.Services
                         break;
                     }
 
-                    if (!IsValidIncomingMessage(message))
+                    bool isAuthoritative = userId == authoritativeUserId;
+
+                    if (!IsValidIncomingMessage(message, isAuthoritative))
                     {
                         continue;
                     }
@@ -182,17 +194,32 @@ namespace schulAppREST.Services
             }
         }
 
-        private static bool IsValidIncomingMessage(PingPongRealtimeMessage message)
+        private static bool IsValidIncomingMessage(
+            PingPongRealtimeMessage message,
+            bool isAuthoritative)
         {
             if (
                 string.IsNullOrWhiteSpace(message.Type) ||
                 !AllowedMessageTypes.Contains(message.Type) ||
-                message.Sequence < 0)
+                message.Sequence < 0 ||
+                message.Payload.ValueKind != JsonValueKind.Object)
             {
                 return false;
             }
 
-            return message.Payload.ValueKind == JsonValueKind.Object;
+            // Lobby events are server-generated only.
+            if (message.Type == "Lobby")
+            {
+                return false;
+            }
+
+            if (AuthoritativeMessageTypes.Contains(message.Type) &&
+                !isAuthoritative)
+            {
+                return false;
+            }
+
+            return true;
         }
 
         private async Task BroadcastLobbyEventAsync(
@@ -279,11 +306,9 @@ namespace schulAppREST.Services
             }
             catch (OperationCanceledException)
             {
-                // A cancelled send is treated as a disconnected client.
             }
             catch (WebSocketException)
             {
-                // The receive loop will clean up the disconnected client.
             }
             finally
             {
