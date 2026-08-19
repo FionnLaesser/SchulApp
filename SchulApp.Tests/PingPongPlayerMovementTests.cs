@@ -1,4 +1,5 @@
 using SchulApp.Models;
+using System.Text.Json;
 using Xunit;
 
 namespace SchulApp.Tests
@@ -58,6 +59,34 @@ namespace SchulApp.Tests
             );
 
             Assert.False(valid);
+        }
+
+        [Fact]
+        public void Payload_CamelCaseJson_DeserializesNormalizedTop()
+        {
+            using JsonDocument document = JsonDocument.Parse(
+                "{\"normalizedTop\":0.625}"
+            );
+
+            PingPongPlayerMovementPayload? payload =
+                document.RootElement.Deserialize<PingPongPlayerMovementPayload>();
+
+            Assert.NotNull(payload);
+            Assert.Equal(0.625, payload!.NormalizedTop, 6);
+        }
+
+        [Fact]
+        public void Payload_SerializesUsingNetworkPropertyName()
+        {
+            string json = JsonSerializer.Serialize(
+                new PingPongPlayerMovementPayload
+                {
+                    NormalizedTop = 0.375
+                }
+            );
+
+            Assert.Contains("\"normalizedTop\":0.375", json);
+            Assert.DoesNotContain("\"NormalizedTop\"", json);
         }
     }
 }
