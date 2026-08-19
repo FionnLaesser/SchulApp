@@ -1,32 +1,42 @@
-# Screenshots der SchulApp
+# SchulApp Screenshots
 
-Die **SchulApp** ist eine mit C# und Windows Forms entwickelte Schulverwaltungsanwendung.  
-Mit der Anwendung können **Schüler, Lehrer, Klassen, Kurse und Stundenpläne** verwaltet werden. Dazu gehören Funktionen zum Anzeigen, Erstellen, Bearbeiten und Löschen von Daten.
+Diese Galerie zeigt die wichtigsten Oberflächen der SchulApp. Die Hauptanwendung wird mit C# und Windows Forms entwickelt und enthält Bereiche für Schulverwaltung, Benutzerprofile, Einstellungen, Stundenplan und PingPong.
 
+Zur Projektübersicht: [`../README.md`](../README.md)
 
 ## Login und Registrierung
 
+### Login
+
 ![Loginseite](LoginSeite.png)
 
+### Registrierung
+
 ![Registrierungsseite](RegisterSeite.png)
-
-## Profil
-
-![Profilseite](ProfileSeite.png)
 
 ## Hauptmenü
 
 ![Hauptmenü](Hauptmenue.png)
 
-## Schüler
+Das Hauptmenü passt verfügbare Bereiche anhand der Benutzerrolle an.
+
+## Profil
+
+![Profilseite](ProfileSeite.png)
+
+## Schülerverwaltung
 
 ![Schülerseite](SchuelerSeite.png)
 
+### Validierung
+
 ![Fehlermeldung Namen eingeben](FehlermeldungNamenEingeben.png)
 
-## Lehrer
+## Lehrerverwaltung
 
 ![Lehrerseite](LehrerSeite.png)
+
+### Validierung
 
 ![Fehlermeldung Titel und Informationen eingeben](FehlermeldungTitelUndInformationenEingeben.png)
 
@@ -34,11 +44,15 @@ Mit der Anwendung können **Schüler, Lehrer, Klassen, Kurse und Stundenpläne**
 
 ![Klassenseite](KlassenSeite.png)
 
+### Validierung
+
 ![Fehlermeldung Klassenbezeichnung eingeben](FehlermeldungKlassenbezeichnungEingeben.png)
 
 ## Kurse
 
 ![Kursseite](KursSeite.png)
+
+### Validierung
 
 ![Fehlermeldung Kursname eingeben](FehlermeldungKursnameEingeben.png)
 
@@ -46,16 +60,25 @@ Mit der Anwendung können **Schüler, Lehrer, Klassen, Kurse und Stundenpläne**
 
 ![Stundenplan](Stundenplan.png)
 
+### Eintrag gespeichert
+
 ![Stundenplaneinträge gespeichert](MeldungStundenplaneintraegeGespeichert.png)
+
+### Eintrag bearbeitet
 
 ![Stundenplaneintrag bearbeitet](MeldungStundenplaneintragBearbeitet.png)
 
 ## Einstellungen
+
 ![Einstellungenseite](EinstellungSeite.png)
 
-### Beispiel Einstellungen
+### Beispiel für benutzerdefinierte Einstellungen
 
-![Beipsiel Einstellungsseite](BeispielEinstellung.png)
+![Beispiel Einstellungsseite](BeispielEinstellung.png)
+
+### Farbauswahl
+
+![Farbauswahl](Farbauswahl.png)
 
 ## PingPong
 
@@ -81,7 +104,16 @@ Mit der Anwendung können **Schüler, Lehrer, Klassen, Kurse und Stundenpläne**
 
 ### Löschbestätigung
 
-![Bestätigung Löschen](BestaetigungLoeschen.png)
+![Löschbestätigung](BestaetigungLoeschen.png)
 
-### Farbauswahl
-![Farbe Auswählen](Farbauswahl.png)
+## Noch nicht als eigener Screenshot vorhanden
+
+Einige neuere Funktionen sind bereits im Code vorhanden, besitzen in diesem Ordner aber noch keinen eigenen Screenshot. Dazu gehören insbesondere:
+
+- Audit Log
+- CSV/PDF-Exportmenü
+- Schüler-CSV-Import
+- herunterladbare CSV-Importvorlage
+- Prometheus- und Grafana-Dashboard
+
+Die Galerie zeigt deshalb die vorhandenen UI-Aufnahmen, ohne fehlende Screenshots als bereits dokumentiert darzustellen.

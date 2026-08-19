@@ -1,112 +1,221 @@
 # SchulApp Monitoring
 
-Das Monitoring besteht aus Prometheus und Grafana und wird mit Docker Compose gestartet. Es überwacht die REST API, die SOAP API und den SQL-Datenbankstatus.
+Das Monitoring der SchulApp basiert auf **Prometheus** und **Grafana** und wird über Docker Compose betrieben. Es erfasst Metriken der REST API und SOAP API und zeigt zusätzlich den Datenbankstatus an.
+
+Zur Projektübersicht: [`../README.md`](../README.md)
+
+## Komponenten
+
+| Komponente | Version / Aufgabe |
+|---|---|
+| Prometheus | `v3.13.1`, sammelt und speichert Metriken |
+| Grafana | `13.1.0`, visualisiert die Prometheus-Daten |
+| REST API | stellt `/metrics` bereit und meldet den Datenbankstatus |
+| SOAP API | stellt `/metrics` bereit |
+| Docker Compose | startet Prometheus und Grafana mit persistenten Volumes |
 
 ## Voraussetzungen
 
-- Docker Desktop ist installiert und gestartet.
-- Docker Compose ist verfügbar.
-- .NET 10 SDK und SQL Server 2022 sind installiert.
-- Die Datenbank `SchulAppDB` ist eingerichtet.
-- REST API und SOAP API werden beim normalen Start automatisch durch `start.ps1` gestartet.
+- Docker Desktop installiert und gestartet
+- Docker Compose verfügbar
+- .NET 10 SDK installiert
+- SQL Server 2022 läuft
+- `SchulAppDB` ist eingerichtet
 
-## Start
+## Normaler Start
 
-Normal wie bisher im Projektordner:
+Im Repository-Root:
 
 ```powershell
 .\start.ps1
 ```
 
-Das Skript startet automatisch:
+Das Startskript:
 
-1. Prometheus in Docker
-2. Grafana in Docker
-3. REST API
-4. SOAP API
-5. Prüfung der REST- und SOAP-Metrik-Endpunkte
-6. SchulApp
+1. prüft Docker und Docker Compose
+2. startet Prometheus und Grafana
+3. wartet auf beide Monitoring-Dienste
+4. startet REST und SOAP
+5. wartet auf REST API und SOAP-WSDL
+6. prüft beide `/metrics`-Endpunkte
+7. startet danach die WinForms-Anwendung
 
-Beim Beenden der SchulApp werden REST API, SOAP API, Prometheus und Grafana beendet. Die Docker-Volumes werden nicht geloescht, deshalb bleibt die Monitoring-Historie erhalten.
+Beim normalen Beenden werden die Container gestoppt. Die Docker-Volumes bleiben erhalten.
 
-## URLs
+## Lokale URLs
 
-- Grafana: http://localhost:3000
-- Prometheus: http://localhost:9090
-- REST Metriken: http://localhost:63636/metrics
-- SOAP Metriken: http://localhost:5210/metrics
-- Health Check: https://localhost:63635/health
-- Swagger: https://localhost:63635/swagger
+| Dienst | URL |
+|---|---|
+| Grafana | `http://localhost:3000` |
+| Prometheus | `http://localhost:9090` |
+| REST Metrics | `http://localhost:63636/metrics` |
+| SOAP Metrics | `http://localhost:5210/metrics` |
+| Health Check | `https://localhost:63635/health` |
+| Swagger | `https://localhost:63635/swagger` |
 
 Grafana Login:
 
-- Benutzer: `admin`
-- Passwort: `schulapp`
+```text
+Benutzer: admin
+Passwort: schulapp
+```
 
-Das Dashboard wird automatisch im Grafana-Ordner `SchulApp` geladen.
+## Prometheus-Konfiguration
+
+Konfiguration:
+
+```text
+Monitoring/prometheus/prometheus.yml
+```
 
 Prometheus fragt die REST- und SOAP-Metriken alle **5 Sekunden** ab.
 
-## Was wird angezeigt?
+Da Prometheus in Docker läuft und die APIs lokal auf Windows gestartet werden, greift der Container über `host.docker.internal` auf die Host-Dienste zu.
 
-- REST API erreichbar oder nicht
-- SOAP API erreichbar oder nicht
-- Datenbank erreichbar oder nicht
-- Anzahl REST Requests
-- Anzahl SOAP Requests
-- HTTP-Fehler
-- durchschnittliche Antwortzeiten
-- Requests pro Minute als Verlauf
-- Antwortzeiten als Verlauf
-- Fehler als Verlauf
+Die HTTP-Endpunkte der APIs sind deshalb für das lokale Monitoring erreichbar. Die REST API behält zusätzlich ihren HTTPS-Endpunkt für normale API-Aufrufe.
 
-Prometheus speichert die Metriken bis zu 30 Tage in einem Docker-Volume.
+## Datenspeicherung
+
+Prometheus verwendet das Volume:
+
+```text
+prometheus-data
+```
+
+Grafana verwendet:
+
+```text
+grafana-data
+```
+
+Prometheus ist aktuell mit einer Retention von **30 Tagen** konfiguriert.
+
+Das normale `docker compose down` löscht diese Volumes nicht.
+
+## Grafana Provisioning
+
+Grafana wird automatisch provisioniert.
+
+Wichtige Pfade:
+
+```text
+Monitoring/grafana/provisioning/datasources/prometheus.yml
+Monitoring/grafana/provisioning/dashboards/dashboards.yml
+Monitoring/grafana/dashboards/schulapp-monitoring.json
+```
+
+Dadurch stehen Prometheus als Datenquelle und das SchulApp-Dashboard ohne manuelle Einrichtung zur Verfügung.
+
+## Angezeigte Informationen
+
+Das Dashboard verwendet die von den APIs bereitgestellten Prometheus-Metriken. Dazu gehören unter anderem:
+
+- REST API Requests
+- SOAP API Requests
+- Antwortzeiten
+- HTTP-Statuscodes
+- Fehler
+- Request-Verläufe
+- Datenbankstatus
+- Erreichbarkeit der überwachten Komponenten
 
 ## Health Check und Monitoring
 
-Der Health Check und Prometheus erfüllen unterschiedliche Aufgaben.
+Der Health Check und Prometheus haben unterschiedliche Aufgaben.
 
-Der Health Check:
+### Health Check
 
 ```text
 https://localhost:63635/health
 ```
 
-prüft bei einem Request den aktuellen Status von:
+Er prüft beim Aufruf den aktuellen Zustand von:
 
 - REST API
 - SQL-Datenbank
 - SOAP API
 
-Er antwortet mit HTTP `200`, wenn alle Komponenten gesund sind, oder HTTP `503`, wenn mindestens Datenbank oder SOAP API nicht erreichbar sind.
+Erwartete Statuscodes:
 
-Prometheus sammelt dagegen fortlaufend Metriken wie Request-Anzahl, Statuscodes und Antwortzeiten. Der Datenbankstatus wird von der REST API zusätzlich als Prometheus-Metrik erfasst.
+- HTTP `200` bei gesundem Zustand
+- HTTP `503`, wenn eine benötigte Abhängigkeit nicht erreichbar ist
 
-## Warum wurden die HTTP-Bindings angepasst?
+### Prometheus
 
-Prometheus läuft in einem Docker-Container. Damit der Container die lokal gestarteten APIs erreichen kann, lauschen die HTTP-Endpunkte der REST API und SOAP API auf `0.0.0.0`. Prometheus greift aus Docker über `host.docker.internal` darauf zu.
-
-Die REST API behält ihren HTTPS-Endpunkt auf `https://localhost:63635`. Der `/metrics`-Endpunkt bleibt absichtlich über HTTP erreichbar.
+Prometheus sammelt fortlaufend technische Metriken und speichert deren Verlauf. Dadurch können beispielsweise steigende Fehlerzahlen oder Antwortzeiten über einen längeren Zeitraum erkannt werden.
 
 ## Monitoring manuell starten
 
+Aus dem Repository-Root:
+
 ```powershell
-cd Monitoring
-docker compose up -d
+docker compose -f .\Monitoring\docker-compose.yml up -d
+```
+
+Status prüfen:
+
+```powershell
+docker compose -f .\Monitoring\docker-compose.yml ps
 ```
 
 ## Monitoring manuell stoppen
 
 ```powershell
-cd Monitoring
-docker compose down
+docker compose -f .\Monitoring\docker-compose.yml down
 ```
 
-## Monitoring-Daten komplett loeschen
+Die gespeicherten Daten bleiben erhalten.
 
-Achtung: Dieser Befehl loescht auch die gespeicherte Prometheus- und Grafana-Historie.
+## Monitoring-Daten vollständig löschen
 
 ```powershell
-cd Monitoring
-docker compose down -v
+docker compose -f .\Monitoring\docker-compose.yml down -v
 ```
+
+Dieser Befehl löscht auch die gespeicherte Prometheus- und Grafana-Historie.
+
+## Troubleshooting
+
+### Prometheus nicht bereit
+
+Prüfen:
+
+```text
+http://localhost:9090/-/ready
+```
+
+### Grafana nicht bereit
+
+Prüfen:
+
+```text
+http://localhost:3000/api/health
+```
+
+### REST Metrics nicht erreichbar
+
+Prüfen:
+
+```text
+http://localhost:63636/metrics
+```
+
+### SOAP Metrics nicht erreichbar
+
+Prüfen:
+
+```text
+http://localhost:5210/metrics
+```
+
+### Container erreichen die APIs nicht
+
+Prüfen:
+
+- REST API läuft auf Port `63636`
+- SOAP API läuft auf Port `5210`
+- `host.docker.internal` ist im Container erreichbar
+- Docker Desktop läuft
+- lokale Firewall blockiert die Ports nicht
+
+Weitere allgemeine Fehlerbehebung steht in [`../SETUP.md`](../SETUP.md).
