@@ -16,9 +16,12 @@ namespace SchulApp.Services
         private ClientWebSocket? socket;
         private CancellationTokenSource? receiveCancellation;
         private Task? receiveTask;
+        private SynchronizationContext? uiContext;
         private string gameCode = string.Empty;
         private int userId;
         private int disconnectedRaised;
+        private int resultNotificationRaised;
+        private int opponentDisconnectNotificationRaised;
 
         public event EventHandler<PingPongMultiplayerMessage>? MessageReceived;
         public event EventHandler? Disconnected;
@@ -52,7 +55,10 @@ namespace SchulApp.Services
 
             this.gameCode = gameCode.Trim().ToUpperInvariant();
             this.userId = userId;
+            uiContext = SynchronizationContext.Current;
             disconnectedRaised = 0;
+            resultNotificationRaised = 0;
+            opponentDisconnectNotificationRaised = 0;
 
             socket?.Dispose();
             receiveCancellation?.Dispose();
@@ -173,6 +179,11 @@ namespace SchulApp.Services
             finally
             {
                 sendLock.Release();
+            }
+
+            if (messageType == PingPongMultiplayerMessageTypes.GameEnd)
+            {
+                NotifyGameResult(message.Payload);
             }
         }
 
@@ -296,6 +307,7 @@ namespace SchulApp.Services
                     }
 
                     MessageReceived?.Invoke(this, message);
+                    HandleClientNotification(message);
                 }
             }
             catch (OperationCanceledException)
@@ -386,6 +398,113 @@ namespace SchulApp.Services
             return message.SenderUserId > 0;
         }
 
+        private void HandleClientNotification(PingPongMultiplayerMessage message)
+        {
+            if (message.Type == PingPongMultiplayerMessageTypes.GameEnd)
+            {
+                NotifyGameResult(message.Payload);
+                return;
+            }
+
+            if (message.Type != PingPongMultiplayerMessageTypes.Lobby)
+            {
+                return;
+            }
+
+            PingPongLobbyEventPayload? payload =
+                TryDeserializePayload<PingPongLobbyEventPayload>(message.Payload);
+
+            if (payload == null ||
+                !string.Equals(
+                    payload.EventName,
+                    "PlayerDisconnected",
+                    StringComparison.Ordinal) ||
+                payload.UserId <= 0 ||
+                payload.UserId == userId)
+            {
+                return;
+            }
+
+            if (Interlocked.Exchange(ref opponentDisconnectNotificationRaised, 1) != 0)
+            {
+                return;
+            }
+
+            RaiseDisconnectedOnce();
+            receiveCancellation?.Cancel();
+            socket?.Abort();
+
+            PostToUi(PingPongMultiplayerResultForm.ShowOpponentDisconnected);
+        }
+
+        private void NotifyGameResult(JsonElement payloadElement)
+        {
+            PingPongGameEndPayload? payload =
+                TryDeserializePayload<PingPongGameEndPayload>(payloadElement);
+
+            if (payload == null ||
+                payload.WinnerUserId <= 0 ||
+                payload.PlayerOneScore < 0 ||
+                payload.PlayerTwoScore < 0)
+            {
+                return;
+            }
+
+            if (Interlocked.Exchange(ref resultNotificationRaised, 1) != 0)
+            {
+                return;
+            }
+
+            PostToUi(() =>
+                PingPongMultiplayerResultForm.ShowGameResult(
+                    userId,
+                    payload.WinnerUserId,
+                    payload.PlayerOneScore,
+                    payload.PlayerTwoScore
+                )
+            );
+        }
+
+        private static TPayload? TryDeserializePayload<TPayload>(JsonElement payload)
+            where TPayload : class
+        {
+            try
+            {
+                return payload.Deserialize<TPayload>(JsonOptions);
+            }
+            catch (JsonException)
+            {
+                return null;
+            }
+        }
+
+        private void PostToUi(Action action)
+        {
+            SynchronizationContext? context = uiContext;
+
+            if (context == null)
+            {
+                return;
+            }
+
+            context.Post(
+                _ =>
+                {
+                    try
+                    {
+                        action();
+                    }
+                    catch (InvalidOperationException)
+                    {
+                    }
+                    catch (ObjectDisposedException)
+                    {
+                    }
+                },
+                null
+            );
+        }
+
         private void RaiseDisconnectedOnce()
         {
             if (Interlocked.Exchange(ref disconnectedRaised, 1) == 0)
@@ -398,6 +517,12 @@ namespace SchulApp.Services
         {
             await DisconnectAsync();
             sendLock.Dispose();
+        }
+
+        private sealed class PingPongLobbyEventPayload
+        {
+            public string EventName { get; set; } = string.Empty;
+            public int UserId { get; set; }
         }
     }
 }
