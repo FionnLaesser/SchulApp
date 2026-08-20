@@ -497,9 +497,6 @@ namespace SchulApp.Services
                     catch (InvalidOperationException)
                     {
                     }
-                    catch (ObjectDisposedException)
-                    {
-                    }
                 },
                 null
             );
