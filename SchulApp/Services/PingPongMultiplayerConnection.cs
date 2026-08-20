@@ -62,7 +62,39 @@ namespace SchulApp.Services
 
             Uri endpoint = CreateWebSocketUri(this.gameCode, userId);
 
-            await socket.ConnectAsync(endpoint, cancellationToken);
+            using CancellationTokenSource connectionTimeout =
+                CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            connectionTimeout.CancelAfter(
+                TimeSpan.FromSeconds(PingPongMultiplayerError.ConnectionTimeoutSeconds)
+            );
+
+            try
+            {
+                await socket.ConnectAsync(endpoint, connectionTimeout.Token);
+            }
+            catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+            {
+                socket.Dispose();
+                socket = null;
+                receiveCancellation.Dispose();
+                receiveCancellation = null;
+
+                throw new TimeoutException(
+                    "Die Multiplayer-Verbindung hat zu lange gedauert. Prüfe Host-IP, Port 63636 und Netzwerkverbindung."
+                );
+            }
+            catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
+            {
+                socket.Dispose();
+                socket = null;
+                receiveCancellation.Dispose();
+                receiveCancellation = null;
+
+                throw new InvalidOperationException(
+                    PingPongMultiplayerError.GetUserMessage(ex),
+                    ex
+                );
+            }
 
             receiveTask = ReceiveLoopAsync(receiveCancellation.Token);
         }

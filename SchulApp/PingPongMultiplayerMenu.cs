@@ -117,7 +117,7 @@ namespace SchulApp
             }
             catch (Exception ex)
             {
-                ShowLobbyError(ex.Message);
+                ShowLobbyError(PingPongMultiplayerError.GetUserMessage(ex));
             }
             finally
             {
@@ -155,12 +155,7 @@ namespace SchulApp
             }
             catch (Exception ex)
             {
-                ShowLobbyError(
-                    ex.Message +
-                    Environment.NewLine +
-                    Environment.NewLine +
-                    "Prüfe Host-IP, Port 63636 und die Windows-Firewall des Hosts."
-                );
+                ShowLobbyError(PingPongMultiplayerError.GetUserMessage(ex));
             }
             finally
             {
